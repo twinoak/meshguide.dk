@@ -1,0 +1,5 @@
+regions-raw.geojson
+denmark.svg
+.DS_Store
+*.swp
+node_modules/
