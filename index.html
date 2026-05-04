@@ -97,9 +97,9 @@ set direct.txdelay 0.4</code></pre>
         <dt>Tommelfingerregel</dt><dd>Højere = foretræk stærkeste signal. Direkte pakker upåvirket.</dd>
       </dl>
       <ul>
-        <li>Påvirker kun flood-pakker - direkte (point-to-point) pakker behandles altid med det samme. Forsinker behandling af floods baseret på signalkvalitet (SNR).</li>
+        <li>Påvirker kun flood-pakker - path-baseret pakker behandles altid med det samme. Forsinker behandling af floods baseret på signalkvalitet (SNR).</li>
         <li>Stærkt signal = behandles straks. Svagt signal = forsinkes og droppes sandsynligvis som duplikat.</li>
-        <li>Effekt: mesh'et foretrækker naturligt de stærkeste, reneste stier uden manuel routing-konfiguration.</li>
+        <li>Effekt: mesh'et foretrækker naturligt de stærkeste, reneste stier.</li>
         <li>Alle danske repeatere bør bruge <code>rxdelay 3</code>.</li>
       </ul>
       <pre><code>set rxdelay 3</code></pre>
