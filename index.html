@@ -168,8 +168,8 @@ set guest.password</code></pre>
     </ul>
 
     <h3>Repeatere vs. companion-noder</h3>
-    <p>En <strong>repeater</strong> skal være medlem af alle de Region Scopes den har til hensigt at viderebringe. Jo bredere repeaterens dækning er, jo flere scopes giver det mening at inkludere - og omvendt for små lokale repeatere.</p>
-    <p>En <strong>companion-node</strong> skal ikke bekymre sig om scopes på node-niveau. Sæt blot Region Scope per chat eller gruppesamtale.</p>
+    <p>En <strong>repeater</strong> skal være medlem af alle de Region Scopes den har til hensigt at viderebringe. Jo bredere repeaterens dækning er, jo flere scopes giver det mening at inkludere - og omvendt for små lokale repeatere.<br> En repeater der kun er medlem af <code>*</code> vil ikke viderebringe pakker med <code>dk</code> scope, og <strong>det er derfor vigtigt at alle scopes bliver programmeret ind.</strong></p>
+    <p>En <strong>companion-noder</strong> skal ikke bekymre sig om scopes på repeater-niveau. Sæt blot Region Scope per chat eller gruppesamtale.</p>
     <p>Eksempler:</p>
     <ul>
       <li><strong>Hilltop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
