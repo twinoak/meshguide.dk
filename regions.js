@@ -4,56 +4,48 @@ window.MCDK_REGIONS = {
     name: "Nordjylland",
     channel: "dk-nrj",
     coverage: "Aalborg, Frederikshavn, Hjørring, Thisted og omegn.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Nordjylland."
+    notes: "Ingen noter."
   },
   "dk-mdj": {
     name: "Midtjylland",
     channel: "dk-mdj",
     coverage: "Viborg, Herning, Holstebro, Skive, Silkeborg.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Midtjylland."
+    notes: "Ingen noter."
   },
   "dk-oj": {
     name: "Østjylland",
     channel: "dk-oj",
     coverage: "Aarhus, Randers, Horsens, Vejle, Kolding.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Østjylland."
+    notes: "Ingen noter."
   },
   "dk-sdrj": {
     name: "Syddanmark",
-    channel: "dk-sdrj",
+    channel: "dk-sdk",
     coverage: "Aabenraa, Sønderborg, Tønder, Haderslev, Esbjerg.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Syddanmark."
+    notes: "Ingen noter."
   },
   "dk-fyn": {
     name: "Fyn",
     channel: "dk-fyn",
     coverage: "Odense, Svendborg, Nyborg, Middelfart og resten af Fyn.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Fyn og omkringliggende øer."
+    notes: "Inklusiv omkringliggende øer."
   },
   "dk-sjl": {
     name: "Sjælland",
     channel: "dk-sjl",
     coverage: "København, Roskilde, Næstved, Helsingør, Holbæk, Slagelse.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Sjælland (eksklusive Lolland-Falster og Bornholm)."
+    notes: "Bunden af Sjælland hører til Lolland-Falster Region Scope!"
   },
   "dk-lo-fa": {
     name: "Lolland-Falster",
     channel: "dk-lo-fa",
     coverage: "Nykøbing F., Maribo, Nakskov, Sakskøbing.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Lolland og Falster."
+    notes: "Bunden af Sjælland hører til dette Region Scope!"
   },
   "dk-bhm": {
     name: "Bornholm",
     channel: "dk-bhm",
     coverage: "Rønne, Nexø, Aakirkeby, Allinge.",
-    coordinator: "Endnu ikke fastlagt",
-    notes: "Regional kanal for Bornholm."
+    notes: "Ingen noter."
   }
 };
