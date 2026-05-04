@@ -229,8 +229,7 @@ code {
   font-size: .85rem;
 }
 .setting pre code { background: transparent; padding: 0; }
-.setting table { margin-top: .75rem; table-layout: fixed; word-wrap: break-word; }
-.setting table td, .setting table th { word-wrap: break-word; overflow-wrap: anywhere; }
+.setting table { margin-top: .75rem; }
 .setting-meta {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -244,6 +243,3 @@ code {
 .setting-meta dt { color: var(--muted); font-weight: 600; }
 .setting-meta dd { margin: 0; }
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
-@media (max-width: 720px) {
-  .profile-card { grid-template-columns: 1fr; gap: .5rem; }
-}
