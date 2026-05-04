@@ -1,6 +1,6 @@
 # mcdk.drkt.eu
 
-MeshCore Danmark — koordinationsside for MeshCore radionetværk i Danmark.
+MeshCore Danmark - koordinationsside for MeshCore radionetværk i Danmark.
 
 ## Vil du rette regionerne på kortet?
 

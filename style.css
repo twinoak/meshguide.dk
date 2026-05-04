@@ -226,6 +226,18 @@ code {
 }
 .setting pre code { background: transparent; padding: 0; }
 .setting table { margin-top: .75rem; }
+.setting-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .25rem .75rem;
+  margin: 0 0 .75rem;
+  padding: .5rem .75rem;
+  background: var(--bg);
+  border-radius: 4px;
+  font-size: .88rem;
+}
+.setting-meta dt { color: var(--muted); font-weight: 600; }
+.setting-meta dd { margin: 0; }
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
 @media (max-width: 720px) {
   .profile-card { grid-template-columns: 1fr; gap: .5rem; }

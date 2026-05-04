@@ -91,6 +91,11 @@ set rxdelay 3</code></pre>
 
     <article class="setting">
       <h3><code>txdelay</code> / <code>direct.txdelay</code></h3>
+      <dl class="setting-meta">
+        <dt>Standard</dt><dd>0.5 / 0.2</dd>
+        <dt>Område</dt><dd>0–3.0</dd>
+        <dt>Tommelfingerregel</dt><dd>Højere = vig for andre noder. <code>direct.txdelay</code> typisk lavere end <code>txdelay</code>.</dd>
+      </dl>
       <ul>
         <li>Styrer hvor længe en repeater venter før den retransmitterer en modtaget pakke.</li>
         <li>Formel: <code>unit = estimated_airtime × txdelay</code>, derefter <code>delay = random(0..5) × unit</code>.</li>
@@ -100,9 +105,14 @@ set rxdelay 3</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>rxdelay</code> — SNR-baseret stivalg</h3>
+      <h3><code>rxdelay</code> - SNR-baseret stivalg</h3>
+      <dl class="setting-meta">
+        <dt>Standard</dt><dd>0</dd>
+        <dt>Område</dt><dd>0–20.0</dd>
+        <dt>Tommelfingerregel</dt><dd>Højere = foretræk stærkeste signal. Direkte pakker upåvirket.</dd>
+      </dl>
       <ul>
-        <li>Påvirker kun flood-pakker — direkte (point-to-point) pakker behandles altid med det samme. Forsinker behandling af floods baseret på signalkvalitet (SNR).</li>
+        <li>Påvirker kun flood-pakker - direkte (point-to-point) pakker behandles altid med det samme. Forsinker behandling af floods baseret på signalkvalitet (SNR).</li>
         <li>Stærkt signal = behandles straks. Svagt signal = forsinkes og droppes sandsynligvis som duplikat.</li>
         <li>Effekt: mesh'et foretrækker naturligt de stærkeste, reneste stier uden manuel routing-konfiguration.</li>
         <li>Alle danske repeatere bør bruge <code>rxdelay 3</code>.</li>
@@ -110,7 +120,7 @@ set rxdelay 3</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>advert.interval</code> / <code>flood.advert.interval</code> — annonceringer</h3>
+      <h3><code>advert.interval</code> / <code>flood.advert.interval</code> - annonceringer</h3>
       <ul>
         <li><code>advert.interval</code> styrer hvor ofte repeateren sender en lokal advert til naboer.</li>
         <li><code>flood.advert.interval</code> styrer hvor ofte repeateren sender en netværksdækkende (flooded) advert.</li>
@@ -134,40 +144,58 @@ set guest.password</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>agc.reset.interval</code> — beskyttelse mod radio-døvhed</h3>
+      <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed</h3>
+      <dl class="setting-meta">
+        <dt>Standard</dt><dd>0</dd>
+        <dt>Område</dt><dd>0–1020 sekunder</dd>
+        <dt>Tommelfingerregel</dt><dd>Ikke-nul = auto-genvinding fra RF-interferens. <code>500</code> (~8 min) er en god startværdi.</dd>
+      </dl>
       <ul>
         <li>Nulstiller periodisk LoRa-radioens Automatic Gain Control (AGC) for at forhindre "døvhed" forårsaget af stærk out-of-band RF-interferens.</li>
         <li>Uden dette kan SX1262'erens AGC låse fast og klemme støjgulvet ved -120 dBm, så repeateren ikke kan høre svagere signaler før reboot.</li>
-        <li>AGC nulstilles også automatisk efter hver transmission — denne indstilling er kun relevant under lange perioder med inaktiv modtagelse.</li>
+        <li>AGC nulstilles også automatisk efter hver transmission - denne indstilling er kun relevant under lange perioder med inaktiv modtagelse.</li>
         <li>Især vigtig for hilltop-repeatere nær master eller mobiltelefonsendere. <code>agc.reset.interval 500</code> (~8 minutter) er en god startværdi.</li>
         <li>Værdier gemmes i 4-sekunders trin. Område: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
       </ul>
     </article>
 
     <article class="setting">
-      <h3><code>owner.info</code> — kontaktoplysninger</h3>
+      <h3><code>owner.info</code> - kontaktoplysninger</h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
-        <li>Synlig for alle der forespørger repeateren — undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
+        <li>Synlig for alle der forespørger repeateren - undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
       </ul>
-      <pre><code>set owner.info "drkt — claudeai@drkt.eu"</code></pre>
+      <p>Overvej at inkludere følgende i din <code>owner.info</code>:</p>
+      <ul>
+        <li><strong>Kontantnavn</strong> - dit ham-kaldesignal, Discord-brugernavn, etc</li>
+        <li><strong>Antennespecifikationer</strong> - type, gain, højde over jord</li>
+        <li><strong>Strømkilde</strong> - net, solceller, batteribackup</li>
+        <li><strong>Installationstype</strong> - tag, mast, indendørs, portabel</li>
+      </ul>
+      <pre><code>set owner OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
 
-    <h3>Hurtig oversigt</h3>
-    <table>
-      <thead>
-        <tr><th>Indstilling</th><th>Standard</th><th>Område</th><th>Styrer</th><th>Tommelfingerregel</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><code>txdelay</code></td><td>0.5</td><td>0-3.0</td><td>Vent før retransmission af floods</td><td>Højere = vig for andre noder</td></tr>
-        <tr><td><code>direct.txdelay</code></td><td>0.2</td><td>0-3.0</td><td>Vent før retransmission af direkte pakker</td><td>Typisk lavere end <code>txdelay</code></td></tr>
-        <tr><td><code>rxdelay</code></td><td>0</td><td>0-20.0</td><td>SNR-baseret flood-prioritet (direkte pakker upåvirket)</td><td>Højere = foretræk stærkeste signal</td></tr>
-        <tr><td><code>agc.reset.interval</code></td><td>0</td><td>0-1020</td><td>Periodisk AGC-reset mod radio-døvhed (sekunder)</td><td>Ikke-nul = auto-genvinding fra RF-interferens</td></tr>
-      </tbody>
-    </table>
   </section>
 
   <section id="regioner">
+    <h2>Region Scopes</h2>
+    <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment der begrænser hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
+    <ul>
+      <li><strong>Forhindrer national flooding</strong> - uden scopes vil enhver chat-besked blive retransmitteret af alle repeatere på frekvensen, hurtigt mætte airtime og gøre netværket ubrugeligt på travle tidspunkter.</li>
+      <li><strong>Gør lokal trafik lokal</strong> - beskeder i Region Scope <code>dk-fyn</code> bliver på Fyn. Folk på Sjælland eller i Jylland bliver ikke forstyrret af samtaler de ikke deltager i.</li>
+      <li><strong>Tillader stadig landsdækkende kontakt</strong> - Privat-beskeder routes på tværs af regioner via repeatere der kender hinanden. Scopes begrænser <em>flooding</em>, ikke path-baseret kommunikation.</li>
+      <li><strong>Repeatere skal være medlem af deres regions scope</strong> - ellers retransmitterer de ikke regionens floods, og den lokale gruppe falder fra hinanden.</li>
+    </ul>
+
+    <h3>Repeatere vs. companion-noder</h3>
+    <p>En <strong>repeater</strong> skal være medlem af alle de Region Scopes den har til hensigt at viderebringe. Jo bredere repeaterens dækning er, jo flere scopes giver det mening at inkludere - og omvendt for små lokale repeatere.</p>
+    <p>En <strong>companion-node</strong> skal ikke bekymre sig om scopes på node-niveau. Sæt blot Region Scope per chat eller gruppesamtale, og lad repeaterne tage sig af resten.</p>
+    <p>Eksempler:</p>
+    <ul>
+      <li><strong>Hilltop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
+      <li><strong>Lokal repeater i Horsens</strong> dækker kun byen og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>, <code>dk-horsens</code>.</li>
+    </ul>
+
     <div class="map-wrap">
       <div class="map-svg-box">
         <svg class="map" viewBox="-10 -10 462.10419 507.80353" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Danmarkskort opdelt i regionsområder">
@@ -180,7 +208,10 @@ set guest.password</code></pre>
           <path class="region" data-region="dk-fyn" transform="translate(1.4034797,3.4025486)" d="m 209.51947,339.14085 2.15534,-1.35336 -1.05261,-10.77672 5.21293,-0.80199 7.36827,11.47846 3.60895,9.82436 -1.20299,3.35833 -5.21292,0.60149 4.41093,5.41342 6.46604,8.77175 4.66155,10.67647 -5.31317,2.40596 1.85026,6.03252 -0.53165,8.3646 5.7418,3.08356 c 0,0 3.33166,-3.18989 3.50888,-3.22533 0.17721,-0.0355 3.22533,2.12659 3.22533,2.12659 l -1.63039,12.51145 -4.11141,13.78741 -3.75698,4.14686 -2.33925,10.95195 -5.28104,14.17729 -1.84305,7.08864 -2.72913,2.3747 -2.55191,0.2481 -2.80001,-3.89875 0.67342,-2.44558 -1.02786,-2.94179 -0.38987,-2.72913 -5.45826,-4.71395 0.5671,-2.33925 -3.61521,-1.20507 -1.13419,2.55191 -6.238,1.0633 -1.77216,3.18989 -3.04812,-1.34684 -7.44307,-7.93928 -3.26078,-2.41014 -3.68609,-5.7418 -2.83546,-5.95446 0.70886,-2.05571 2.6228,0.85064 2.05571,3.68609 2.90634,0.42532 4.67851,5.10382 2.62279,1.77216 2.83546,-1.13418 0.42532,-6.37978 -5.38737,-2.26836 -2.69368,-4.53673 -7.15953,-2.48103 -2.41014,-2.76457 -5.03294,1.63039 -2.83546,-1.84305 0.21266,-3.96964 -1.13418,-1.41773 -2.55191,0.56709 -1.5595,-2.12659 1.45926,-3.95626 -1.75435,-1.8546 -2.00497,1.35336 -4.91218,-2.35584 -0.2005,-1.80448 1.30323,-1.10273 -0.85211,-2.75683 0.65162,-5.01243 -1.30324,-1.60398 -3.40845,-0.0501 -1.2531,-2.64406 -3.75932,-2.44356 1.4315,-8.58889 -2.19748,-5.06838 -7.0532,-2.51646 -5.00011,-14.96597 -4.18537,-4.82446 0.71427,-3.67161 6.44097,0.42606 -0.12531,-4.9623 5.07508,-2.40597 4.54878,-0.41353 1.60397,5.5638 4.06007,0.25062 8.27051,-6.6164 8.71089,-3.6564 2.35883,-8.42542 4.36855,-0.39913 2.13911,5.99769 3.32444,-0.38377 1.00248,-1.90472 3.60895,-0.25062 9.72411,5.26305 z" />
           <path class="region" data-region="dk-lo-fa" transform="translate(1.4034797,3.4025486)" d="m 285.9913,477.06567 3.57977,-3.79242 4.11141,-0.88608 0.81519,-2.48103 9.99499,-0.63798 9.21523,2.72913 4.48101,-2.43308 4.00994,7.0174 0.35087,4.7618 5.86454,3.05758 1.35336,-2.05509 -1.30323,-13.38318 1.40347,-6.31566 3.5087,-3.20795 1.63272,-4.34823 3.40255,-4.92661 3.47343,-1.94937 0.70886,-2.97723 2.41014,-0.8152 0.53165,-1.59494 -2.15955,-5.29273 5.13774,-0.55137 2.98239,-2.80696 4.48612,-6.34072 5.5638,-2.7819 6.56628,0.60149 5.01242,2.60647 4.16032,-0.80199 1.25311,-2.25559 -0.401,-4.66156 -2.65658,-4.11019 -5.51368,-2.30572 -10.27547,-0.85211 -2.30572,0.2005 -2.55634,-1.80448 -0.45111,-5.06255 -4.1102,0.15037 -3.50869,-1.8546 0.80198,-2.95733 -2.45609,-3.05758 -3.35832,-1.30323 -2.25559,1.8546 -3.80945,0.0501 -1.90472,-3.40845 -20.45071,1.70423 -8.01988,2.15534 3.00746,6.46603 -3.05758,0.65162 h -2.2556 l 0.10025,2.00497 4.1203,2.78595 6.80509,2.19748 3.54433,3.82786 1.63038,0.85064 -0.92152,5.03294 -1.91393,-1.77216 -1.55951,1.63038 -0.14177,2.69369 -3.47343,-3.61521 -3.33167,0.99241 -3.119,5.03294 3.04812,2.12659 -0.92153,4.25319 -4.96205,-3.6861 -2.83545,1.27596 0.28354,5.67091 -1.41773,1.13418 -2.12659,-1.34684 -2.76457,1.41773 0.14177,2.97723 -6.02534,-1.48861 0.14177,-2.83546 -3.34868,-1.43698 -5.51367,-3.25807 -0.90224,-3.80945 -3.45857,-1.35335 -3.20796,-4.1102 -7.71914,-1.2531 -5.91466,1.35335 -5.06255,2.10522 -3.95982,3.65907 -1.55385,5.41343 5.81441,8.12013 -1.60397,1.70422 -7.2179,-3.00745 -2.25559,0.50124 1.10397,5.65047 3.68609,6.02535 12.05069,4.82027 10.13676,3.96964 6.16712,6.59244 9.21524,6.37978 z" />
           <path class="region" data-region="dk-sjl" transform="translate(1.4034797,3.4025486)" d="m 333.77755,396.08202 1.90472,3.42098 3.80945,-0.0501 2.25559,-1.86713 -0.47618,-4.46106 3.85957,-4.48612 8.37075,-4.21044 7.79433,0.82705 8.76683,-6.50899 0.88608,-9.1089 -8.22283,-11.09373 -10.70308,-2.73639 -3.60894,-4.73675 2.35584,-8.72162 4.91218,-5.96479 9.12261,-5.3633 7.11765,0.85212 7.96976,7.01739 6.91715,-3.45857 3.55882,-5.01243 -0.50124,-6.66653 -2.45609,-2.9072 -4.56131,-13.73406 -2.50621,-15.33802 -3.55882,-9.77424 4.51118,-11.22784 3.35833,-5.86454 -0.60149,-2.45609 -10.47598,-7.31814 -6.36578,-0.35087 -6.26553,-3.85957 -6.81691,-1.4536 -9.57373,3.00745 -10.02486,8.27051 -17.04225,11.82933 -2.45609,2.25559 -3.10771,-2.20547 -6.71665,4.31069 -5.61392,0.85211 -2.85708,-3.1077 -5.71417,1.75435 -4.11019,-1.75435 -6.8169,-0.55137 -9.32312,-5.81442 -2.25559,1.75435 1.49067,5.39508 7.58485,3.6152 9.49878,1.34685 2.33925,4.04052 -0.63798,6.02535 -4.18229,1.41773 -8.29372,1.63039 0.92153,9.42789 -2.83546,2.83546 -3.18989,0.21266 -2.33925,3.40255 -3.54432,-2.6228 -1.70128,1.27595 -1.77216,-2.33925 -4.96205,0.49621 -4.6785,2.83545 -4.46585,-1.27595 -8.01016,-1.5595 -4.60762,2.0557 0.28354,2.33926 3.04812,1.63038 6.55699,0.38988 4.85572,5.91902 -2.0557,0.42531 -6.73421,-0.85063 -1.66583,1.8076 0.92152,2.55191 8.40004,1.3114 7.08864,4.35952 2.55192,5.45825 -0.49621,5.03294 -4.92661,0.21266 -1.13418,4.71394 2.80002,1.59495 3.86331,-0.49621 1.91393,4.78484 2.33925,3.50888 -0.88608,4.57217 1.45317,2.69369 -8.43548,2.8709 -1.91394,4.71394 3.82787,4.00509 8.1165,5.13926 0.2047,5.47419 -1.57891,0.10025 -2.70671,-2.00497 -1.15286,2.33078 0.82705,8.87199 -3.93476,3.10771 2.40597,4.56131 1.72929,-0.67668 0.55136,-2.80696 2.25559,-1.50373 1.55386,-2.45609 0.20049,-2.53127 1.67917,-0.2005 4.436,2.1804 2.68164,-0.70174 1.27817,-0.80198 2.63153,0.62655 0.70174,1.1278 4.66715,0.79163 6.09623,-1.66583 7.08865,1.27595 3.81419,1.76612 1.36052,1.74276 1.59494,0.51393 2.02026,3.84116 8.0187,-2.14861 z" />
-
+          <path class="region" data-region="dk-ls" transform="translate(1.4034797,3.4025486)" d="m 265.18613,65.92438 -8.78991,-0.21266 -9.14435,1.701275 -11.97981,4.324072 -3.33166,5.387369 5.60003,6.025346 3.47343,-0.07089 c 0,0 1.20507,3.96964 1.34684,4.324072 0.14178,0.354432 8.15194,0 8.15194,0 l 5.88358,-6.875984 0.0709,-6.592438 7.37219,0.708864 1.70128,-4.394958 z" />
+          <path class="region" data-region="dk-aht" transform="translate(1.4034797,3.4025486)" d="m 302.32457,156.98923 c -0.42606,0.10025 -8.04495,2.75683 -8.04495,2.75683 0,0 -1.87966,-0.67667 -2.00497,-0.65161 -0.12531,0.0251 -1.97991,0.40099 -1.97991,0.40099 l -1.77941,2.18041 1.2531,2.00497 1.05261,2.85708 2.18041,0.9273 3.33326,-0.67667 2.30572,-3.63401 4.53625,-3.40846 0.42605,-1.80447 z" />
+          <path class="region" data-region="dk-sms" transform="translate(1.4034797,3.4025486)" d="m 208.86785,267.46313 -4.11019,5.66405 0.401,7.61889 4.91218,1.6541 0.40099,5.71416 -4.66156,2.50622 -0.30074,12.53107 c 0,0 2.15534,3.70919 2.45609,3.75932 0.30074,0.0501 7.31814,0.10025 7.31814,0.10025 l 2.85709,-3.95982 0.50124,-5.21293 -0.75187,-3.20795 3.55883,-5.06255 -0.25062,-3.40845 -4.31069,0.75186 -1.55385,-2.65659 3.95981,-1.15285 -1.10273,-1.80448 -3.65907,-1.40348 -2.65659,-5.26305 -0.75186,-6.21541 z" />
+          
           <text class="label" x="170" y="80">Nordjylland</text>
           <text class="label" x="420" y="80">Bornholm</text>
           <text class="label" x="80" y="230">Midtjylland</text>
@@ -189,14 +220,9 @@ set guest.password</code></pre>
           <text class="label" x="300" y="460">Lolland-Falster</text>
           <text class="label" x="195" y="380">Fyn</text>
           <text class="label" x="160" y="240">Østjylland</text>
-          <text class="label island-label" x="250" y="64">Læsø</text>
-          <text class="label island-label" x="296" y="156">Anholt</text>
-          <text class="label island-label" x="214" y="293">Samsø</text>
-
-          <!-- Small islands not yet assigned to a region scope (visual only). -->
-          <path class="region" data-region="dk-ls" transform="translate(1.4034797,3.4025486)" d="m 265.18613,65.92438 -8.78991,-0.21266 -9.14435,1.701275 -11.97981,4.324072 -3.33166,5.387369 5.60003,6.025346 3.47343,-0.07089 c 0,0 1.20507,3.96964 1.34684,4.324072 0.14178,0.354432 8.15194,0 8.15194,0 l 5.88358,-6.875984 0.0709,-6.592438 7.37219,0.708864 1.70128,-4.394958 z" />
-          <path class="region" data-region="dk-aht" transform="translate(1.4034797,3.4025486)" d="m 302.32457,156.98923 c -0.42606,0.10025 -8.04495,2.75683 -8.04495,2.75683 0,0 -1.87966,-0.67667 -2.00497,-0.65161 -0.12531,0.0251 -1.97991,0.40099 -1.97991,0.40099 l -1.77941,2.18041 1.2531,2.00497 1.05261,2.85708 2.18041,0.9273 3.33326,-0.67667 2.30572,-3.63401 4.53625,-3.40846 0.42605,-1.80447 z" />
-          <path class="region" data-region="dk-sms" transform="translate(1.4034797,3.4025486)" d="m 208.86785,267.46313 -4.11019,5.66405 0.401,7.61889 4.91218,1.6541 0.40099,5.71416 -4.66156,2.50622 -0.30074,12.53107 c 0,0 2.15534,3.70919 2.45609,3.75932 0.30074,0.0501 7.31814,0.10025 7.31814,0.10025 l 2.85709,-3.95982 0.50124,-5.21293 -0.75187,-3.20795 3.55883,-5.06255 -0.25062,-3.40845 -4.31069,0.75186 -1.55385,-2.65659 3.95981,-1.15285 -1.10273,-1.80448 -3.65907,-1.40348 -2.65659,-5.26305 -0.75186,-6.21541 z" />
+          <text class="label" x="250" y="64">Læsø</text>
+          <text class="label" x="296" y="156">Anholt</text>
+          <text class="label" x="214" y="293">Samsø</text>
         </svg>
       </div>
 

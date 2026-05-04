@@ -49,7 +49,7 @@
     const r = regions[p.dataset.region];
     if (r) {
       const t = document.createElementNS("http://www.w3.org/2000/svg", "title");
-      t.textContent = r.name + " — " + r.channel;
+      t.textContent = r.name + " - " + r.channel;
       p.appendChild(t);
     }
   });
