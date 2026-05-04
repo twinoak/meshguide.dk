@@ -229,7 +229,8 @@ code {
   font-size: .85rem;
 }
 .setting pre code { background: transparent; padding: 0; }
-.setting table { margin-top: .75rem; }
+.setting table { margin-top: .75rem; table-layout: fixed; word-wrap: break-word; }
+.setting table td, .setting table th { word-wrap: break-word; overflow-wrap: anywhere; }
 .setting-meta {
   display: grid;
   grid-template-columns: auto 1fr;
