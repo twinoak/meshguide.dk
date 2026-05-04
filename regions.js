@@ -47,5 +47,23 @@ window.MCDK_REGIONS = {
     channel: "dk-bhm",
     coverage: "Rønne, Nexø, Aakirkeby, Allinge.",
     notes: "Ingen noter."
+  },
+  "dk-ls": {
+    name: "Læsø",
+    channel: "dk-ls",
+    coverage: "Læsø.",
+    notes: "Ingen noter."
+  },
+  "dk-aht": {
+    name: "Anholt",
+    channel: "dk-aht",
+    coverage: "Anholt.",
+    notes: "Ingen noter."
+  },
+  "dk-sms": {
+    name: "Samsø",
+    channel: "dk-sms",
+    coverage: "Samsø.",
+    notes: "Ingen noter."
   }
 };

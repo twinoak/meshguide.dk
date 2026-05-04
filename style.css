@@ -108,14 +108,6 @@ svg.map .island-label {
   font-weight: 500;
 }
 
-svg.map .island {
-  fill: #34425e;
-  fill-opacity: 0.7;
-  stroke: #34425e;
-  stroke-width: 0.5;
-  pointer-events: none;
-}
-
 /* Per-region hues. Keep them distinct enough that overlaps are obvious. */
 svg.map .region[data-region="dk-nrj"]  { fill: #2da8a0; } /* teal */
 svg.map .region[data-region="dk-mdj"]  { fill: #4a8be0; } /* blue */

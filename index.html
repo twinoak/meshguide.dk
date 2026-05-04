@@ -28,12 +28,12 @@
   </section>
 
   <section id="profiler">
-    <h2>Node-profiler</h2>
-    <p class="muted">Vælg den profil der bedst beskriver din nodes placering. Profilen styrer <code>txdelay</code>/<code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest.</p>
+    <h2>Repeater Profiler</h2>
+    <p class="muted">Vælg den profil der bedst beskriver din repeater placering. Profilen styrer <code>txdelay</code>/<code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest.</p>
 
     <div class="profile-grid">
       <article class="profile-card">
-        <header><h3>HILLTOP</h3><span>Højest · 20+ naboer</span></header>
+        <header><h3>HILLTOP</h3><span>20+ naboer</span></header>
         <div class="profile-body">
           <p>Frit udsyn over større område. Backbone-infrastruktur.</p>
           <p class="profile-examples">Eksempler: sendemast, højdedrag, tagspids på højhus</p>
@@ -43,7 +43,7 @@ set direct.txdelay 2
 set rxdelay 3</code></pre>
       </article>
       <article class="profile-card">
-        <header><h3>FOOTHILLS</h3><span>Middel · 10-20 naboer</span></header>
+        <header><h3>FOOTHILLS</h3><span>10-20 naboer</span></header>
         <div class="profile-body">
           <p>Bro mellem hilltop-noder og forstadsdækning.</p>
           <p class="profile-examples">Eksempler: bakketop, høj tagmontering uden for by</p>
@@ -53,7 +53,7 @@ set direct.txdelay 1
 set rxdelay 3</code></pre>
       </article>
       <article class="profile-card">
-        <header><h3>SUBURBAN</h3><span>Gennemsnitlig · 5-10 naboer</span></header>
+        <header><h3>SUBURBAN</h3><span>5-10 naboer</span></header>
         <div class="profile-body">
           <p>Typisk installation der dækker eget kvarter.</p>
           <p class="profile-examples">Eksempler: almindelig tagmontering i by/forstad</p>
@@ -63,7 +63,7 @@ set direct.txdelay 0.4
 set rxdelay 3</code></pre>
       </article>
       <article class="profile-card">
-        <header><h3>LOCAL</h3><span>Lav · 1-3 naboer</span></header>
+        <header><h3>LOCAL</h3><span>1-3 naboer</span></header>
         <div class="profile-body">
           <p>Ser kun få naboer. Dækker nærområdet.</p>
           <p class="profile-examples">Eksempler: indendørs, jordniveau, lavt tag</p>
@@ -112,9 +112,9 @@ set rxdelay 3</code></pre>
           <text class="label island-label" x="214" y="293">Samsø</text>
 
           <!-- Small islands not yet assigned to a region scope (visual only). -->
-          <path class="island" data-island="laesoe" transform="translate(1.4034797,3.4025486)" d="m 265.18613,65.92438 -8.78991,-0.21266 -9.14435,1.701275 -11.97981,4.324072 -3.33166,5.387369 5.60003,6.025346 3.47343,-0.07089 c 0,0 1.20507,3.96964 1.34684,4.324072 0.14178,0.354432 8.15194,0 8.15194,0 l 5.88358,-6.875984 0.0709,-6.592438 7.37219,0.708864 1.70128,-4.394958 z" />
-          <path class="island" data-island="anholt" transform="translate(1.4034797,3.4025486)" d="m 302.32457,156.98923 c -0.42606,0.10025 -8.04495,2.75683 -8.04495,2.75683 0,0 -1.87966,-0.67667 -2.00497,-0.65161 -0.12531,0.0251 -1.97991,0.40099 -1.97991,0.40099 l -1.77941,2.18041 1.2531,2.00497 1.05261,2.85708 2.18041,0.9273 3.33326,-0.67667 2.30572,-3.63401 4.53625,-3.40846 0.42605,-1.80447 z" />
-          <path class="island" data-island="samsoe" transform="translate(1.4034797,3.4025486)" d="m 208.86785,267.46313 -4.11019,5.66405 0.401,7.61889 4.91218,1.6541 0.40099,5.71416 -4.66156,2.50622 -0.30074,12.53107 c 0,0 2.15534,3.70919 2.45609,3.75932 0.30074,0.0501 7.31814,0.10025 7.31814,0.10025 l 2.85709,-3.95982 0.50124,-5.21293 -0.75187,-3.20795 3.55883,-5.06255 -0.25062,-3.40845 -4.31069,0.75186 -1.55385,-2.65659 3.95981,-1.15285 -1.10273,-1.80448 -3.65907,-1.40348 -2.65659,-5.26305 -0.75186,-6.21541 z" />
+          <path class="region" data-region="dk-ls" transform="translate(1.4034797,3.4025486)" d="m 265.18613,65.92438 -8.78991,-0.21266 -9.14435,1.701275 -11.97981,4.324072 -3.33166,5.387369 5.60003,6.025346 3.47343,-0.07089 c 0,0 1.20507,3.96964 1.34684,4.324072 0.14178,0.354432 8.15194,0 8.15194,0 l 5.88358,-6.875984 0.0709,-6.592438 7.37219,0.708864 1.70128,-4.394958 z" />
+          <path class="region" data-region="dk-aht" transform="translate(1.4034797,3.4025486)" d="m 302.32457,156.98923 c -0.42606,0.10025 -8.04495,2.75683 -8.04495,2.75683 0,0 -1.87966,-0.67667 -2.00497,-0.65161 -0.12531,0.0251 -1.97991,0.40099 -1.97991,0.40099 l -1.77941,2.18041 1.2531,2.00497 1.05261,2.85708 2.18041,0.9273 3.33326,-0.67667 2.30572,-3.63401 4.53625,-3.40846 0.42605,-1.80447 z" />
+          <path class="region" data-region="dk-sms" transform="translate(1.4034797,3.4025486)" d="m 208.86785,267.46313 -4.11019,5.66405 0.401,7.61889 4.91218,1.6541 0.40099,5.71416 -4.66156,2.50622 -0.30074,12.53107 c 0,0 2.15534,3.70919 2.45609,3.75932 0.30074,0.0501 7.31814,0.10025 7.31814,0.10025 l 2.85709,-3.95982 0.50124,-5.21293 -0.75187,-3.20795 3.55883,-5.06255 -0.25062,-3.40845 -4.31069,0.75186 -1.55385,-2.65659 3.95981,-1.15285 -1.10273,-1.80448 -3.65907,-1.40348 -2.65659,-5.26305 -0.75186,-6.21541 z" />
         </svg>
       </div>
 
