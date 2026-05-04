@@ -1,4 +1,4 @@
-// Regionsdata. Rediger denne fil for at opdatere kanaloplysninger.
+// Regionsdata. Rediger denne fil for at opdatere region information.
 window.MCDK_REGIONS = {
   "dk-nrj": {
     name: "Nordjylland",
