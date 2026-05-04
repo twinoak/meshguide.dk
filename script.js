@@ -33,7 +33,13 @@
         "<dt>Region Scope</dt><dd>" + r.channel + "</dd>" +
         "<dt>Dækning</dt><dd>" + r.coverage + "</dd>" +
         "<dt>Bemærkninger</dt><dd>" + r.notes + "</dd>" +
-      "</dl>";
+      "</dl>" +
+      "<h4>CLI</h4>" +
+      "<pre><code>region put dk *\n" +
+      "region put " + r.channel + " dk</code></pre>" +
+      "<h4>By-scopes</h4>" +
+      "<p>Byer er <code>dk-&lt;postnummer&gt;</code>, tilføjet som child af regionen.</p>" +
+      "<pre><code>region put dk-&lt;postnummer&gt; " + r.channel + "</code></pre>";
     paths.forEach(p => p.classList.toggle("active", p.dataset.region === key));
     [...list.children].forEach(li => li.classList.toggle("active", li.dataset.region === key));
   }

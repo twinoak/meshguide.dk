@@ -136,8 +136,12 @@ svg.map .label {
   min-height: 200px;
 }
 .region-info h3 { margin: 0 0 .5rem; color: var(--accent-2); }
+.region-info h4 { margin: 1rem 0 .35rem; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
 .region-info dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .35rem .75rem; }
 .region-info dt { color: var(--muted); }
+.region-info pre { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
+.region-info pre code { background: transparent; padding: 0; }
+.region-info > p { margin: .6rem 0 0; font-size: .88rem; }
 
 .region-list {
   list-style: none;
