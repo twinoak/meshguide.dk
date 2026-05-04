@@ -18,7 +18,7 @@ window.MCDK_REGIONS = {
     coverage: "Aarhus, Randers, Horsens, Vejle, Kolding.",
     notes: "Ingen noter."
   },
-  "dk-sdrj": {
+  "dk-sdk": {
     name: "Syddanmark",
     channel: "dk-sdk",
     coverage: "Aabenraa, Sønderborg, Tønder, Haderslev, Esbjerg.",
