@@ -110,6 +110,30 @@ set rxdelay 3</code></pre>
     </article>
 
     <article class="setting">
+      <h3><code>advert.interval</code> / <code>flood.advert.interval</code> — annonceringer</h3>
+      <ul>
+        <li><code>advert.interval</code> styrer hvor ofte repeateren sender en lokal advert til naboer.</li>
+        <li><code>flood.advert.interval</code> styrer hvor ofte repeateren sender en netværksdækkende (flooded) advert.</li>
+        <li><code>guest.password</code> uden værdi tillader medlemmer at forespørge repeaterens status.</li>
+      </ul>
+      <pre><code>set advert.interval 240
+set flood.advert.interval 24
+set agc.reset.interval 500
+set guest.password</code></pre>
+      <table>
+        <thead>
+          <tr><th>Indstilling</th><th>Værdi</th><th>Hvad den gør</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>advert.interval</code></td><td>240</td><td>Lokal advert hver 4. time (kun naboer)</td></tr>
+          <tr><td><code>flood.advert.interval</code></td><td>24</td><td>Netværksdækkende advert hver 24. time</td></tr>
+          <tr><td><code>agc.reset.interval</code></td><td>500</td><td>Nulstil radio-AGC hver ~8 min for at modvirke døvhed fra RF-interferens</td></tr>
+          <tr><td><code>guest.password</code></td><td>(tom)</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="setting">
       <h3><code>agc.reset.interval</code> — beskyttelse mod radio-døvhed</h3>
       <ul>
         <li>Nulstiller periodisk LoRa-radioens Automatic Gain Control (AGC) for at forhindre "døvhed" forårsaget af stærk out-of-band RF-interferens.</li>

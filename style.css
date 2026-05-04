@@ -216,6 +216,16 @@ code {
 .setting h3 { margin: 0 0 .5rem; color: var(--accent-2); font-size: 1rem; }
 .setting ul { margin: 0; padding-left: 1.2rem; }
 .setting li { font-size: .92rem; margin-bottom: .2rem; }
+.setting pre {
+  margin: .75rem 0 0;
+  background: var(--bg);
+  padding: .6rem .8rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: .85rem;
+}
+.setting pre code { background: transparent; padding: 0; }
+.setting table { margin-top: .75rem; }
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
 @media (max-width: 720px) {
   .profile-card { grid-template-columns: 1fr; gap: .5rem; }
