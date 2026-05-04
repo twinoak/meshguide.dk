@@ -46,7 +46,7 @@ window.MCDK_REGIONS = {
     name: "Bornholm",
     channel: "dk-bhm",
     coverage: "Rønne, Nexø, Aakirkeby, Allinge.",
-    notes: "Ingen noter."
+    notes: "Forbindelse til resten af DK vil kræve ekstrem koordination med Syd-Sverige."
   },
   "dk-ls": {
     name: "Læsø",
