@@ -102,6 +102,9 @@ set rxdelay 3</code></pre>
         <li>Højere værdier giver et bredere tilfældigt vindue, dvs. mere hensyn til andre noder der måske retransmitterer først.</li>
         <li><code>direct.txdelay</code> er samme mekanisme men for routede point-to-point-beskeder (typisk sat lavere fordi direkte beskeder vinder ved hurtig levering).</li>
       </ul>
+      <pre><code>set txdelay 0.8
+set direct.txdelay 0.4</code></pre>
+      <p class="muted">Værdier afhænger af din node-profil - se Repeater Profiler ovenfor.</p>
     </article>
 
     <article class="setting">
@@ -117,6 +120,7 @@ set rxdelay 3</code></pre>
         <li>Effekt: mesh'et foretrækker naturligt de stærkeste, reneste stier uden manuel routing-konfiguration.</li>
         <li>Alle danske repeatere bør bruge <code>rxdelay 3</code>.</li>
       </ul>
+      <pre><code>set rxdelay 3</code></pre>
     </article>
 
     <article class="setting">
@@ -157,6 +161,7 @@ set guest.password</code></pre>
         <li>Især vigtig for hilltop-repeatere nær master eller mobiltelefonsendere. <code>agc.reset.interval 500</code> (~8 minutter) er en god startværdi.</li>
         <li>Værdier gemmes i 4-sekunders trin. Område: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
       </ul>
+      <pre><code>set agc.reset.interval 500</code></pre>
     </article>
 
     <article class="setting">
@@ -189,7 +194,7 @@ set guest.password</code></pre>
 
     <h3>Repeatere vs. companion-noder</h3>
     <p>En <strong>repeater</strong> skal være medlem af alle de Region Scopes den har til hensigt at viderebringe. Jo bredere repeaterens dækning er, jo flere scopes giver det mening at inkludere - og omvendt for små lokale repeatere.</p>
-    <p>En <strong>companion-node</strong> skal ikke bekymre sig om scopes på node-niveau. Sæt blot Region Scope per chat eller gruppesamtale, og lad repeaterne tage sig af resten.</p>
+    <p>En <strong>companion-node</strong> skal ikke bekymre sig om scopes på node-niveau. Sæt blot Region Scope per chat eller gruppesamtale.</p>
     <p>Eksempler:</p>
     <ul>
       <li><strong>Hilltop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
