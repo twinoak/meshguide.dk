@@ -182,3 +182,37 @@ code {
   border-radius: 4px;
   font-size: .9em;
 }
+
+.profile-grid {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.profile-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .9rem 1.1rem;
+  display: grid;
+  grid-template-columns: minmax(160px, 200px) 1fr auto;
+  align-items: center;
+  gap: 1.25rem;
+}
+.profile-card header { display: flex; flex-direction: column; gap: .15rem; }
+.profile-card h3 { margin: 0; color: var(--accent-2); font-size: 1.05rem; letter-spacing: .5px; }
+.profile-card header span { color: var(--muted); font-size: .85rem; }
+.profile-card .profile-body p { margin: 0; font-size: .92rem; }
+.profile-card .profile-examples { color: var(--muted); font-size: .85rem; margin-top: .2rem; }
+.profile-card pre {
+  margin: 0;
+  background: var(--bg);
+  padding: .6rem .8rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: .85rem;
+}
+.profile-card pre code { background: transparent; padding: 0; }
+@media (max-width: 720px) {
+  .profile-card { grid-template-columns: 1fr; gap: .5rem; }
+}

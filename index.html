@@ -27,6 +27,64 @@
     -->
   </section>
 
+  <section id="profiler">
+    <h2>Node-profiler</h2>
+    <p class="muted">Vælg den profil der bedst beskriver din nodes placering. Profilen styrer <code>txdelay</code>/<code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest.</p>
+
+    <div class="profile-grid">
+      <article class="profile-card">
+        <header><h3>HILLTOP</h3><span>Højest · 20+ naboer</span></header>
+        <div class="profile-body">
+          <p>Frit udsyn over større område. Backbone-infrastruktur.</p>
+          <p class="profile-examples">Eksempler: sendemast, højdedrag, tagspids på højhus</p>
+        </div>
+        <pre><code>set txdelay 2
+set direct.txdelay 2
+set rxdelay 3</code></pre>
+      </article>
+      <article class="profile-card">
+        <header><h3>FOOTHILLS</h3><span>Middel · 10-20 naboer</span></header>
+        <div class="profile-body">
+          <p>Bro mellem hilltop-noder og forstadsdækning.</p>
+          <p class="profile-examples">Eksempler: bakketop, høj tagmontering uden for by</p>
+        </div>
+        <pre><code>set txdelay 1.5
+set direct.txdelay 1
+set rxdelay 3</code></pre>
+      </article>
+      <article class="profile-card">
+        <header><h3>SUBURBAN</h3><span>Gennemsnitlig · 5-10 naboer</span></header>
+        <div class="profile-body">
+          <p>Typisk installation der dækker eget kvarter.</p>
+          <p class="profile-examples">Eksempler: almindelig tagmontering i by/forstad</p>
+        </div>
+        <pre><code>set txdelay 0.8
+set direct.txdelay 0.4
+set rxdelay 3</code></pre>
+      </article>
+      <article class="profile-card">
+        <header><h3>LOCAL</h3><span>Lav · 1-3 naboer</span></header>
+        <div class="profile-body">
+          <p>Ser kun få naboer. Dækker nærområdet.</p>
+          <p class="profile-examples">Eksempler: indendørs, jordniveau, lavt tag</p>
+        </div>
+        <pre><code>set txdelay 0.3
+set direct.txdelay 0.1
+set rxdelay 3</code></pre>
+      </article>
+      <article class="profile-card">
+        <header><h3>MOBILE</h3><span>Variabel højde · variabelt antal naboer</span></header>
+        <div class="profile-body">
+          <p>Bevæger sig gennem mesh'et. Viger altid for fast infrastruktur.</p>
+          <p class="profile-examples">Eksempler: bil, cykel, vandretur</p>
+        </div>
+        <pre><code>set txdelay 3
+set direct.txdelay 2.5
+set rxdelay 3</code></pre>
+      </article>
+    </div>
+  </section>
+
   <section id="regioner">
     <div class="map-wrap">
       <div class="map-svg-box">
