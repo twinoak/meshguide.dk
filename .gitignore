@@ -1,6 +1,7 @@
 TODO.txt
 regions-raw.geojson
 denmark.svg
+denmark-bg.svg
 .DS_Store
 *.swp
 node_modules/
