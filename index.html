@@ -75,7 +75,7 @@ set rxdelay 3</code></pre>
       <h3><code>txdelay</code> / <code>direct.txdelay</code></h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0.5 / 0.2</dd>
-        <dt>Område</dt><dd>0–3.0</dd>
+        <dt>Range</dt><dd>0–3.0</dd>
         <dt>Tommelfingerregel</dt><dd>Højere = vig for andre noder. <code>direct.txdelay</code> typisk lavere end <code>txdelay</code>.</dd>
       </dl>
       <ul>
@@ -93,7 +93,7 @@ set direct.txdelay 0.4</code></pre>
       <h3><code>rxdelay</code> - SNR-baseret stivalg</h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0</dd>
-        <dt>Område</dt><dd>0–20.0</dd>
+        <dt>Range</dt><dd>0–20.0</dd>
         <dt>Tommelfingerregel</dt><dd>Højere = foretræk stærkeste signal. Direkte pakker upåvirket.</dd>
       </dl>
       <ul>
@@ -133,7 +133,7 @@ set guest.password</code></pre>
       <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed</h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0</dd>
-        <dt>Område</dt><dd>0–1020 sekunder</dd>
+        <dt>Range</dt><dd>0–1020 sekunder</dd>
         <dt>Tommelfingerregel</dt><dd>Ikke-nul = auto-genvinding fra RF-interferens. <code>500</code> (~8 min) er en god startværdi.</dd>
       </dl>
       <ul>
@@ -141,7 +141,7 @@ set guest.password</code></pre>
         <li>Uden dette kan SX1262'erens AGC låse fast og klemme støjgulvet ved -120 dBm, så repeateren ikke kan høre svagere signaler før reboot.</li>
         <li>AGC nulstilles også automatisk efter hver transmission - denne indstilling er kun relevant under lange perioder med inaktiv modtagelse.</li>
         <li>Især vigtig for hilltop-repeatere nær master eller mobiltelefonsendere. <code>agc.reset.interval 500</code> (~8 minutter) er en god startværdi.</li>
-        <li>Værdier gemmes i 4-sekunders trin. Område: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
+        <li>Værdier gemmes i 4-sekunders trin. Range: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
       </ul>
       <pre><code>set agc.reset.interval 500</code></pre>
     </article>
