@@ -205,6 +205,18 @@ code {
   font-size: .85rem;
 }
 .profile-card pre code { background: transparent; padding: 0; }
+
+.setting {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .9rem 1.1rem;
+  margin-bottom: .75rem;
+}
+.setting h3 { margin: 0 0 .5rem; color: var(--accent-2); font-size: 1rem; }
+.setting ul { margin: 0; padding-left: 1.2rem; }
+.setting li { font-size: .92rem; margin-bottom: .2rem; }
+#indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
 @media (max-width: 720px) {
   .profile-card { grid-template-columns: 1fr; gap: .5rem; }
 }
