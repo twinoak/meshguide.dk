@@ -15,7 +15,7 @@
       <li><strong>Forhindrer national flooding</strong> - uden scopes vil enhver chat-besked blive retransmitteret af alle repeatere på frekvensen, hurtigt mætte airtime og gøre netværket ubrugeligt på travle tidspunkter.</li>
       <li><strong>Gør lokal trafik lokal</strong> - beskeder i Region Scope <code>dk-fyn</code> bliver på Fyn. Folk på Sjælland eller i Jylland bliver ikke forstyrret af samtaler de ikke deltager i.</li>
       <li><strong>Tillader stadig landsdækkende kontakt</strong> - Privat-beskeder routes på tværs af regioner via repeatere der kender hinanden. Scopes begrænser <em>flooding</em>, ikke path-baseret kommunikation.</li>
-      <li><strong>Repeatere skal være medlem af deres regions scope</strong> - ellers retransmitterer de ikke regionens floods, og den lokale gruppe falder fra hinanden.</li>
+      <li><strong>Repeatere skal være medlem af deres region scope</strong> - ellers retransmitterer de ikke regionens floods, og den lokale gruppe falder fra hinanden.</li>
     </ul>
 
     <h3>Repeatere vs. companion-noder</h3>
@@ -67,12 +67,26 @@
 
   <section id="indstillinger">
     <h2>Indstillinger</h2>
-    <p class="muted">Forklaring af de vigtigste timing- og radioparametre der styrer hvordan din repeater opfører sig i mesh'et.</p>
 
     <article class="setting">
+      <h3><code>path.hash.mode</code> - path-hash længde</h3>
+      <dl class="setting-meta">
+        <dt>Standard</dt><dd>0 (1-byte)</dd>
+        <dt>Værdi</dt><dd>1 (2 byte)</dd>
+      </dl>
+      <ul>
+        <li>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et.</li>
+        <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger - to forskellige stier kan ende med samme hash og blive forvekslet.</li>
+        <li>2-byte (65 536 mulige hashes) gør kollisioner praktisk talt umulige selv i et mesh med tusindvis af noder.</li>
+        <li>Repeaters <strong>skal opdateres</strong> til minimum Firmware V1.15.0 for at kunne bruge denne indstilling.</li>
+      </ul>
+      <pre><code>set path.hash.mode 1</code></pre>
+    </article>
+
+    <!--<article class="setting">
       <h3><code>txdelay</code> / <code>direct.txdelay</code></h3>
       <dl class="setting-meta">
-        <dt>Standard</dt><dd>0.5 / 0.2</dd>
+        <dt>Standard</dt><dd>0.5 / 0.2</dd> 
         <dt>Range</dt><dd>0–3.0</dd>
       </dl>
       <ul>
@@ -84,9 +98,9 @@
       <pre><code>set txdelay 0.8
 set direct.txdelay 0.4</code></pre>
       <p class="muted">Værdier afhænger af din node-profil - se Repeater Profiler ovenfor.</p>
-    </article>
+    </article>-->
 
-    <article class="setting">
+    <!--<article class="setting">
       <h3><code>rxdelay</code> - SNR-baseret stivalg</h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0</dd>
@@ -99,7 +113,7 @@ set direct.txdelay 0.4</code></pre>
         <li>Alle danske repeatere bør bruge <code>rxdelay 3</code>.</li>
       </ul>
       <pre><code>set rxdelay 3</code></pre>
-    </article>
+    </article>-->
 
     <article class="setting">
       <h3><code>advert.interval</code> / <code>flood.advert.interval</code> - annonceringer</h3>
@@ -119,7 +133,7 @@ set guest.password</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed</h3>
+      <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed (på understøttede enheder)</h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0</dd>
         <dt>Range</dt><dd>0–1020 sekunder</dd>
@@ -148,21 +162,6 @@ set guest.password</code></pre>
         <li><strong>Installationstype</strong> - tag, mast, indendørs, portabel</li>
       </ul>
       <pre><code>set owner OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
-    </article>
-
-    <article class="setting">
-      <h3><code>path.hash.mode</code> - path-hash længde</h3>
-      <dl class="setting-meta">
-        <dt>Standard</dt><dd>0 (1-byte)</dd>
-        <dt>Værdi</dt><dd>1 = 2-byte hash</dd>
-      </dl>
-      <ul>
-        <li>Styrer hvor mange bytes der bruges til at identificere routede paths i mesh'et.</li>
-        <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger - to forskellige stier kan ende med samme hash og blive forvekslet.</li>
-        <li>2-byte (65 536 mulige hashes) gør kollisioner praktisk talt umulige selv i et mesh med tusindvis af noder.</li>
-        <li>Alle repeatere på samme net bør køre samme <code>path.hash.mode</code>, ellers fortolker de path-headers forskelligt.</li>
-      </ul>
-      <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
   </section>
