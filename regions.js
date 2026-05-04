@@ -9,13 +9,13 @@ window.MCDK_REGIONS = {
   "dk-mdj": {
     name: "Midtjylland",
     channel: "dk-mdj",
-    coverage: "Viborg, Herning, Holstebro, Skive, Silkeborg.",
+    coverage: "Viborg, Herning, Holstebro, Skive, Silkeborg, Horsens, Randers, Aarhus.",
     notes: "Ingen noter."
   },
   "dk-oj": {
     name: "Østjylland",
     channel: "dk-oj",
-    coverage: "Aarhus, Randers, Horsens, Vejle, Kolding.",
+    coverage: "Aarhus, Randers, Horsens, Vejle, Kolding, Silkeborg.",
     notes: "Ingen noter."
   },
   "dk-sdk": {
