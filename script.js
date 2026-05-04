@@ -21,7 +21,12 @@
 
   function render(key) {
     const r = regions[key];
-    if (!r) return;
+    if (!r) {
+      info.innerHTML = "";
+      paths.forEach(p => p.classList.remove("active"));
+      [...list.children].forEach(li => li.classList.remove("active"));
+      return;
+    }
     info.innerHTML =
       "<h3>" + r.name + "</h3>" +
       "<dl>" +
@@ -32,6 +37,10 @@
     paths.forEach(p => p.classList.toggle("active", p.dataset.region === key));
     [...list.children].forEach(li => li.classList.toggle("active", li.dataset.region === key));
   }
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".region, .region-list li")) render(null);
+  });
 
   paths.forEach(p => {
     p.addEventListener("click", () => render(p.dataset.region));
