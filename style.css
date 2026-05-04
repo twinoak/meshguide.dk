@@ -101,6 +101,12 @@ svg.map .region.active {
   mix-blend-mode: normal;
 }
 
+svg.map .island-label {
+  font-size: 9px;
+  fill: #8b949e;
+  font-weight: 500;
+}
+
 svg.map .island {
   fill: #34425e;
   fill-opacity: 0.7;
@@ -120,7 +126,7 @@ svg.map .region[data-region="dk-lo-fa"]{ fill: #e879c8; } /* pink */
 svg.map .region[data-region="dk-bhm"]  { fill: #c89a4a; } /* gold */
 svg.map .label {
   fill: #e6edf3;
-  font-size: 11px;
+  font-size: 6px;
   pointer-events: none;
   text-anchor: middle;
   font-weight: 600;
