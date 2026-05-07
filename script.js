@@ -13,14 +13,18 @@
   function regionsAtClientPoint(clientX, clientY) {
     // Use SVG-native isPointInFill so hidden (display:none active-mode siblings)
     // regions are still hit-tested - elementsFromPoint would skip them.
+    // The point must be in each path's own local coordinate system (after its
+    // own transform). Chrome enforces this strictly; Firefox is lenient.
     if (!svgEl) return [];
-    const pt = svgEl.createSVGPoint();
-    pt.x = clientX; pt.y = clientY;
-    const svgPt = pt.matrixTransform(svgEl.getScreenCTM().inverse());
-    const localPt = svgEl.createSVGPoint();
-    localPt.x = svgPt.x; localPt.y = svgPt.y;
+    const screenPt = svgEl.createSVGPoint();
+    screenPt.x = clientX; screenPt.y = clientY;
     return [...paths]
-      .filter(p => p.isPointInFill(localPt))
+      .filter(p => {
+        const ctm = p.getScreenCTM();
+        if (!ctm) return false;
+        const localPt = screenPt.matrixTransform(ctm.inverse());
+        return p.isPointInFill(localPt);
+      })
       .map(p => p.dataset.region);
   }
 

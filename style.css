@@ -93,7 +93,9 @@ svg.map .region {
   transition: fill-opacity .15s, stroke-width .15s;
 }
 svg.map .region:hover { fill-opacity: 0.85; stroke-width: 2; }
-svg.map:has(.region.active) .region:not(.active) { display: none; }
+svg.map .region:focus { outline: none; }
+svg.map .region:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+svg.map:has(.region.active) .region:not(.active) { visibility: hidden; }
 svg.map .region.active {
   fill-opacity: 0.55;
   stroke-width: 2;
