@@ -102,6 +102,13 @@ svg.map .region.active {
   mix-blend-mode: normal;
 }
 
+svg.map .click-marker {
+  fill: #ffffff;
+  stroke: #0a1830;
+  stroke-width: 1;
+  pointer-events: none;
+}
+
 svg.map .island-label {
   font-size: 9px;
   fill: #8b949e;

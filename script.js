@@ -61,8 +61,31 @@
     [...list.children].forEach(li => li.classList.toggle("active", valid.includes(li.dataset.region)));
   }
 
+  let clickMarker = null;
+  function showMarker(clientX, clientY) {
+    if (!svgEl) return;
+    const pt = svgEl.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    const svgPt = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    if (!clickMarker) {
+      clickMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      clickMarker.setAttribute("class", "click-marker");
+      clickMarker.setAttribute("r", "3");
+      clickMarker.setAttribute("pointer-events", "none");
+    }
+    clickMarker.setAttribute("cx", svgPt.x);
+    clickMarker.setAttribute("cy", svgPt.y);
+    svgEl.appendChild(clickMarker);
+  }
+  function hideMarker() {
+    if (clickMarker && clickMarker.parentNode) clickMarker.parentNode.removeChild(clickMarker);
+  }
+
   document.addEventListener("click", e => {
-    if (!e.target.closest(".region, .region-list li, #regionInfo")) render(null);
+    if (!e.target.closest(".region, .region-list li, #regionInfo")) {
+      render(null);
+      hideMarker();
+    }
   });
 
   if (svgEl) {
@@ -71,6 +94,7 @@
       if (!target.classList || !target.classList.contains("region")) return;
       const hits = regionsAtClientPoint(e.clientX, e.clientY);
       render(hits.length ? hits : [target.dataset.region]);
+      showMarker(e.clientX, e.clientY);
     });
   }
 
