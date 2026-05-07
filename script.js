@@ -11,11 +11,17 @@
   if (svgEl) svgEl.querySelectorAll(".label, g").forEach(el => el.parentNode.appendChild(el));
 
   function regionsAtClientPoint(clientX, clientY) {
-    // elementsFromPoint returns every element under the cursor in z-order,
-    // regardless of which one received the click. Filter to .region paths.
-    return document.elementsFromPoint(clientX, clientY)
-      .filter(el => el.classList && el.classList.contains("region"))
-      .map(el => el.dataset.region);
+    // Use SVG-native isPointInFill so hidden (display:none active-mode siblings)
+    // regions are still hit-tested - elementsFromPoint would skip them.
+    if (!svgEl) return [];
+    const pt = svgEl.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    const svgPt = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    const localPt = svgEl.createSVGPoint();
+    localPt.x = svgPt.x; localPt.y = svgPt.y;
+    return [...paths]
+      .filter(p => p.isPointInFill(localPt))
+      .map(p => p.dataset.region);
   }
 
   function render(keys) {
@@ -90,11 +96,14 @@
 
   if (svgEl) {
     svgEl.addEventListener("click", e => {
-      const target = e.target;
-      if (!target.classList || !target.classList.contains("region")) return;
+      // Hit-test geometrically rather than relying on e.target - when a region
+      // is active, overlapping siblings are display:none and won't be the
+      // event target, but isPointInFill still detects them.
       const hits = regionsAtClientPoint(e.clientX, e.clientY);
-      render(hits.length ? hits : [target.dataset.region]);
+      if (!hits.length) return;
+      render(hits);
       showMarker(e.clientX, e.clientY);
+      e.stopPropagation();
     });
   }
 
