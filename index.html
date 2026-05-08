@@ -11,20 +11,13 @@
   <section id="regioner">
     <h2>Region Scopes</h2>
     <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment der begrænser hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
-    <ul>
-      <li><strong>Forhindrer national flooding</strong> - uden scopes vil enhver chat-besked blive retransmitteret af alle repeatere på frekvensen, hurtigt mætte airtime og gøre netværket ubrugeligt på travle tidspunkter.</li>
-      <li><strong>Gør lokal trafik lokal</strong> - beskeder i Region Scope <code>dk-fyn</code> bliver på Fyn. Folk på Sjælland eller i Jylland bliver ikke forstyrret af samtaler de ikke deltager i.</li>
-      <li><strong>Tillader stadig landsdækkende kontakt</strong> - Privat-beskeder routes på tværs af regioner via repeatere der kender hinanden. Scopes begrænser <em>flooding</em>, ikke path-baseret kommunikation.</li>
-      <li><strong>Repeatere skal være medlem af deres region scope</strong> - ellers retransmitterer de ikke regionens floods, og den lokale gruppe falder fra hinanden.</li>
-    </ul>
-
-    <h3>Repeatere vs. companion-noder</h3>
-    <p>En <strong>repeater</strong> skal være medlem af alle de Region Scopes den har til hensigt at viderebringe. Jo bredere repeaterens dækning er, jo flere scopes giver det mening at inkludere - og omvendt for små lokale repeatere.<br> En repeater der kun er medlem af <code>*</code> vil ikke viderebringe pakker med <code>dk</code> scope, og <strong>det er derfor vigtigt at alle scopes bliver programmeret ind.</strong></p>
-    <p>En <strong>companion-node</strong> skal ikke bekymre sig om scopes på repeater-niveau. Sæt blot Region Scope per chat eller gruppesamtale.</p>
-    <p>Eksempler:</p>
+    <p>Det er dårligt forklaret i forskellige cirkler, men det fungere sådan her: En Repeater der kun har scope: <code>*</code> kan <strong>ikke</strong> videresende pakker der har scope: <code>dk</code>. Dette er fordi, at scope: <code>*</code> faktisk slet ikke er et 'wildcard' som man skulle tro. Det betyder ikke 'alle pakker', det er stenografi for scope: <code>null</code>. Alle Repeatere i et område skal derfor have alle scopes, som de vil videresende, kodet ind, ellers kan de kun videresende pakker med scope: <code>null</code>!</p>
+    <p>Scopes er nødvendigt, for hvis alle pakker blev sendt igennem hele meshet, ville netværket hurtigt blive ubrugligt. Lokal-chat på Fyn behøver ikke kunne læses i Midtjylland.</p>
+    <p>Det er vigtigt at understreje at dette <strong>kun gælder flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes igennem hele meshet uanset scopes, og companion-noder skal bare sætte et scope på de chats de har, og så kører det.</p>
     <ul>
       <li><strong>Hilltop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
       <li><strong>Lokal repeater i Horsens</strong> dækker kun byen og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>, <code>dk-horsens</code>.</li>
+      <li><code>#horsens</code> lokal-chat skal kun sættes som scope: <code>dk-horsens</code></li>
     </ul>
 
     <div class="map-wrap">
