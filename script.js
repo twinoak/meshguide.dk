@@ -25,7 +25,7 @@
         const localPt = screenPt.matrixTransform(ctm.inverse());
         return p.isPointInFill(localPt);
       })
-      .map(p => p.dataset.region);
+      .map(p => p.dataset.region);a
   }
 
   function render(keys) {
@@ -59,12 +59,12 @@
 
     let cli = "region put eu *\nregion put dk eu";
     valid.forEach(k => { cli += "\nregion put " + regions[k].channel + " dk"; });
-    html += "<pre><code>" + cli + "</code></pre>";
+    html += "<pre><code>" + cli + "</code></pre>"; 
     html += "<pre><code>region save</code></pre>";
 
-    html += "<p>Byer er <code>dk-&lt;postnummer&gt;</code>, tilføjet som child af regionen.</p>";
-    html += "<pre><code>region put dk-&lt;postnummer&gt; " + primary.channel + "</code></pre>";
-    html += "<pre><code>region save</code></pre>";
+    // html += "<p>Byer er <code>dk-&lt;postnummer&gt;</code>, tilføjet som child af regionen.</p>";
+    // html += "<pre><code>region put dk-&lt;postnummer&gt; " + primary.channel + "</code></pre>";
+    // html += "<pre><code>region save</code></pre>";
 
     info.innerHTML = html;
     paths.forEach(p => p.classList.toggle("active", valid.includes(p.dataset.region)));
