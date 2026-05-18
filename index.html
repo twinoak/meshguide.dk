@@ -11,7 +11,7 @@
   <section id="regioner">
     <h2>Region Scopes</h2>
     <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment der begrænser hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
-    <p>Det er dårligt forklaret i forskellige cirkler, men det fungere sådan her: En Repeater der kun har scope: <code>*</code> kan <strong>ikke</strong> videresende pakker der har scope: <code>dk</code>. Dette er fordi, at scope: <code>*</code> faktisk slet ikke er et 'wildcard' som man skulle tro. Det betyder ikke 'alle pakker', det er stenografi for scope: <code>null</code>. Alle Repeatere i et område skal derfor have alle scopes, som de vil videresende, kodet ind, ellers kan de kun videresende pakker med scope: <code>null</code>!</p>
+    <p>En Repeater der kun har scope: <code>*</code> kan <strong>ikke</strong> videresende pakker der har scope: <code>dk</code>. Dette er fordi, at scope: <code>*</code> faktisk slet ikke er et 'wildcard' som man skulle tro. Det betyder ikke 'alle pakker', det er stenografi for scope: <code>null</code>. Alle Repeatere i et område skal derfor have alle scopes, som de vil videresende, kodet ind, ellers kan de kun videresende pakker med scope: <code>null</code>!</p>
     <p>Scopes er nødvendigt, for hvis alle pakker blev sendt igennem hele meshet, ville netværket hurtigt blive ubrugligt. Lokal-chat på Fyn behøver ikke kunne læses i Midtjylland.</p>
     <p>Det er vigtigt at understreje at dette <strong>kun gælder flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes igennem hele meshet uanset scopes, og companion-noder skal bare sætte et scope på de chats de har, og så kører det.</p>
     <ul>
@@ -125,7 +125,7 @@ set flood.advert.interval <span id="floodAdvertInterval">72</span>
 set guest.password</code></pre>
     </article>
 
-    <article class="setting">
+    <!--<article class="setting">
       <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed (på understøttede enheder)</h3>
       <dl class="setting-meta">
         <dt>Standard</dt><dd>0</dd>
@@ -139,7 +139,7 @@ set guest.password</code></pre>
         <li>Værdier gemmes i 4-sekunders trin. Range: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
       </ul>
       <pre><code>set agc.reset.interval 500</code></pre>
-    </article>
+    </article>-->
 
     <article class="setting">
       <h3><code>owner.info</code> - kontaktoplysninger</h3>
