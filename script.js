@@ -122,6 +122,9 @@
     }
   });
 
+  const floodEl = document.getElementById("floodAdvertInterval");
+  if (floodEl) floodEl.textContent = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
+
   Object.keys(regions).forEach(key => {
     const li = document.createElement("li");
     li.textContent = regions[key].name;
