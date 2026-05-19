@@ -59,14 +59,10 @@
   </section>
 
   <section id="indstillinger">
-    <h2>Indstillinger</h2>
+    <h2>De vigtigste indstillinger</h2>
 
     <article class="setting">
       <h3><code>path.hash.mode</code> - path-hash længde</h3>
-      <dl class="setting-meta">
-        <dt>Standard</dt><dd>0 (1-byte)</dd>
-        <dt>Værdi</dt><dd>1 (2 byte)</dd>
-      </dl>
       <ul>
         <li>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et.</li>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger - to forskellige stier kan ende med samme hash og blive forvekslet.</li>
