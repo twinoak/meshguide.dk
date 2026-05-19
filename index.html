@@ -14,6 +14,7 @@
     <p>En Repeater der kun har scope: <code>*</code> kan <strong>ikke</strong> videresende pakker der har scope: <code>dk</code>. Dette er fordi, at scope: <code>*</code> faktisk slet ikke er et 'wildcard' som man skulle tro. Det betyder ikke 'alle pakker', det er stenografi for scope: <code>null</code>. Alle Repeatere i et område skal derfor have alle scopes, som de vil videresende, kodet ind, ellers kan de kun videresende pakker med scope: <code>null</code>!</p>
     <p>Scopes er nødvendigt, for hvis alle pakker blev sendt igennem hele meshet, ville netværket hurtigt blive ubrugligt. Lokal-chat på Fyn behøver ikke kunne læses i Midtjylland.</p>
     <p>Det er vigtigt at understreje at dette <strong>kun gælder flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes igennem hele meshet uanset scopes, og companion-noder skal bare sætte et scope på de chats de har, og så kører det.</p>
+    <p>Disse indstillinger gælder alle firmware versioner der understøtter scopes, men de præcise kommandoer der skal bruges er, i resten af dette dokument, baseret på <strong>Firmware 1.15.0+</strong>. Hvis din Repeater er på en tidligere Firmware, skal du dobelt-tjekke den officielle dokumentation! Det nemmeste er måske bare at opdatere din Repeater.</p>
     <ul>
       <li><strong>Bakketop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
       <li><strong>Lokal repeater i Horsens</strong> dækker kun byen og bør inkludere <code>*</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>, <code>dk-horsens</code>.</li>
@@ -67,8 +68,18 @@
         <li>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et.</li>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger - to forskellige stier kan ende med samme hash og blive forvekslet.</li>
         <li>2-byte (65 536 mulige hashes) gør kollisioner praktisk talt umulige selv i et mesh med tusindvis af noder.</li>
-        <li>Repeaters <strong>skal opdateres</strong> til minimum Firmware V1.15.0 for at kunne bruge denne indstilling.</li>
+        <li>2-byte gør det også meget nemmere at diagnosticere netværket og fejlfinde på, for eksempel, <a href="https://meshview.dk">meshview.dk</a>.</li>
       </ul>
+      <table>
+        <thead>
+          <tr><th>Indstilling</th><th>Hvad den gør</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>path.hash.mode 0</code></td><td>1-byte (64 max hops)</td></tr>
+          <tr><td><code>path.hash.mode 1</code></td><td>2-byte (32 max hops)</td></tr>
+          <tr><td><code>path.hash.mode 2</code></td><td>3-byte (21 max hops)</td></tr>
+        </tbody>
+      </table>
       <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
