@@ -115,13 +115,13 @@ set direct.txdelay 0.4</code></pre>
           <tr><th>Indstilling</th><th>Værdi</th><th>Hvad den gør</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>advert.interval</code></td><td>240</td><td>Lokal advert til naboer hver 4. time</td></tr>
-          <tr><td><code>flood.advert.interval</code></td><td>24</td><td>Netværksdækkende (flooded) advert hver 24. time</td></tr>
+          <tr><td><code>advert.interval</code></td><td>0</td><td>0-hop adverts burde slås helt fra</td></tr>
+          <tr><td><code>flood.advert.interval</code></td><td><span class="floodAdvertInterval">24</span></td><td>Netværksdækkende (flooded) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
           <tr><td><code>guest.password</code></td><td>(tom)</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
         </tbody>
       </table>
       <pre><code>set advert.interval 0
-set flood.advert.interval <span id="floodAdvertInterval">72</span>
+set flood.advert.interval <span class="floodAdvertInterval">24</span>
 set guest.password</code></pre>
     </article>
 

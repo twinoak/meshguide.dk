@@ -122,8 +122,8 @@
     }
   });
 
-  const floodEl = document.getElementById("floodAdvertInterval");
-  if (floodEl) floodEl.textContent = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
+  const floodInterval = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
+  document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 
   Object.keys(regions).forEach(key => {
     const li = document.createElement("li");
