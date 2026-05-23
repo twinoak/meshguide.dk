@@ -92,10 +92,7 @@ a { color: var(--accent); }
   text-shadow: 0 0 40px rgba(88,166,255,.15);
 }
 .site-header-accent {
-  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color:#bf2525;
 }
 .site-header p {
   margin: 0;

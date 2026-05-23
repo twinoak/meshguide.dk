@@ -1,6 +1,5 @@
-// Anchor a pulsing mesh node to the right edge of the header title.
-// Finds the 2 nearest existing mesh nodes and draws lines to them, so the
-// title-node looks like a genuine participant in the mesh.
+// Anchor a pulsing mesh node to the left of the header title and link it
+// to the top-left-most existing mesh node so it looks like a participant.
 
 (function () {
   const SVG_NS = "http://www.w3.org/2000/svg";
@@ -19,9 +18,11 @@
   }));
 
   // Build the dynamic elements once.
-  const link1 = document.createElementNS(SVG_NS, "line");
-  const link2 = document.createElementNS(SVG_NS, "line");
-  meshGroup.append(link1, link2);
+  const link = document.createElementNS(SVG_NS, "line");
+  meshGroup.appendChild(link);
+
+  // The top-left-most node: minimum x+y. Computed once since mesh is static.
+  const target = meshNodes.reduce((a, b) => (a.x + a.y <= b.x + b.y ? a : b));
 
   const node = document.createElementNS(SVG_NS, "circle");
   node.setAttribute("r", "5");
@@ -70,19 +71,10 @@
     node.setAttribute("cx", cx);
     node.setAttribute("cy", cy);
 
-    const nearest = meshNodes
-      .map((n) => ({ n, d: (n.x - cx) ** 2 + (n.y - cy) ** 2 }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, 2);
-
-    [link1, link2].forEach((line, i) => {
-      const target = nearest[i]?.n;
-      if (!target) return;
-      line.setAttribute("x1", cx);
-      line.setAttribute("y1", cy);
-      line.setAttribute("x2", target.x);
-      line.setAttribute("y2", target.y);
-    });
+    link.setAttribute("x1", cx);
+    link.setAttribute("y1", cy);
+    link.setAttribute("x2", target.x);
+    link.setAttribute("y2", target.y);
 
     rings.forEach((ring) => {
       ring.setAttribute("cx", cx);
