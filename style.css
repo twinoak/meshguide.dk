@@ -85,14 +85,10 @@ a { color: var(--accent); }
   font-weight: 800;
   letter-spacing: -.5px;
   line-height: 1.05;
-  background: linear-gradient(180deg, #ffffff 0%, #c9d6e8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 40px rgba(88,166,255,.15);
+  color: #ffffff;
 }
 .site-header-accent {
-  color:#bf2525;
+  color: #d92525;
 }
 .site-header p {
   margin: 0;
