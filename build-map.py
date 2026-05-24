@@ -38,6 +38,7 @@ LABEL_TO_REGION = {
     "Nordjylland":     "dk-nrj",
     "Midtjylland":     "dk-mdj",
     "Oestjylland":     "dk-oj",
+    "Trekantsomroedet": "dk-3kant",
     "Syddanmark":      "dk-sdk",
     "Fyn":             "dk-fyn",
     "Sjaelland":       "dk-sjl",

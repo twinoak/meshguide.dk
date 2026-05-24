@@ -65,5 +65,11 @@ window.MCDK_REGIONS = {
     channel: "dk-sms",
     coverage: "Samsø.",
     notes: "Ingen noter."
+  },
+  "dk-3kant": {
+    name: "Trekantsområdet",
+    channel: "dk-3kant",
+    coverage: "Fredericia, Vejle, Kolding, Middelfart",
+    notes: "Ingen noter."
   }
 };

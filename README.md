@@ -12,7 +12,9 @@ Regionspolygonerne tegnes i [Inkscape](https://inkscape.org/) i `denmark-bg.svg`
 
 ## Sådan opdaterer du kortet på siden
 
-Når du har rettet `denmark-bg.svg` i Inkscape:
+Når du har rettet `denmark-bg.svg` i Inkscape og tilføjet relevant data til regions.js skal du rette LABEL_TO_REGION i build-map.py
+
+Derefter kan du køre scriptet, og lave en PR for ændringen.
 
 ```sh
 python3 build-map.py
