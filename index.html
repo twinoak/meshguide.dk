@@ -144,38 +144,6 @@
       <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
-    <!--<article class="setting">
-      <h3><code>txdelay</code> / <code>direct.txdelay</code></h3>
-      <dl class="setting-meta">
-        <dt>Standard</dt><dd>0.5 / 0.2</dd> 
-        <dt>Range</dt><dd>0–3.0</dd>
-      </dl>
-      <ul>
-        <li>Styrer hvor længe en repeater venter før den retransmitterer en modtaget pakke.</li>
-        <li>Formel: <code>unit = estimated_airtime × txdelay</code>, derefter <code>delay = random(0..5) × unit</code>.</li>
-        <li>Højere værdier giver et bredere tilfældigt vindue, dvs. mere hensyn til andre noder der måske retransmitterer først.</li>
-        <li><code>direct.txdelay</code> er samme mekanisme men for routede point-to-point-beskeder (typisk sat lavere fordi direkte beskeder vinder ved hurtig levering).</li>
-      </ul>
-      <pre><code>set txdelay 0.8
-set direct.txdelay 0.4</code></pre>
-      <p class="muted">Værdier afhænger af din node-profil - se Repeater Profiler ovenfor.</p>
-    </article>-->
-
-    <!--<article class="setting">
-      <h3><code>rxdelay</code> - SNR-baseret stivalg</h3>
-      <dl class="setting-meta">
-        <dt>Standard</dt><dd>0</dd>
-        <dt>Range</dt><dd>0–20.0</dd>
-      </dl>
-      <ul>
-        <li>Påvirker kun flood-pakker - path-baseret pakker behandles altid med det samme. Forsinker behandling af floods baseret på signalkvalitet (SNR).</li>
-        <li>Stærkt signal = behandles straks. Svagt signal = forsinkes og droppes sandsynligvis som duplikat.</li>
-        <li>Effekt: mesh'et foretrækker naturligt de stærkeste, reneste stier.</li>
-        <li>Alle danske repeatere bør bruge <code>rxdelay 3</code>.</li>
-      </ul>
-      <pre><code>set rxdelay 3</code></pre>
-    </article>-->
-
     <article class="setting">
       <h3><code>advert.interval</code> / <code>flood.advert.interval</code> - annonceringer</h3>
       <table>
@@ -193,27 +161,11 @@ set flood.advert.interval <span class="floodAdvertInterval">24</span>
 set guest.password</code></pre>
     </article>
 
-    <!--<article class="setting">
-      <h3><code>agc.reset.interval</code> - beskyttelse mod radio-døvhed (på understøttede enheder)</h3>
-      <dl class="setting-meta">
-        <dt>Standard</dt><dd>0</dd>
-        <dt>Range</dt><dd>0–1020 sekunder</dd>
-      </dl>
-      <ul>
-        <li>Nulstiller periodisk LoRa-radioens Automatic Gain Control (AGC) for at forhindre "døvhed" forårsaget af stærk out-of-band RF-interferens.</li>
-        <li>Uden dette kan SX1262'erens AGC låse fast og klemme støjgulvet ved -120 dBm, så repeateren ikke kan høre svagere signaler før reboot.</li>
-        <li>AGC nulstilles også automatisk efter hver transmission - denne indstilling er kun relevant under lange perioder med inaktiv modtagelse.</li>
-        <li>Især vigtig for hilltop-repeatere nær master eller mobiltelefonsendere. <code>agc.reset.interval 500</code> (~8 minutter) er en god startværdi.</li>
-        <li>Værdier gemmes i 4-sekunders trin. Range: 4–1020 sekunder. Sæt til 0 for at deaktivere.</li>
-      </ul>
-      <pre><code>set agc.reset.interval 500</code></pre>
-    </article>-->
-
     <article class="setting">
       <h3><code>owner.info</code> - kontaktoplysninger</h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
-        <li>Synlig for alle der forespørger repeateren - undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
+        <li>Synlig for alle der forespørger repeateren. Undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
       </ul>
       <p>Overvej at inkludere følgende i din <code>owner.info</code>:</p>
       <ul>
