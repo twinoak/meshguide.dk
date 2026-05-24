@@ -229,7 +229,8 @@ set guest.password</code></pre>
 
     <section id="profiler">
     <h2>Repeater Profiler</h2>
-    <p class="muted">Vælg den profil der bedst beskriver din repeater placering. Profilen styrer <code>txdelay</code> / <code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest.</p>
+    <p>Vælg den profil der bedst beskriver din repeater placering. Profilen styrer <code>txdelay</code> / <code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest. Hvis alle følger disse regler vil netværket øge dets kapacitet i trængte områder, da en Bakketop-repeater, for det meste, kun vil vidresende pakker der skal sendes langt.</p>
+    <p>Det fungere fordi en Bakketop-repeater vil vente et kort øjeblik med at sende pakken videre. Hvis Bakketop-repeateren ser en anden Repeater sende den samme pakke med et bedre signal (SNR), så vil Bakketop-repeateren droppe pakken helt, da den ikke behøver at blive sendt igen, og bruger ikke dets kostbare airtime på at duplikere lokale pakker.</p>
 
     <div class="profile-grid">
       <article class="profile-card">
