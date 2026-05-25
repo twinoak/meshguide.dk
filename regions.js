@@ -117,5 +117,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-fyn-odense",
     scope: "",
     notes: ""
+  },
+  "svendborg": {
+    name: "Danmark",
+    localChat: "#danmark",
+    scope: "dk",
+    notes: ""
   }
 };
