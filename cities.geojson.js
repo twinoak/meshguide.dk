@@ -41,7 +41,7 @@ window.MCDK_CITIES_GEOJSON = {
     {
       "type": "Feature",
       "properties": { "city": "danmark" },
-      "geometry": { "type": "Point", "coordinates": [9.9977, 55.6210] }
+      "geometry": { "type": "Point", "coordinates": [10.8854, 55.9934] }
     },
     {
       "type": "Feature",
