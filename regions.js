@@ -141,5 +141,11 @@ window.MCDK_CITIES = {
     localChat: "#nordjylland",
     scope: "dk-nrj",
     notes: ""
+  },
+  "fredericia": {
+    name: "Fredericia",
+    localChat: "#fredericia",
+    scope: "",
+    notes: ""
   }
 };
