@@ -25,7 +25,7 @@ window.MCDK_CITIES_GEOJSON = {
     },
     {
       "type": "Feature",
-      "properties": { "city": "fyn" },
+      "properties": { "city": "sjaelland" },
       "geometry": { "type": "Point", "coordinates": [11.7762, 55.5958] }
     }
   ]
