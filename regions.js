@@ -93,5 +93,11 @@ window.MCDK_CITIES = {
     localChat: "#oestjylland",
     scope: "dk-oj",
     notes: ""
+  },
+    "fyn": {
+    name: "Fyn",
+    localChat: "#dk-fyn",
+    scope: "dk-fyn",
+    notes: ""
   }
 };

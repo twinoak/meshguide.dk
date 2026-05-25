@@ -17,6 +17,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "oestjylland" },
       "geometry": { "type": "Point", "coordinates": [9.9493, 56.0859] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "fyn" },
+      "geometry": { "type": "Point", "coordinates": [10.3405, 55.3211] }
     }
   ]
 };
