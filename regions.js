@@ -73,3 +73,15 @@ window.MCDK_REGIONS = {
     notes: "Ingen noter."
   }
 };
+
+// Bydata. Geometri ligger i cities.geojson.js, denne fil holder metadata.
+// parentRegion skal matche en nøgle i MCDK_REGIONS.
+window.MCDK_CITIES = {
+  "horsens": {
+    name: "Horsens",
+    parentRegion: "dk-oj",
+    localChat: "#horsens",
+    scope: "dk-horsens",
+    notes: ""
+  }
+};

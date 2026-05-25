@@ -1,0 +1,12 @@
+// Geometri for byer. Hver Feature skal have properties.city = nøgle i window.MCDK_CITIES.
+// Punkter i lon/lat (EPSG:4326).
+window.MCDK_CITIES_GEOJSON = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "city": "horsens" },
+      "geometry": { "type": "Point", "coordinates": [9.8503, 55.8607] }
+    }
+  ]
+};

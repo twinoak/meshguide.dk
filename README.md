@@ -1,37 +1,22 @@
 ## Vil du rette regionerne på kortet?
 
-Regionspolygonerne tegnes i [Inkscape](https://inkscape.org/) i `denmark-bg.svg`. Ret SVG-filen og send en pull request, email meshcore@drkt.eu eller ping Dorkington på mesh'et.
+Åbn `edit.html` i en browser. Det er en in-page region-editor:
+
+- Tegn nye polygoner med polygon-værktøjet i venstre side (klik punkter, dobbeltklik for at afslutte).
+- Når et polygon er færdigt, vælg hvilken `dk-xx`-region det hører til.
+- Klik et eksisterende polygon for at ændre dets region-nøgle, eller brug edit-/slet-værktøjet til at justere geometri.
+- Brug **Kopier GeoJSON** eller **Download .geojson** og send resultatet til vedligeholderen via Discord eller mesh'et.
 
 ## Kortets opbygning
 
-`denmark-bg.svg` er sandheden for kortet. Den indeholder tre Inkscape-lag:
-
-- **BackgroundMap**: Danmarks kystlinje, søer og byer.
-- **RegionScopes**: selve regionspolygonerne. Hver `<path>` har et `inkscape:label` (fx `Oestjylland`) som mappes til en `data-region`-kode (fx `dk-oj`) i build-scriptet.
-- **Text**: ignoreres, legacy information der skal ryddes op. Labels på kortet ligger som `<text>` direkte i `index.html`, så de er nemme at rette i hånden.
-
-## Sådan opdaterer du kortet på siden
-
-Når du har rettet `denmark-bg.svg` i Inkscape og tilføjet relevant data til regions.js skal du rette LABEL_TO_REGION i build-map.py
-
-Derefter kan du køre scriptet, og lave en PR for ændringen.
-
-```sh
-python3 build-map.py
-```
-
-Det gør to ting:
-
-1. Skriver `basemap.svg` (en standalone SVG med kun BackgroundMap-laget, renset for Inkscape-metadata). Den refereres af `<image>`-tagget i `index.html`.
-2. Genererer region-paths mellem `<!-- regions:start -->` og `<!-- regions:end -->` i `index.html`, med korrekt `data-region`-attribut på hver path.
-
-Commit både `denmark-bg.svg`, `basemap.svg` og `index.html` bagefter.
+- `regions.geojson.js` indeholder polygon-geometrien som en GeoJSON `FeatureCollection`. Hver feature har `properties.region` som matcher en nøgle i `regions.js`.
+- `regions.js` indeholder per-region metadata (navn, kanal, dækning, noter).
+- `cities.geojson.js` + `MCDK_CITIES` i `regions.js` håndterer bymarkører og deres popup-info.
+- `script.js` renderer kortet (Leaflet + CARTO dark tiles) på `index.html`.
+- `edit.js` driver region-editoren på `edit.html` (Leaflet-Geoman).
 
 ## Tilføj en ny region
 
-1. Tegn polygonen i Inkscape som et nyt `<path>` i `RegionScopes`-laget. Giv den et entydigt `inkscape:label` (Object Properties → Label).
-2. Åbn `build-map.py` og tilføj en linje til `LABEL_TO_REGION` der mapper labelen til en `dk-*`-kode.
-3. Tilføj regionens metadata til `regions.js` så klikinteraktionen virker.
-4. Kør `python3 build-map.py`.
-
-Scriptet advarer hvis en label i `LABEL_TO_REGION` ikke findes i SVG'en, eller hvis en path i `RegionScopes` mangler mapping så stavefejl og omdøbninger fanges med det samme.
+1. Tilføj region-metadata i `regions.js` (nøgle, navn, channel, coverage, notes).
+2. Tilføj en farve til `REGION_COLORS` i både `script.js` og `edit.js`.
+3. Åbn `edit.html`, tegn polygonen, vælg den nye nøgle, og indsæt det eksporterede GeoJSON i `regions.geojson.js`.

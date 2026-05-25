@@ -66,19 +66,6 @@ a { color: var(--accent); }
   margin: 0 auto;
   padding: 3.5rem 1.5rem 3rem;
 }
-.site-header-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--hl);
-  box-shadow: 0 0 8px var(--hl);
-  animation: hdr-blink 1.8s ease-in-out infinite;
-}
-@keyframes hdr-blink {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: .3; }
-}
-
 .site-header h1 {
   margin: 0 0 .5rem;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
@@ -98,12 +85,6 @@ a { color: var(--accent); }
   margin-left: auto;
   margin-right: auto;
 }
-.site-header-divider {
-  display: block;
-  width: 100%;
-  height: 4px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .site-mesh-bg .hdr-pulse circle { animation: none; }
 }
@@ -126,15 +107,6 @@ section h2 {
 
 .muted { color: var(--muted); margin: 0; }
 
-.placeholder {
-  color: var(--muted);
-  font-style: italic;
-  padding: 1rem;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  text-align: center;
-}
-
 table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; }
@@ -145,72 +117,185 @@ th { color: var(--muted); font-weight: 600; }
   gap: 1.25rem;
 }
 
-.map-svg-box {
+#map {
+  width: auto;
+  height: 560px;
+  margin: 0 -1.5rem;
+  background: #111;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+#map .leaflet-container { background: #111; }
+
+/* Per-region farver paa GeoJSON-laget. Sat via JS-stylefunktion paa Leaflet pathOptions. */
+.mcdk-region {
+  cursor: pointer;
+}
+.mcdk-city-marker {
+  background: var(--accent-2);
+  border: 2px solid #0a1830;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 0 0 2px rgba(240,136,62,.25);
+}
+.mcdk-city-popup-body h4 { margin: 0 0 .35rem; color: var(--accent-2); font-size: 1rem; }
+.mcdk-city-popup-body dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .2rem .6rem; font-size: .88rem; }
+.mcdk-city-popup-body dt { color: var(--muted); }
+.mcdk-city-popup-body dd { margin: 0; }
+.mcdk-city-popup-body p { margin: .4rem 0 0; font-size: .85rem; }
+.leaflet-popup-content-wrapper {
   background: var(--panel-2);
+  color: var(--text);
   border: 1px solid var(--border);
   border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45);
+  padding: 0;
+}
+.leaflet-popup-tip {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.leaflet-popup-content {
+  margin: .75rem .9rem;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.leaflet-popup-content code {
+  background: var(--bg);
+  color: var(--text);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: .9em;
+}
+.leaflet-popup-close-button {
+  color: var(--muted) !important;
+  font-size: 20px !important;
+  padding: 4px 6px 0 0 !important;
+}
+.leaflet-popup-close-button:hover { color: var(--text) !important; }
+.leaflet-popup-content-wrapper a.leaflet-popup-close-button { background: transparent; }
+.leaflet-control-attribution {
+  background: rgba(32,32,32,.85) !important;
+  color: var(--muted) !important;
+}
+.leaflet-control-attribution a { color: var(--accent) !important; }
+
+/* ---- Editor (edit.html) ---- */
+.editor-body main { max-width: 1400px; }
+.editor-map {
+  width: auto;
+  height: 70vh;
+  min-height: 480px;
+  margin: 1rem -1.5rem 0;
+  background: #111;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   overflow: hidden;
-  position: relative;
 }
-
-svg.map {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: #111111;
-  isolation: isolate; /* contain mix-blend-mode to within the SVG */
+.editor-toolbar {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
 }
-svg.map .region {
-  fill: #4a8db8;
-  fill-opacity: 0.55;
-  stroke: #0a1830;
-  stroke-width: 1.2;
+.editor-toolbar button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .45rem .9rem;
+  font: inherit;
   cursor: pointer;
-  mix-blend-mode: screen; /* overlapping regions blend into a brighter hue */
-  transition: fill-opacity .15s, stroke-width .15s;
 }
-svg.map .region:hover { fill-opacity: 0.85; stroke-width: 2; }
-svg.map .region:focus { outline: none; }
-svg.map .region:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
-svg.map:has(.region.active) .region:not(.active) { visibility: hidden; }
-svg.map .region.active {
-  fill-opacity: 0.55;
-  stroke-width: 2;
-  mix-blend-mode: normal;
+.editor-toolbar button:hover { background: var(--border); }
+.editor-toolbar button.primary {
+  background: var(--accent-2);
+  color: #000;
+  border-color: var(--accent-2);
 }
+.editor-status {
+  color: var(--hl);
+  font-size: .9rem;
+}
+.editor-handoff { margin-top: .75rem; font-size: .9rem; }
 
-svg.map .click-marker {
-  fill: #ffffff;
-  stroke: #0a1830;
-  stroke-width: 1;
-  pointer-events: none;
+/* Geoman dark-theme overrides */
+.leaflet-pm-toolbar .leaflet-buttons-control-button {
+  background-color: var(--panel-2) !important;
 }
+.leaflet-pm-toolbar .leaflet-buttons-control-button:hover {
+  background-color: var(--border) !important;
+}
+.leaflet-pm-actions-container {
+  background: var(--panel-2) !important;
+  border: 1px solid var(--border) !important;
+}
+.leaflet-pm-action {
+  background: var(--panel-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-pm-action:hover { background: var(--border) !important; }
 
-svg.map .island-label {
-  font-size: 9px;
-  fill: #8b949e;
-  font-weight: 500;
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
-
-/* Per-region hues. Keep them distinct enough that overlaps are obvious. */
-svg.map .region[data-region="dk-nrj"]  { fill: #2da8a0; } /* teal */
-svg.map .region[data-region="dk-mdj"]  { fill: #4a8be0; } /* blue */
-svg.map .region[data-region="dk-oj"]   { fill: #b760d6; } /* purple */
-svg.map .region[data-region="dk-sdrj"] { fill: #5fbf5f; } /* green */
-svg.map .region[data-region="dk-fyn"]  { fill: #e8a23a; } /* amber */
-svg.map .region[data-region="dk-sjl"]  { fill: #e85a5a; } /* red */
-svg.map .region[data-region="dk-lo-fa"]{ fill: #e879c8; } /* pink */
-svg.map .region[data-region="dk-bhm"]  { fill: #c89a4a; } /* gold */
-svg.map .label {
-  fill: #e6edf3;
-  font-size: 6px;
-  pointer-events: none;
-  text-anchor: middle;
-  font-weight: 600;
-  paint-order: stroke;
-  stroke: #0a1830;
-  stroke-width: 3;
+.modal-backdrop[hidden] { display: none; }
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.4rem;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  color: var(--text);
 }
+.modal h3 { margin: 0 0 .5rem; color: var(--accent-2); }
+.modal p { margin: 0 0 .75rem; }
+.modal select {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .4rem .5rem;
+  font: inherit;
+}
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+.modal-actions button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .45rem .9rem;
+  font: inherit;
+  cursor: pointer;
+}
+.modal-actions button:hover {
+  background: var(--border);
+}
+.modal-actions .primary {
+  background: var(--accent-2);
+  color: #000;
+  border-color: var(--accent-2);
+}
+.modal-actions .primary:hover { background: var(--accent-2); filter: brightness(1.1); }
 
 .region-info {
   background: var(--panel-2);

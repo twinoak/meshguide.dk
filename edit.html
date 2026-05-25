@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tegn regioner — MeshCore Danmark</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js" defer></script>
+</head>
+<body class="editor-body">
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <h1>Tegn / ret <span class="site-header-accent">regioner</span></h1>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Region-editor</h2>
+    <p>Tegn nye region-polygoner eller ret eksisterende. Hver gang du tegner et nyt polygon, bliver du bedt om at vælge hvilken region (<code>dk-xx</code>) den hører til. Du kan ogsaa flytte hjørner paa eksisterende polygoner.</p>
+    <p>Naar du er færdig, brug <strong>Kopier</strong> eller <strong>Download</strong> nederst.</p>
+
+    <div id="editor-map" class="editor-map"></div>
+
+    <div class="editor-toolbar">
+      <button type="button" id="btnCopy">Kopier GeoJSON</button>
+      <button type="button" id="btnDownload">Download .geojson</button>
+      <span class="editor-status" id="editorStatus" aria-live="polite"></span>
+    </div>
+    <p class="muted editor-handoff">Kopier eller download dit arbejde og send det til vedligeholderen via den kanal du allerede bruger (Discord, mesh, hvad du nu har).</p>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="keyModal" hidden>
+  <div class="modal" role="dialog" aria-label="Vælg region for polygon">
+    <h3>Hvilken region er dette?</h3>
+    <p class="muted">Vælg den region-noegle der hoerer til den polygon du lige har tegnet.</p>
+    <select id="keySelect"></select>
+    <div class="modal-actions">
+      <button type="button" id="keyCancel">Slet polygon</button>
+      <button type="button" id="keyConfirm" class="primary">Gem</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Tilbage til <a href="index.html">forsiden</a>.
+</footer>
+
+<script src="regions.js"></script>
+<script src="regions.geojson.js"></script>
+<script src="cities.geojson.js"></script>
+<script src="edit.js" defer></script>
+</body>
+</html>
