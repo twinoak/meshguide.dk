@@ -90,5 +90,12 @@ window.MCDK_CITIES = {
     localChat: "#hornslet",
     scope: "",
     notes: ""
+  },
+  "oestjylland": {
+    name: "Østjylland",
+    parentRegion: "dk-oj",
+    localChat: "#oestjylland",
+    scope: "dk-oj",
+    notes: ""
   }
 };
