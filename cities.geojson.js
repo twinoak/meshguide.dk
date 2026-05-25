@@ -62,6 +62,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "fredericia" },
       "geometry": { "type": "Point", "coordinates": [9.7592, 55.5646] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "aarhus" },
+      "geometry": { "type": "Point", "coordinates": [10.1965, 56.1503] }
     }
   ]
 };
