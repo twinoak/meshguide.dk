@@ -40,8 +40,13 @@ window.MCDK_CITIES_GEOJSON = {
     },
     {
       "type": "Feature",
-      "properties": { "city": "Danmark" },
+      "properties": { "city": "danmark" },
       "geometry": { "type": "Point", "coordinates": [10.3810, 55.4047] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "aalborg" },
+      "geometry": { "type": "Point", "coordinates": [9.9234, 57.0402] }
     }
   ]
 };

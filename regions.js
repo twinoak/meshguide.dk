@@ -112,16 +112,22 @@ window.MCDK_CITIES = {
     scope: "",
     notes: ""
   },
-  "svendborg": {
+  "odense": {
     name: "Odense",
     localChat: "#dk-fyn-odense",
     scope: "",
     notes: ""
   },
-  "svendborg": {
+  "danmark": {
     name: "Danmark",
     localChat: "#danmark",
     scope: "dk",
+    notes: ""
+  },
+  "aalborg": {
+    name: "Ålborg",
+    localChat: "#aalborg",
+    scope: "",
     notes: ""
   }
 };
