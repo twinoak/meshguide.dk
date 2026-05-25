@@ -135,5 +135,11 @@ window.MCDK_CITIES = {
     localChat: "#gilleleje",
     scope: "",
     notes: ""
+  },
+  "nordjylland": {
+    name: "Nordjylland",
+    localChat: "#nordjylland",
+    scope: "dk-nrj",
+    notes: ""
   }
 };
