@@ -94,10 +94,16 @@ window.MCDK_CITIES = {
     scope: "dk-oj",
     notes: ""
   },
-    "fyn": {
+  "fyn": {
     name: "Fyn",
     localChat: "#dk-fyn",
     scope: "dk-fyn",
+    notes: ""
+  },
+  "sjaelland": {
+    name: "sjaelland",
+    localChat: "#dk-sjaelland",
+    scope: "dk-sjl",
     notes: ""
   }
 };

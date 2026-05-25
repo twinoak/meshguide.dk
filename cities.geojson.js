@@ -22,6 +22,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "fyn" },
       "geometry": { "type": "Point", "coordinates": [10.3405, 55.3211] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "fyn" },
+      "geometry": { "type": "Point", "coordinates": [11.7762, 55.5958] }
     }
   ]
 };
