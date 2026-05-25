@@ -191,7 +191,7 @@
     let html = '<div class="mcdk-city-popup-body">';
     html += "<h4>" + escapeHtml(c.name) + "</h4>";
     html += "<dl>";
-    html += "<dt>Lokal-chat</dt><dd><code>" + escapeHtml(c.localChat) + "</code></dd>";
+    html += "<dt>Chat</dt><dd><code>" + escapeHtml(c.localChat) + "</code></dd>";
     if (c.scope) html += "<dt>Scope</dt><dd><code>" + escapeHtml(c.scope) + "</code></dd>";
     html += "</dl>";
     if (c.notes) html += "<p><em>" + escapeHtml(c.notes) + "</em></p>";
