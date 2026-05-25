@@ -101,7 +101,7 @@ window.MCDK_CITIES = {
     notes: ""
   },
   "sjaelland": {
-    name: "sjaelland",
+    name: "Sjaelland",
     localChat: "#dk-sjaelland",
     scope: "dk-sjl",
     notes: ""
@@ -109,6 +109,12 @@ window.MCDK_CITIES = {
   "svendborg": {
     name: "Svendborg",
     localChat: "#dk-fyn-svendborg",
+    scope: "",
+    notes: ""
+  },
+  "svendborg": {
+    name: "Odense",
+    localChat: "#dk-fyn-odense",
     scope: "",
     notes: ""
   }

@@ -32,6 +32,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "svendborg" },
       "geometry": { "type": "Point", "coordinates": [10.6062, 55.0632] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "odense" },
+      "geometry": { "type": "Point", "coordinates": [10.3810, 55.4047] }
     }
   ]
 };
