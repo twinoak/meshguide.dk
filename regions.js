@@ -105,5 +105,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-sjaelland",
     scope: "dk-sjl",
     notes: ""
+  },
+  "svendborg": {
+    name: "Svendborg",
+    localChat: "#dk-fyn-svendborg",
+    scope: "",
+    notes: ""
   }
 };
