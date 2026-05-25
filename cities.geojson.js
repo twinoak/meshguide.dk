@@ -7,6 +7,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "horsens" },
       "geometry": { "type": "Point", "coordinates": [9.8503, 55.8607] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "hornslet" },
+      "geometry": { "type": "Point", "coordinates": [10.3210, 56.3149] }
     }
   ]
 };

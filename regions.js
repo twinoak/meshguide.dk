@@ -83,5 +83,12 @@ window.MCDK_CITIES = {
     localChat: "#horsens",
     scope: "dk-horsens",
     notes: ""
+  },
+  "hornslet": {
+    name: "Hornslet",
+    parentRegion: "dk-oj",
+    localChat: "#hornslet",
+    scope: "",
+    notes: ""
   }
 };
