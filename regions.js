@@ -177,5 +177,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-sjl-soroe",
     scope: "dk-sjl-soroe",
     notes: ""
+  },
+  "skanderborg": {
+    name: "Skanderborg",
+    localChat: "#skanderborg",
+    scope: "dk-skanderborg",
+    notes: ""
   }
 };
