@@ -153,5 +153,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-oj-aarhus",
     scope: "",
     notes: ""
+  },
+  "nyborg": {
+    name: "Nyborg",
+    localChat: "#dk-fyn-nyborg",
+    scope: "",
+    notes: ""
   }
 };

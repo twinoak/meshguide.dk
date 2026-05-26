@@ -67,6 +67,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "aarhus" },
       "geometry": { "type": "Point", "coordinates": [10.1965, 56.1503] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "nyborg" },
+      "geometry": { "type": "Point", "coordinates": [10.7961, 55.3154] }
     }
   ]
 };
