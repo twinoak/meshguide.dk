@@ -223,23 +223,7 @@ th { color: var(--muted); font-weight: 600; }
 }
 .editor-handoff { margin-top: .75rem; font-size: .9rem; }
 
-/* Geoman dark-theme overrides */
-.leaflet-pm-toolbar .leaflet-buttons-control-button {
-  background-color: var(--panel-2) !important;
-}
-.leaflet-pm-toolbar .leaflet-buttons-control-button:hover {
-  background-color: var(--border) !important;
-}
-.leaflet-pm-actions-container {
-  background: var(--panel-2) !important;
-  border: 1px solid var(--border) !important;
-}
-.leaflet-pm-action {
-  background: var(--panel-2) !important;
-  color: var(--text) !important;
-  border-color: var(--border) !important;
-}
-.leaflet-pm-action:hover { background: var(--border) !important; }
+/* Match Geoman buttons to Leaflet's default white zoom controls. */
 
 /* Modal */
 .modal-backdrop {
