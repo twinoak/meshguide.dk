@@ -82,6 +82,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "slagelse" },
       "geometry": { "type": "Point", "coordinates": [11.3549, 55.4045] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "city": "soroe" },
+      "geometry": { "type": "Point", "coordinates": [11.5610, 55.4457] }
     }
   ]
 };

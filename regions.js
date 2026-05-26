@@ -171,5 +171,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-sjl-slagelse",
     scope: "",
     notes: ""
+  },
+  "soroe": {
+    name: "Sorø",
+    localChat: "#dk-sjl-soroe",
+    scope: "",
+    notes: ""
   }
 };
