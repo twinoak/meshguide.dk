@@ -165,5 +165,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-fyn-ringe",
     scope: "",
     notes: ""
+  },
+  "slagelse": {
+    name: "Slagelse",
+    localChat: "#dk-sjl-slagelse",
+    scope: "",
+    notes: ""
   }
 };
