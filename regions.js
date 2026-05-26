@@ -109,13 +109,13 @@ window.MCDK_CITIES = {
   "svendborg": {
     name: "Svendborg",
     localChat: "#dk-fyn-svendborg",
-    scope: "",
+    scope: "dk-fyn-svendborg",
     notes: ""
   },
   "odense": {
     name: "Odense",
     localChat: "#dk-fyn-odense",
-    scope: "",
+    scope: "dk-fyn-odense",
     notes: ""
   },
   "danmark": {
@@ -150,32 +150,32 @@ window.MCDK_CITIES = {
   },
   "aarhus": {
     name: "Århus",
-    localChat: "#dk-oj-aarhus",
-    scope: "",
+    localChat: "#aarhus",
+    scope: "dk-aarhus",
     notes: ""
   },
   "nyborg": {
     name: "Nyborg",
     localChat: "#dk-fyn-nyborg",
-    scope: "",
+    scope: "dk-fyn-nyborg",
     notes: ""
   },
   "ringe": {
     name: "Ringe",
     localChat: "#dk-fyn-ringe",
-    scope: "",
+    scope: "dk-fyn-ringe",
     notes: ""
   },
   "slagelse": {
     name: "Slagelse",
     localChat: "#dk-sjl-slagelse",
-    scope: "",
+    scope: "dk-sjl-slagelse",
     notes: ""
   },
   "soroe": {
     name: "Sorø",
     localChat: "#dk-sjl-soroe",
-    scope: "",
+    scope: "dk-sjl-soroe",
     notes: ""
   }
 };
