@@ -24,7 +24,7 @@
     "dk-3kant": "#d6b88f83"
   };
   const DEFAULT_REGION_COLOR = "#4a8db883";
-  const CITY_ZOOM_MIN = 9;
+  const CITY_ZOOM_MIN = 8;
 
   function regionColor(key) { return REGION_COLORS[key] || DEFAULT_REGION_COLOR; }
 
