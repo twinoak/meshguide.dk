@@ -29,6 +29,7 @@
     <div class="editor-toolbar">
       <button type="button" id="btnCopy">Kopier GeoJSON</button>
       <button type="button" id="btnDownload">Download .geojson</button>
+      <button type="button" id="btnEmail" class="primary">Send via e-mail</button>
       <span class="editor-status" id="editorStatus" aria-live="polite"></span>
     </div>
     <p class="muted editor-handoff">Kopier eller download dit arbejde og send det til vedligeholderen via den kanal du allerede bruger (Discord, mesh, hvad du nu har).</p>
@@ -38,11 +39,27 @@
 <div class="modal-backdrop" id="keyModal" hidden>
   <div class="modal" role="dialog" aria-label="Vælg region for polygon">
     <h3>Hvilken region er dette?</h3>
-    <p class="muted">Vælg den region-noegle der hoerer til den polygon du lige har tegnet.</p>
+    <p class="muted">Vælg den region-nøgle der hører til den polygon du lige har tegnet. Vælg <em>+ Ny region…</em> hvis ingen passer.</p>
     <select id="keySelect"></select>
     <div class="modal-actions">
-      <button type="button" id="keyCancel">Slet polygon</button>
+      <button type="button" id="keyCancel">Annuller</button>
       <button type="button" id="keyConfirm" class="primary">Gem</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="newRegionModal" hidden>
+  <div class="modal" role="dialog" aria-label="Definer ny region">
+    <h3>Ny region</h3>
+    <p class="muted">Giv den nye region et scope og et navn.</p>
+    <label for="newRegionKey">Scope</label>
+    <input type="text" id="newRegionKey" maxlength="32" placeholder="eksempel" autocomplete="off">
+    <label for="newRegionName">Navn</label>
+    <input type="text" id="newRegionName" maxlength="80" placeholder="Eksempelby">
+    <p class="muted error" id="newRegionError" aria-live="polite"></p>
+    <div class="modal-actions">
+      <button type="button" id="newRegionCancel">Annuller</button>
+      <button type="button" id="newRegionConfirm" class="primary">Opret</button>
     </div>
   </div>
 </div>

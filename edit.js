@@ -25,19 +25,45 @@
   const statusEl = document.getElementById("editorStatus");
   const btnCopy = document.getElementById("btnCopy");
   const btnDownload = document.getElementById("btnDownload");
+  const btnEmail = document.getElementById("btnEmail");
   const keyModal = document.getElementById("keyModal");
   const keySelect = document.getElementById("keySelect");
   const keyConfirm = document.getElementById("keyConfirm");
   const keyCancel = document.getElementById("keyCancel");
+  const newRegionModal = document.getElementById("newRegionModal");
+  const nrKey = document.getElementById("newRegionKey");
+  const nrName = document.getElementById("newRegionName");
+  const nrError = document.getElementById("newRegionError");
+  const nrConfirm = document.getElementById("newRegionConfirm");
+  const nrCancel = document.getElementById("newRegionCancel");
 
   if (!mapEl || typeof L === "undefined") return;
 
-  Object.keys(regions).forEach(k => {
-    const opt = document.createElement("option");
-    opt.value = k;
-    opt.textContent = k + " — " + regions[k].name;
-    keySelect.appendChild(opt);
-  });
+  // Regions proposed by the user in this session (key -> metadata).
+  const proposedRegions = {};
+  const NEW_REGION_SENTINEL = "__new__";
+
+  function rebuildKeySelect(selected) {
+    keySelect.innerHTML = "";
+    Object.keys(regions).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k + " — " + regions[k].name;
+      keySelect.appendChild(opt);
+    });
+    Object.keys(proposedRegions).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k + " — " + proposedRegions[k].name + " (ny)";
+      keySelect.appendChild(opt);
+    });
+    const newOpt = document.createElement("option");
+    newOpt.value = NEW_REGION_SENTINEL;
+    newOpt.textContent = "+ Ny region…";
+    keySelect.appendChild(newOpt);
+    if (selected) keySelect.value = selected;
+  }
+  rebuildKeySelect();
 
   const map = L.map(mapEl, {
     center: [56.0, 11.0],
@@ -59,6 +85,14 @@
       bindLayerTooltip(layer, feature.properties && feature.properties.region);
     }
   }).addTo(map);
+
+  // Tag each loaded layer with its original key + geometry so we can diff at submit time.
+  regionsLayer.eachLayer(l => {
+    const gj = l.toGeoJSON();
+    l._origKey = gj.properties && gj.properties.region;
+    l._origGeom = JSON.stringify(gj.geometry);
+  });
+  const deletedOriginals = [];
 
   // Vis byer som referencepunkter, ikke-redigerbare.
   citiesGeo.features.forEach(f => {
@@ -88,8 +122,10 @@
   }
   function bindLayerTooltip(layer, key) {
     if (!key) return;
-    const meta = regions[key];
-    layer.bindTooltip(key + (meta ? " — " + meta.name : ""), { sticky: true, direction: "top" });
+    const meta = regions[key] || proposedRegions[key];
+    const suffix = meta ? " — " + meta.name + (proposedRegions[key] ? " (ny)" : "") : "";
+    layer.unbindTooltip();
+    layer.bindTooltip(key + suffix, { sticky: true, direction: "top" });
   }
 
   // Geoman controls.
@@ -154,7 +190,14 @@
 
   // Naar et polygon slettes via Geoman, fjern det ogsaa fra regionsLayer.
   map.on("pm:remove", e => {
-    if (regionsLayer.hasLayer(e.layer)) regionsLayer.removeLayer(e.layer);
+    const l = e.layer;
+    if (l && l._origKey) {
+      deletedOriginals.push({
+        region: l._origKey,
+        geometry: JSON.parse(l._origGeom)
+      });
+    }
+    if (regionsLayer.hasLayer(l)) regionsLayer.removeLayer(l);
     setStatus("Slettet.");
   });
 
@@ -162,24 +205,79 @@
   let keyResolver = null;
   function promptForKey(preselect, cb) {
     keyResolver = cb;
-    if (preselect) keySelect.value = preselect;
-    else keySelect.selectedIndex = 0;
+    rebuildKeySelect(preselect && (regions[preselect] || proposedRegions[preselect]) ? preselect : null);
+    if (!preselect) keySelect.selectedIndex = 0;
     keyModal.hidden = false;
     keySelect.focus();
   }
-  function closeKeyModal(key) {
+  function resolveKey(key) {
     keyModal.hidden = true;
     const cb = keyResolver;
     keyResolver = null;
     if (cb) cb(key);
   }
-  keyConfirm.addEventListener("click", () => closeKeyModal(keySelect.value));
-  keyCancel.addEventListener("click", () => closeKeyModal(null));
-  keyModal.addEventListener("click", e => { if (e.target === keyModal) closeKeyModal(null); });
+  function handleKeyConfirm() {
+    const choice = keySelect.value;
+    if (choice === NEW_REGION_SENTINEL) {
+      keyModal.hidden = true;
+      openNewRegionModal();
+      return;
+    }
+    resolveKey(choice);
+  }
+  keyConfirm.addEventListener("click", handleKeyConfirm);
+  keyCancel.addEventListener("click", () => resolveKey(null));
+  keyModal.addEventListener("click", e => { if (e.target === keyModal) resolveKey(null); });
   document.addEventListener("keydown", e => {
     if (keyModal.hidden) return;
-    if (e.key === "Enter") closeKeyModal(keySelect.value);
-    if (e.key === "Escape") closeKeyModal(null);
+    if (e.key === "Enter") handleKeyConfirm();
+    if (e.key === "Escape") resolveKey(null);
+  });
+
+  // New-region modal handling.
+  function openNewRegionModal() {
+    nrKey.value = "";
+    nrName.value = "";
+    nrError.textContent = "";
+    newRegionModal.hidden = false;
+    nrKey.focus();
+  }
+  function closeNewRegionModal(savedKey) {
+    newRegionModal.hidden = true;
+    if (savedKey) {
+      resolveKey(savedKey);
+    } else {
+      // User cancelled the new-region step — re-open the key picker so they can choose again.
+      keyModal.hidden = false;
+      keySelect.focus();
+    }
+  }
+  function submitNewRegion() {
+    const key = nrKey.value.trim().toLowerCase();
+    const name = nrName.value.trim();
+    if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(key)) {
+      nrError.textContent = "Nøglen må kun indeholde små bogstaver, tal og bindestreger.";
+      return;
+    }
+    if (regions[key] || proposedRegions[key]) {
+      nrError.textContent = "Nøglen findes allerede.";
+      return;
+    }
+    if (!name) { nrError.textContent = "Navn er påkrævet."; return; }
+    proposedRegions[key] = { name };
+    closeNewRegionModal(key);
+  }
+  nrConfirm.addEventListener("click", submitNewRegion);
+  nrCancel.addEventListener("click", () => closeNewRegionModal(null));
+  newRegionModal.addEventListener("click", e => { if (e.target === newRegionModal) closeNewRegionModal(null); });
+  document.addEventListener("keydown", e => {
+    if (newRegionModal.hidden) return;
+    if (e.key === "Escape") closeNewRegionModal(null);
+    // Enter on textarea inserts newlines, don't hijack it; submit only from inputs.
+    if (e.key === "Enter" && e.target && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      submitNewRegion();
+    }
   });
 
   // Export buttons.
@@ -193,6 +291,107 @@
       window.prompt("Kopier manuelt:", text);
     }
   });
+  btnEmail.addEventListener("click", async () => {
+    const changes = collectChanges();
+    if (changes.length === 0) {
+      setStatus("Ingen ændringer at sende.");
+      return;
+    }
+
+    const byType = { NEW: [], MODIFIED: [], DELETED: [] };
+    changes.forEach(c => byType[c.change].push(c));
+    const newKeys = Object.keys(proposedRegions).filter(k => changes.some(c => c.region === k));
+
+    const subjectParts = [];
+    if (byType.NEW.length) subjectParts.push(byType.NEW.length + " ny");
+    if (byType.MODIFIED.length) subjectParts.push(byType.MODIFIED.length + " ændret");
+    if (byType.DELETED.length) subjectParts.push(byType.DELETED.length + " slettet");
+    const subjectTag = newKeys.length ? " [NY SCOPE: " + newKeys.join(", ") + "]" : "";
+    const subject = "Region-bidrag: " + subjectParts.join(", ") + subjectTag;
+
+    let newRegionBlock = "";
+    if (newKeys.length) {
+      newRegionBlock = "Nye scopes (tilføj til regions.js):\n";
+      newKeys.forEach(k => {
+        newRegionBlock +=
+          "  \"" + k + "\": { name: " + JSON.stringify(proposedRegions[k].name) + " },\n";
+      });
+      newRegionBlock += "\n";
+    }
+
+    const summaryLines = changes.map(c => {
+      const ctr = c.center.map(v => v.toFixed(3)).join(", ");
+      const tag = c.change === "MODIFIED" && c.oldRegion && c.oldRegion !== c.region
+        ? c.oldRegion + " → " + c.region
+        : c.region;
+      return "  [" + c.change.padEnd(8) + "] " + tag.padEnd(14) + " " + c.vertexCount + " hjørner, center " + ctr;
+    }).join("\n");
+
+    const fc = {
+      type: "FeatureCollection",
+      features: changes.map(c => ({
+        type: "Feature",
+        properties: { region: c.region, change: c.change },
+        geometry: c.geometry
+      }))
+    };
+    const geo = JSON.stringify(fc, null, 2);
+
+    const intro =
+      newRegionBlock
+    const body = intro + geo + "\n";
+
+    try {
+      await navigator.clipboard.writeText(body);
+      setStatus("Indhold kopieret — indsæt i e-mailen med Ctrl+V.");
+    } catch (err) {
+      window.prompt("Kopier dette og indsæt i din e-mail til meshcore@drkt.eu:", body);
+      return;
+    }
+    const placeholder = "(indsæt indholdet fra udklipsholderen her med Ctrl+V)";
+    window.location.href = "mailto:meshcore@drkt.eu?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(placeholder);
+  });
+
+  function collectChanges() {
+    const changes = [];
+    regionsLayer.eachLayer(l => {
+      const gj = l.toGeoJSON();
+      const key = gj.properties && gj.properties.region;
+      if (!key) return;
+      const currentGeom = JSON.stringify(gj.geometry);
+      if (!l._origKey) {
+        changes.push(buildChange("NEW", key, gj.geometry));
+      } else if (l._origKey !== key || l._origGeom !== currentGeom) {
+        changes.push(buildChange("MODIFIED", key, gj.geometry, l._origKey));
+      }
+    });
+    deletedOriginals.forEach(d => {
+      changes.push(buildChange("DELETED", d.region, d.geometry));
+    });
+    return changes;
+  }
+
+  function buildChange(change, region, geometry, oldRegion) {
+    const stats = geomStats(geometry);
+    return { change, region, oldRegion, geometry, vertexCount: stats.vertexCount, center: stats.center };
+  }
+
+  function geomStats(geom) {
+    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity, n = 0;
+    (function walk(c) {
+      if (typeof c[0] === "number" && typeof c[1] === "number") {
+        if (c[0] < minLon) minLon = c[0];
+        if (c[0] > maxLon) maxLon = c[0];
+        if (c[1] < minLat) minLat = c[1];
+        if (c[1] > maxLat) maxLat = c[1];
+        n++;
+      } else {
+        c.forEach(walk);
+      }
+    })(geom.coordinates);
+    return { vertexCount: n, center: [(minLat + maxLat) / 2, (minLon + maxLon) / 2] };
+  }
+
   btnDownload.addEventListener("click", () => {
     const text = serialize();
     const blob = new Blob([text], { type: "application/geo+json" });

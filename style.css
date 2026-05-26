@@ -263,7 +263,9 @@ th { color: var(--muted); font-weight: 600; }
 }
 .modal h3 { margin: 0 0 .5rem; color: var(--accent-2); }
 .modal p { margin: 0 0 .75rem; }
-.modal select {
+.modal select,
+.modal input[type="text"],
+.modal textarea {
   width: 100%;
   background: var(--bg);
   color: var(--text);
@@ -272,6 +274,15 @@ th { color: var(--muted); font-weight: 600; }
   padding: .4rem .5rem;
   font: inherit;
 }
+.modal textarea { resize: vertical; }
+.modal label {
+  display: block;
+  margin-top: .6rem;
+  margin-bottom: .25rem;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.modal .error { color: #e85a5a; min-height: 1.2em; }
 .modal-actions {
   margin-top: 1rem;
   display: flex;
