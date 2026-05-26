@@ -159,5 +159,11 @@ window.MCDK_CITIES = {
     localChat: "#dk-fyn-nyborg",
     scope: "",
     notes: ""
+  },
+  "ringe": {
+    name: "Ringe",
+    localChat: "#dk-fyn-ringe",
+    scope: "",
+    notes: ""
   }
 };
