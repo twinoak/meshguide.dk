@@ -154,13 +154,6 @@
       const primary = regions[valid[0]];
       let html = "<h3>" + valid.map(k => escapeHtml(regions[k].name)).join(" + ") + "</h3>";
 
-      html += "<dl>";
-      valid.forEach(k => {
-        const r = regions[k];
-        html += "<dt>" + escapeHtml(r.name) + "</dt><dd><code>" + escapeHtml(r.channel) + "</code></dd>";
-      });
-      html += "</dl>";
-
       let cli = "region put eu *\nregion put dk eu";
       valid.forEach(k => { cli += "\nregion put " + regions[k].channel + " dk"; });
       html += "<pre><code>" + escapeHtml(cli) + "</code></pre>";
