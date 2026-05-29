@@ -337,9 +337,7 @@
     };
     const geo = JSON.stringify(fc, null, 2);
 
-    const intro =
-      newRegionBlock
-    const body = intro + geo + "\n";
+    const body = newRegionBlock + geo + "\n";
 
     try {
       await navigator.clipboard.writeText(body);
