@@ -2,7 +2,7 @@
 window.MCDK_REGIONS = {
   "dk-nrj": {
     name: "Nordjylland",
-    channel: "dk-nrj",
+    channel: "dk-nj",
     coverage: "Aalborg, Frederikshavn, Hjørring, Thisted og omegn.",
     notes: "Ingen noter."
   },
