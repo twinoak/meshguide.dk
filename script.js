@@ -154,10 +154,6 @@
       const primary = regions[valid[0]];
       let html = "<h3>" + valid.map(k => escapeHtml(regions[k].name)).join(" + ") + "</h3>";
 
-      if (valid.length > 1) {
-        html += "<p><strong>Overlap:</strong> denne placering er dækket af " + valid.length + " regioner. Inkludér alle scopes.</p>";
-      }
-
       html += "<dl>";
       valid.forEach(k => {
         const r = regions[k];
