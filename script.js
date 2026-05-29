@@ -161,7 +161,7 @@
       html += "<dl>";
       valid.forEach(k => {
         const r = regions[k];
-        html += "<dt>" + escapeHtml(r.name) + "</dt><dd><code>" + escapeHtml(r.channel) + "</code> – " + escapeHtml(r.coverage) + "</dd>";
+        html += "<dt>" + escapeHtml(r.name) + "</dt><dd><code>" + escapeHtml(r.channel) + "</code></dd>";
       });
       html += "</dl>";
 

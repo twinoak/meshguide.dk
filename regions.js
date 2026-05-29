@@ -2,63 +2,51 @@
 window.MCDK_REGIONS = {
   "dk-nrj": {
     name: "Nordjylland",
-    channel: "dk-nj",
-    coverage: "Aalborg, Frederikshavn, Hjørring, Thisted og omegn."
+    channel: "dk-nj"
   },
   "dk-mdj": {
     name: "Midtjylland",
-    channel: "dk-mdj",
-    coverage: "Viborg, Herning, Holstebro, Skive, Silkeborg, Horsens, Randers, Aarhus."
+    channel: "dk-mdj"
   },
   "dk-oj": {
     name: "Østjylland",
-    channel: "dk-oj",
-    coverage: "Aarhus, Randers, Horsens, Vejle, Kolding, Silkeborg."
+    channel: "dk-oj"
   },
   "dk-sdk": {
     name: "Syddanmark",
-    channel: "dk-sdk",
-    coverage: "Aabenraa, Sønderborg, Tønder, Haderslev, Esbjerg."
+    channel: "dk-sdk"
   },
   "dk-fyn": {
     name: "Fyn",
-    channel: "dk-fyn",
-    coverage: "Odense, Svendborg, Nyborg, Middelfart og resten af Fyn."
+    channel: "dk-fyn"
   },
   "dk-sjl": {
     name: "Sjælland",
-    channel: "dk-sjl",
-    coverage: "København, Roskilde, Næstved, Helsingør, Holbæk, Slagelse."
+    channel: "dk-sjl"
   },
   "dk-lo-fa": {
     name: "Lolland-Falster",
-    channel: "dk-lo-fa",
-    coverage: "Nykøbing F., Maribo, Nakskov, Sakskøbing."
+    channel: "dk-lo-fa"
   },
   "dk-bhm": {
     name: "Bornholm",
-    channel: "dk-bhm",
-    coverage: "Rønne, Nexø, Aakirkeby, Allinge."
+    channel: "dk-bhm"
   },
   "dk-ls": {
     name: "Læsø",
-    channel: "dk-ls",
-    coverage: "Læsø."
+    channel: "dk-ls"
   },
   "dk-aht": {
     name: "Anholt",
-    channel: "dk-aht",
-    coverage: "Anholt."
+    channel: "dk-aht"
   },
   "dk-sms": {
     name: "Samsø",
-    channel: "dk-sms",
-    coverage: "Samsø."
+    channel: "dk-sms"
   },
   "dk-3kant": {
     name: "Trekantsområdet",
-    channel: "dk-3kant",
-    coverage: "Fredericia, Vejle, Kolding, Middelfart"
+    channel: "dk-3kant"
   }
 };
 
