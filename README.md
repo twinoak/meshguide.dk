@@ -17,6 +17,6 @@
 
 ## Tilføj en ny region
 
-1. Tilføj region-metadata i `regions.js` (nøgle, navn, channel, coverage, notes).
+1. Tilføj region-metadata i `regions.js` (nøgle, navn, channel, coverage).
 2. Tilføj en farve til `REGION_COLORS` i både `script.js` og `edit.js`.
 3. Åbn `edit.html`, tegn polygonen, vælg den nye nøgle, og indsæt det eksporterede GeoJSON i `regions.geojson.js`.

@@ -165,10 +165,6 @@
       });
       html += "</dl>";
 
-      if (primary.notes && primary.notes !== "Ingen noter.") {
-        html += "<p><em>" + escapeHtml(primary.notes) + "</em></p>";
-      }
-
       let cli = "region put eu *\nregion put dk eu";
       valid.forEach(k => { cli += "\nregion put " + regions[k].channel + " dk"; });
       html += "<pre><code>" + escapeHtml(cli) + "</code></pre>";
@@ -194,7 +190,6 @@
     html += "<dt>Chat</dt><dd><code>" + escapeHtml(c.localChat) + "</code></dd>";
     if (c.scope) html += "<dt>Scope</dt><dd><code>" + escapeHtml(c.scope) + "</code></dd>";
     html += "</dl>";
-    if (c.notes) html += "<p><em>" + escapeHtml(c.notes) + "</em></p>";
     html += "</div>";
     return html;
   }
