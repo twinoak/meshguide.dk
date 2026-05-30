@@ -95,7 +95,7 @@ window.MCDK_CITIES = {
   "aalborg": {
     name: "Ålborg",
     localChat: "#aalborg",
-    scope: ""
+    scope: "dk-aalborg"
   },
   "gilleleje": {
     name: "Gilleleje",
