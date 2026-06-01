@@ -47,6 +47,58 @@ window.MCDK_REGIONS = {
   "dk-3kant": {
     name: "Trekantsområdet",
     channel: "dk-3kant"
+  },
+  "dk-aalborg": {
+    name: "Ålborg",
+    channel: "dk-aalborg"
+  },
+  "hornslet": {
+    name: "Hornslet",
+    channel: "hornslet"
+  },
+  "dk-aarhus": {
+    name: "Århus",
+    channel: "dk-aarhus"
+  },
+  "dk-skanderborg": {
+    name: "Skanderborg",
+    channel: "dk-skanderborg"
+  },
+  "dk-horsens": {
+    name: "Horsens",
+    channel: "dk-horsens"
+  },
+  "fredericia": {
+    name: "Fredericia",
+    channel: "fredericia"
+  },
+  "dk-fyn-odense": {
+    name: "Odense",
+    channel: "dk-fyn-odense"
+  },
+  "dk-fyn-ringe": {
+    name: "Ringe",
+    channel: "dk-fyn-ringe"
+  },
+  "dk-fyn-svendbord": {
+    name: "Svendborg",
+    channel: "dk-fyn-svendbord"
+  },
+  "dk-fyn-nyborg": {
+    name: "Nyborg",
+    channel: "dk-fyn-nyborg"
+  },
+  "dk-sjl-slagelse": {
+    name: "Slagelse",
+    channel: "dk-sjl-slagelse"
+  },
+  "dk-sjl-soroe": {
+    name: "Sorø",
+    channel: "dk-sjl-soroe"
+  },
+  "dk-sjl-gilleleje": {
+    name: "Gilleleje",
+    channel: "dk-sjl-gilleleje"
   }
 };
 

@@ -10,7 +10,7 @@
 
   // Per-region farver. Tilfoej en linje hvis du tilfoejer en ny region.
   const REGION_COLORS = {
-    "dk-nrj":   "#2da8a083",
+    "dk-nj":    "#2da8a083",
     "dk-mdj":   "#4a8be083",
     "dk-oj":    "#b760d683",
     "dk-sdk":   "#5fbf5f93",
@@ -21,9 +21,22 @@
     "dk-ls":    "#8fb8d683",
     "dk-aht":   "#d68f8f83",
     "dk-sms":   "#a0d68f83",
-    "dk-3kant": "#d6b88f83"
+    "dk-3kant": "#d6b88f83",
+    "dk-aalborg": "#8f8fd683",
+    "hornslet": "#d68fb883",
+    "dk-aarhus": "#8fd6b883",
+    "dk-skanderborg": "#b8d68f83",
+    "dk-horsens": "#d68f5a83",
+    "fredericia": "#5ad68f83",
+    "dk-fyn-odense": "#d6a25a83",
+    "dk-fyn-ringe": "#a2d65a83",
+    "dk-fyn-svendbord": "#5ad6a283",
+    "dk-fyn-nyborg": "#a25ad683",
+    "dk-sjl-slagelse": "#d65a8f83",
+    "dk-sjl-soroe": "#8fd65a83",
+    "dk-sjl-gilleleje": "#5a8fd683"
   };
-  const DEFAULT_REGION_COLOR = "#4a8db883";
+  const DEFAULT_REGION_COLOR = "#ff00bf00";
   const CITY_ZOOM_MIN = 8;
 
   function regionColor(key) { return REGION_COLORS[key] || DEFAULT_REGION_COLOR; }
