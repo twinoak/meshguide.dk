@@ -4,22 +4,8 @@
   const initialGeo = window.MCDK_REGIONS_GEOJSON || { type: "FeatureCollection", features: [] };
   const citiesGeo = window.MCDK_CITIES_GEOJSON || { type: "FeatureCollection", features: [] };
 
-  const REGION_COLORS = {
-    "dk-nj":    "#2da8a0",
-    "dk-mdj":   "#4a8be0",
-    "dk-oj":    "#b760d6",
-    "dk-sdk":   "#5fbf5f",
-    "dk-fyn":   "#e8a23a",
-    "dk-sjl":   "#e85a5a",
-    "dk-lo-fa": "#e879c8",
-    "dk-bhm":   "#c89a4a",
-    "dk-ls":    "#8fb8d6",
-    "dk-aht":   "#d68f8f",
-    "dk-sms":   "#a0d68f",
-    "dk-3kant": "#d6b88f"
-  };
   const DEFAULT_COLOR = "#4a8db8";
-  const colorFor = key => REGION_COLORS[key] || DEFAULT_COLOR;
+  const colorFor = () => DEFAULT_COLOR;
 
   const mapEl = document.getElementById("editor-map");
   const statusEl = document.getElementById("editorStatus");

@@ -8,38 +8,10 @@
   const list = document.getElementById("regionList");
   const mapEl = document.getElementById("map");
 
-  // Per-region farver. Tilfoej en linje hvis du tilfoejer en ny region.
-  const REGION_COLORS = {
-    "dk-nj":    "#2da8a083",
-    "dk-mdj":   "#4a8be083",
-    "dk-oj":    "#b760d683",
-    "dk-sdk":   "#5fbf5f93",
-    "dk-fyn":   "#e8a23a83",
-    "dk-sjl":   "#e85a5a83",
-    "dk-lo-fa": "#e879c883",
-    "dk-bhm":   "#c89a4a83",
-    "dk-ls":    "#8fb8d683",
-    "dk-aht":   "#d68f8f83",
-    "dk-sms":   "#a0d68f83",
-    "dk-3kant": "#d6b88f83",
-    "dk-aalborg": "#8f8fd683",
-    "hornslet": "#d68fb883",
-    "dk-aarhus": "#8fd6b883",
-    "dk-skanderborg": "#b8d68f83",
-    "dk-horsens": "#d68f5a83",
-    "fredericia": "#5ad68f83",
-    "dk-fyn-odense": "#d6a25a83",
-    "dk-fyn-ringe": "#a2d65a83",
-    "dk-fyn-svendbord": "#5ad6a283",
-    "dk-fyn-nyborg": "#a25ad683",
-    "dk-sjl-slagelse": "#d65a8f83",
-    "dk-sjl-soroe": "#8fd65a83",
-    "dk-sjl-gilleleje": "#5a8fd683"
-  };
-  const DEFAULT_REGION_COLOR = "#ff00bf00";
+  const DEFAULT_REGION_COLOR = "#ffffff";
   const CITY_ZOOM_MIN = 8;
 
-  function regionColor(key) { return REGION_COLORS[key] || DEFAULT_REGION_COLOR; }
+  function regionColor() { return DEFAULT_REGION_COLOR; }
 
   function init() {
     if (!mapEl || typeof L === "undefined") return;
@@ -64,7 +36,8 @@
         color: "#0a1830",
         weight: 1.2,
         fillColor: regionColor(feature.properties && feature.properties.region),
-        fillOpacity: 0.45
+        fillOpacity: 0,
+        opacity: 0
       }),
       onEachFeature: (feature, layer) => {
         const key = feature.properties && feature.properties.region;
@@ -159,7 +132,7 @@
       const valid = arr.filter(k => regions[k]);
       if (valid.length === 0) {
         info.innerHTML = "<h3>Vælg en region</h3>";
-        regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0.45, weight: 1.2 }));
+        regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
         [...list.children].forEach(li => li.classList.remove("active"));
         return;
       }
@@ -177,7 +150,7 @@
       regionsLayer.eachLayer(l => {
         const k = l.feature && l.feature.properties && l.feature.properties.region;
         const active = valid.includes(k);
-        l.setStyle({ fillOpacity: active ? 0.7 : 0.15, weight: active ? 2.5 : 1 });
+        l.setStyle({ fillOpacity: active ? 0.2 : 0, weight: active ? 1 : 0, opacity: active ? 1 : 0 });
         if (active) l.bringToFront();
       });
       [...list.children].forEach(li => li.classList.toggle("active", valid.includes(li.dataset.region)));
