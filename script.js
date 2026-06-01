@@ -4,7 +4,7 @@
   const regionsGeo = window.MCDK_REGIONS_GEOJSON || { type: "FeatureCollection", features: [] };
   const citiesGeo = window.MCDK_CITIES_GEOJSON || { type: "FeatureCollection", features: [] };
 
-  const info = document.getElementById("regionInfo");
+  const regionCli = document.getElementById("regionCli");
   const mapEl = document.getElementById("map");
 
   const DEFAULT_REGION_COLOR = "#ffffff";
@@ -120,21 +120,20 @@
       const arr = Array.isArray(keys) ? keys : (keys ? [keys] : []);
       const valid = arr.filter(k => regions[k]);
       if (valid.length === 0) {
-        info.innerHTML = "<h3>Vælg en region</h3>";
+        regionCli.style.display = "none";
+        regionTitle.style.display = "none";
         regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
         showHint(true);
         [...list.children].forEach(li => li.classList.remove("active"));
         return;
       }
 
-      const primary = regions[valid[0]];
-      let html = "<h3>Skriv disse kommandoer i CLI på din repeater</h3>";
+      regionCli.style.display = "";
+      regionTitle.style.display = "";
 
       let cli = "region put eu\nregion put dk";
       valid.forEach(k => { cli += "\nregion put " + regions[k].channel; });
-      html += "<pre><code>" + escapeHtml(cli + "\nregion save") + "</code></pre>";
-
-      info.innerHTML = html;
+      regionCli.innerHTML = "<code>" + escapeHtml(cli + "\nregion save") + "</code>";
 
       regionsLayer.eachLayer(l => {
         const k = l.feature && l.feature.properties && l.feature.properties.region;
