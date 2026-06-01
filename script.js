@@ -111,6 +111,12 @@
 
     map.on("click", () => { render(null); hideClickMarker(); });
 
+    // Hint overlay — vis når ingen regioner er valgt.
+    const hintEl = document.getElementById("mapHint");
+    function showHint(show) {
+      if (hintEl) hintEl.hidden = !show;
+    }
+
     // Region-liste under kortet.
     Object.keys(regions).forEach(key => {
       const li = document.createElement("li");
@@ -133,6 +139,7 @@
       if (valid.length === 0) {
         info.innerHTML = "<h3>Vælg en region</h3>";
         regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
+        showHint(true);
         [...list.children].forEach(li => li.classList.remove("active"));
         return;
       }
@@ -153,6 +160,7 @@
         l.setStyle({ fillOpacity: active ? 0.2 : 0, weight: active ? 1 : 0, opacity: active ? 1 : 0 });
         if (active) l.bringToFront();
       });
+      showHint(false);
       [...list.children].forEach(li => li.classList.toggle("active", valid.includes(li.dataset.region)));
     }
 
