@@ -70,7 +70,7 @@
 <main>
 
   <section id="regioner">
-    <h2>Region Scopes</h2>
+    <h2 id="region-scopes"><a href="#region-scopes">Region Scopes</a></h2>
     <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment, der begrænser, hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
     <p><strong>Hvorfor scopes?</strong> Uden scopes ville alle pakker sendes igennem hele mesh-netværket, hvilket hurtigt ville gøre det ubrugeligt. Lokal-chat på Fyn behøver for eksempel ikke at kunne læses af brugere i Midtjylland, og slet ikke i Tyskland.</p>
     <p><strong>Vigtigt: scope <code>*</code> er ikke et wildcard.</strong> En Repeater, der kun har scope <code>*</code>, kan <strong>ikke</strong> videresende pakker med scope <code>dk</code> (eller andre scopes). Scope <code>*</code> betyder faktisk <code>null</code>; altså ingen scope. En Repeater skal derfor eksplicit have alle de scopes konfigureret, som den skal videresende. Uden det kan den kun håndtere pakker uden scope.</p>
@@ -93,7 +93,7 @@
   </section>
 
   <section id="indstillinger">
-    <h2>De vigtigste indstillinger</h2>
+    <h2 id="de-vigtigste-indstillinger"><a href="#de-vigtigste-indstillinger">De vigtigste indstillinger</a></h2>
 
     <article class="setting">
       <h3><code>path.hash.mode</code> - path-hash længde</h3>
@@ -152,7 +152,7 @@ set guest.password</code></pre>
   </section>
 
     <section id="profiler">
-    <h2>Repeater Profiler</h2>
+    <h2 id="repeater-profiler"><a href="#repeater-profiler">Repeater Profiler</a></h2>
     <p>Vælg den profil der bedst beskriver din repeater placering. Profilen styrer <code>txdelay</code> / <code>rxdelay</code>, så netværket prioriterer de noder der dækker bredest. Hvis alle følger disse regler vil netværket øge dets kapacitet i trængte områder, da en Bakketop-repeater, for det meste, kun vil vidresende pakker der skal sendes langt.</p>
     <p>Det fungere fordi en Bakketop-repeater vil vente et kort øjeblik med at sende pakken videre. Hvis Bakketop-repeateren ser en anden Repeater sende den samme pakke med et bedre signal (SNR), så vil Bakketop-repeateren droppe pakken helt, da den ikke behøver at blive sendt igen, og bruger ikke dets kostbare airtime på at duplikere lokale pakker.</p>
 
