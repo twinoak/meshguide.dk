@@ -45,7 +45,7 @@
           const hits = hitTestRegions(e.latlng);
           render(hits.length ? hits : (key ? [key] : []));
           showClickMarker(e.latlng);
-          L.DomEvent.stopPropagation(e);
+          e.stopPropagation();
         });
       }
     }).addTo(map);
@@ -124,7 +124,6 @@
         regionTitle.style.display = "none";
         regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
         showHint(true);
-        [...list.children].forEach(li => li.classList.remove("active"));
         return;
       }
 
@@ -142,7 +141,6 @@
         if (active) l.bringToFront();
       });
       showHint(false);
-      [...list.children].forEach(li => li.classList.toggle("active", valid.includes(li.dataset.region)));
     }
 
   }
