@@ -71,15 +71,15 @@
 
   <section id="regioner">
     <h2>Region Scopes</h2>
-    <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment der begrænser hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
-    <p>En Repeater der kun har scope: <code>*</code> kan <strong>ikke</strong> videresende pakker der har scope: <code>dk</code>. Dette er fordi, at scope: <code>*</code> faktisk slet ikke er et 'wildcard' som man skulle tro. Det betyder ikke 'alle pakker', det er stenografi for scope: <code>null</code>. Alle Repeatere i et område skal derfor have alle scopes, som de vil videresende, kodet ind, ellers kan de kun videresende pakker med scope: <code>null</code>!</p>
-    <p>Scopes er nødvendigt, for hvis alle pakker blev sendt igennem hele meshet, ville netværket hurtigt blive ubrugligt. Lokal-chat på Fyn behøver ikke kunne læses i Midtjylland.</p>
-    <p>Det er vigtigt at understreje at dette <strong>kun gælder flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes igennem hele meshet uanset scopes, og companion-noder skal bare sætte et scope på de chats de har, og så kører det.</p>
-    <p>Disse indstillinger gælder alle firmware versioner der understøtter scopes, men de præcise kommandoer der skal bruges er, i resten af dette dokument, baseret på <strong>Firmware 1.15.0+</strong>. Hvis din Repeater er på en tidligere Firmware, skal du dobelt-tjekke den officielle dokumentation! Det nemmeste er måske bare at opdatere din Repeater.</p>
+    <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment, der begrænser, hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
+    <p><strong>Hvorfor scopes?</strong> Uden scopes ville alle pakker sendes igennem hele mesh-netværket, hvilket hurtigt ville gøre det ubrugeligt. Lokal-chat på Fyn behøver for eksempel ikke at kunne læses af brugere i Midtjylland, og slet ikke i Tyskland.</p>
+    <p><strong>Vigtigt: scope <code>*</code> er ikke et wildcard.</strong> En Repeater, der kun har scope <code>*</code>, kan <strong>ikke</strong> videresende pakker med scope <code>dk</code> (eller andre scopes). Scope <code>*</code> betyder faktisk <code>null</code>; altså ingen scope. En Repeater skal derfor eksplicit have alle de scopes konfigureret, som den skal videresende. Uden det kan den kun håndtere pakker uden scope.</p>
+    <p><strong>Dette gælder kun flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes frit gennem hele mesh-netværket uanset scopes. Companion-noder skal blot sætte en scope på de chats, de bruger, og så kører det.</p>
+    <p>Disse indstillinger gælder alle firmware-versioner, der understøtter scopes. De præcise kommandoer i dette dokument er dog baseret på <strong>Firmware 1.15.0+</strong>. Har du en ældre version, skal du dobbelttjekke den officielle dokumentation.</p>
     <ul>
       <li><strong>Bakketop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>eu</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>.</li>
       <li><strong>Lokal repeater i Horsens</strong> dækker kun byen og bør inkludere <code>*</code>, <code>eu</code>, <code>dk</code>, <code>dk-oj</code>, <code>dk-mdj</code>, <code>dk-horsens</code>.</li>
-      <li><code>#horsens</code> er en lokal-chat og brugere skal sætte Scope til <code>dk-horsens</code></li>
+      <li><code>#horsens</code> er en lokal-chat og brugere skal sætte Scope til <code>dk-horsens</code>.</li>
     </ul>
 
     <div class="map-wrap">
@@ -161,7 +161,7 @@ set guest.password</code></pre>
       <article class="profile-card">
         <header><h3>BAKKETOP</h3><span>20+ naboer</span></header>
         <div class="profile-body">
-          <p>Frit udsyn over større område. Backbone-infrastruktur.</p>
+          <p>Har frit udsyn over større område. Backbone-infrastruktur.</p>
           <p class="profile-examples">Eksempler: sendemast, højdedrag, tagspids på højhus</p>
         </div>
         <pre><code>set txdelay 2.0

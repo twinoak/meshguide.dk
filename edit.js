@@ -5,7 +5,7 @@
   const citiesGeo = window.MCDK_CITIES_GEOJSON || { type: "FeatureCollection", features: [] };
 
   const REGION_COLORS = {
-    "dk-nrj":   "#2da8a0",
+    "dk-nj":    "#2da8a0",
     "dk-mdj":   "#4a8be0",
     "dk-oj":    "#b760d6",
     "dk-sdk":   "#5fbf5f",

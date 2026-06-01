@@ -1,6 +1,6 @@
 // Regionsdata. Rediger denne fil for at opdatere region information.
 window.MCDK_REGIONS = {
-  "dk-nrj": {
+  "dk-nj": {
     name: "Nordjylland",
     channel: "dk-nj"
   },
@@ -105,7 +105,7 @@ window.MCDK_CITIES = {
   "nordjylland": {
     name: "Nordjylland",
     localChat: "#nordjylland",
-    scope: "dk-nrj"
+    scope: "dk-nj"
   },
   "fredericia": {
     name: "Fredericia",

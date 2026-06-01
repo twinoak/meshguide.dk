@@ -1491,7 +1491,7 @@ window.MCDK_REGIONS_GEOJSON = {
     {
       "type": "Feature",
       "properties": {
-        "region": "dk-nrj"
+        "region": "dk-nj"
       },
       "geometry": {
         "type": "Polygon",
