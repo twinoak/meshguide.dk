@@ -202,8 +202,7 @@
   document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 
   // Horizontal scroll via mousewheel with momentum.
-  const grid = document.querySelector(".screenshot-grid");
-  if (grid) {
+  document.querySelectorAll(".screenshot-grid").forEach(grid => {
     let vel = 0, rafId = null;
 
     function animate() {
@@ -249,7 +248,7 @@
       vel = touchVel;
       startMomentum();
     });
-  }
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
