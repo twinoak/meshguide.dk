@@ -461,11 +461,10 @@ code {
   border-radius: .3rem;
 }
 .screenshot-grid a {
-  flex: 0 0 calc((100% - 1.875rem) / 3.5);
   scroll-snap-align: start;
 }
 .screenshot-grid img {
-  width: 100%;
+  width: 350px;
   aspect-ratio: 9 / 20;
   object-fit: cover;
   border-radius: 4px;
