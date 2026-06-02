@@ -233,16 +233,14 @@
       touchScrollLeft = grid.scrollLeft;
       touchVel = 0;
       lastTouchX = touchStartX;
-    }, { passive: false });
+    }, { passive: true });
     grid.addEventListener("touchmove", e => {
-      e.preventDefault();
       const x = e.touches[0].clientX;
-      touchVel = (x - lastTouchX) * 0.8;
+      touchVel = x - lastTouchX;
       lastTouchX = x;
-      grid.scrollLeft = touchScrollLeft + (x - touchStartX);
-    }, { passive: false });
+    }, { passive: true });
     grid.addEventListener("touchend", () => {
-      vel = touchVel;
+      vel = touchVel * 0.5;
       startMomentum();
     });
   });
