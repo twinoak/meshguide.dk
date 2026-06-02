@@ -111,6 +111,27 @@ section h2 a {
 
 .muted { color: var(--muted); margin: 0; }
 
+.platform-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 1rem 0;
+}
+.platform-links a {
+  display: inline-block;
+  padding: .45rem 1rem;
+  background: var(--accent-2);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: .9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+.platform-links a:hover {
+  opacity: .85;
+}
+
 table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; }
@@ -419,3 +440,31 @@ code {
 .setting-meta dt { color: var(--muted); font-weight: 600; }
 .setting-meta dd { margin: 0; }
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
+
+.screenshot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem;
+  margin-top: 1rem;
+}
+.screenshot-grid a {
+  display: block;
+}
+.screenshot-grid img {
+  width: 100%;
+  aspect-ratio: 9 / 20;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+@media (max-width: 768px) {
+  .screenshot-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .screenshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
