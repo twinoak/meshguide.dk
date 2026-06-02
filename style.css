@@ -442,13 +442,27 @@ code {
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
 
 .screenshot-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
   gap: .75rem;
   margin-top: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thick;
+  scrollbar-color: var(--border) transparent;
+}
+.screenshot-grid::-webkit-scrollbar {
+  height: .6rem;
+}
+.screenshot-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.screenshot-grid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: .3rem;
 }
 .screenshot-grid a {
-  display: block;
+  flex: 0 0 calc((100% - 1.875rem) / 3.5);
+  scroll-snap-align: start;
 }
 .screenshot-grid img {
   width: 100%;
@@ -458,13 +472,8 @@ code {
   border: 1px solid var(--border);
   background: var(--bg);
 }
-@media (max-width: 768px) {
-  .screenshot-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 @media (max-width: 480px) {
   .screenshot-grid {
-    grid-template-columns: 1fr;
+    gap: .5rem;
   }
 }

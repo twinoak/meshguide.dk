@@ -201,6 +201,56 @@
   const floodInterval = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
   document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 
+  // Horizontal scroll via mousewheel with momentum.
+  const grid = document.querySelector(".screenshot-grid");
+  if (grid) {
+    let vel = 0, rafId = null;
+
+    function animate() {
+      if (Math.abs(vel) < 0.5) { vel = 0; rafId = null; return; }
+      vel *= 0.9;
+      grid.scrollLeft += vel;
+      rafId = requestAnimationFrame(animate);
+    }
+
+    function startMomentum() {
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    }
+
+    grid.addEventListener("wheel", e => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        vel += e.deltaX * 0.05;
+      } else {
+        vel += e.deltaY * 0.03;
+      }
+      startMomentum();
+      e.preventDefault();
+    }, { passive: false });
+
+    // Touch support with momentum.
+    let touchStartX, touchScrollLeft, touchVel = 0, lastTouchX, lastTime;
+    grid.addEventListener("touchstart", e => {
+      touchStartX = e.touches[0].clientX;
+      touchScrollLeft = grid.scrollLeft;
+      touchVel = 0;
+      lastTouchX = touchStartX;
+      lastTime = performance.now();
+    }, { passive: true });
+    grid.addEventListener("touchmove", e => {
+      const x = e.touches[0].clientX;
+      const now = performance.now();
+      const dt = now - lastTime || 1;
+      touchVel = (x - lastTouchX) / dt * 2;
+      lastTouchX = x;
+      lastTime = now;
+      grid.scrollLeft = touchScrollLeft + (x - touchStartX);
+    }, { passive: true });
+    grid.addEventListener("touchend", () => {
+      vel = touchVel;
+      startMomentum();
+    });
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
