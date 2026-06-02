@@ -446,7 +446,6 @@ code {
   gap: .75rem;
   margin-top: 1rem;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: thick;
   scrollbar-color: var(--border) transparent;
 }

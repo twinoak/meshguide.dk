@@ -227,23 +227,20 @@
     }, { passive: false });
 
     // Touch support with momentum.
-    let touchStartX, touchScrollLeft, touchVel = 0, lastTouchX, lastTime;
+    let touchStartX, touchScrollLeft, touchVel = 0, lastTouchX;
     grid.addEventListener("touchstart", e => {
       touchStartX = e.touches[0].clientX;
       touchScrollLeft = grid.scrollLeft;
       touchVel = 0;
       lastTouchX = touchStartX;
-      lastTime = performance.now();
-    }, { passive: true });
+    }, { passive: false });
     grid.addEventListener("touchmove", e => {
+      e.preventDefault();
       const x = e.touches[0].clientX;
-      const now = performance.now();
-      const dt = now - lastTime || 1;
-      touchVel = (x - lastTouchX) / dt * 2;
+      touchVel = (x - lastTouchX) * 0.8;
       lastTouchX = x;
-      lastTime = now;
       grid.scrollLeft = touchScrollLeft + (x - touchStartX);
-    }, { passive: true });
+    }, { passive: false });
     grid.addEventListener("touchend", () => {
       vel = touchVel;
       startMomentum();
