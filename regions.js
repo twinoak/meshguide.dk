@@ -99,6 +99,10 @@ window.MCDK_REGIONS = {
   "dk-sjl-gilleleje": {
     name: "Gilleleje",
     channel: "dk-sjl-gilleleje"
+  },
+  "dk-jylland": {
+    name: "Jylland",
+    channel: "jylland"
   }
 };
 
