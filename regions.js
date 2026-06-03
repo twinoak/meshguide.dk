@@ -197,5 +197,10 @@ window.MCDK_CITIES = {
     name: "Skanderborg",
     localChat: "#skanderborg",
     scope: "dk-skanderborg"
+  },
+  "jylland": {
+    name: "Jylland",
+    localChat: "#jylland",
+    scope: "dk-jylland"
   }
 };

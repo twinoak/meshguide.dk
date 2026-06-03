@@ -92,6 +92,11 @@ window.MCDK_CITIES_GEOJSON = {
       "type": "Feature",
       "properties": { "city": "skanderborg" },
       "geometry": { "type": "Point", "coordinates": [9.9278, 56.0410] }
+    },
+        {
+      "type": "Feature",
+      "properties": { "city": "jylland" },
+      "geometry": { "type": "Point", "coordinates": [9.1923, 56.2070] }
     }
   ]
 };
