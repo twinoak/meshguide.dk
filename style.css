@@ -444,11 +444,45 @@ code {
 .screenshot-grid {
   display: flex;
   gap: .75rem;
-  margin-top: 1rem;
+  margin: 1rem -1.5rem;
   overflow-x: auto;
   touch-action: pan-x;
   scrollbar-width: thick;
   scrollbar-color: var(--border) transparent;
+  position: relative;
+  padding: 0 1.5rem;
+}
+.screenshot-grid .scroll-hint {
+  position: absolute;
+  top: 50%;
+  right: .75rem;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  color: var(--text);
+  pointer-events: none;
+  animation: scroll-hint-bob 1.6s ease-in-out infinite;
+  transition: opacity .3s ease;
+}
+.screenshot-grid .scroll-hint.interactive {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.screenshot-grid .scroll-hint.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.screenshot-grid .scroll-hint svg {
+  width: 100%;
+  height: 100%;
+}
+@keyframes scroll-hint-bob {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(10px); }
 }
 .screenshot-grid::-webkit-scrollbar {
   height: .6rem;

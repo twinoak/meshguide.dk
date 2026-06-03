@@ -216,6 +216,11 @@
       if (!rafId) rafId = requestAnimationFrame(animate);
     }
 
+    function hideScrollHint() {
+      const hint = grid.querySelector(".scroll-hint");
+      if (hint) hint.classList.add("hidden");
+    }
+
     grid.addEventListener("wheel", e => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         vel += e.deltaX * 0.05;
@@ -223,6 +228,7 @@
         vel += e.deltaY * 0.03;
       }
       startMomentum();
+      hideScrollHint();
       e.preventDefault();
     }, { passive: false });
 
@@ -242,7 +248,24 @@
     grid.addEventListener("touchend", () => {
       vel = touchVel * 0.5;
       startMomentum();
+      hideScrollHint();
     });
+
+    // Also hide on scrollbar drag / keyboard scroll.
+    grid.addEventListener("scroll", () => {
+      if (grid.scrollLeft > 0) hideScrollHint();
+    }, { passive: true });
+
+    // Click the arrow to jolt the scroll forward.
+    const hint = grid.querySelector(".scroll-hint");
+    if (hint) {
+      hint.classList.add("interactive");
+      hint.addEventListener("click", e => {
+        e.stopPropagation();
+        grid.scrollBy({ left: 200, behavior: "smooth" });
+        hideScrollHint();
+      });
+    }
   });
 
   if (document.readyState === "loading") {
