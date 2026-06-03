@@ -1,8 +1,21 @@
 (function () {
   const regions = window.MCDK_REGIONS || {};
   const cities = window.MCDK_CITIES || {};
-  const initialGeo = window.MCDK_REGIONS_GEOJSON || { type: "FeatureCollection", features: [] };
-  const citiesGeo = window.MCDK_CITIES_GEOJSON || { type: "FeatureCollection", features: [] };
+  const initialGeo = toFeatureCollection(regions, "region");
+  const citiesGeo = toFeatureCollection(cities, "city");
+
+  function toFeatureCollection(dict, propKey) {
+    return {
+      type: "FeatureCollection",
+      features: Object.entries(dict)
+        .filter(([, v]) => v && v.geometry)
+        .map(([k, v]) => ({
+          type: "Feature",
+          properties: { [propKey]: k },
+          geometry: v.geometry
+        }))
+    };
+  }
 
   const DEFAULT_COLOR = "#4a8db8";
   const colorFor = () => DEFAULT_COLOR;
@@ -299,8 +312,11 @@
     if (newKeys.length) {
       newRegionBlock = "Nye scopes (tilføj til regions.js):\n";
       newKeys.forEach(k => {
-        newRegionBlock +=
-          "  \"" + k + "\": { name: " + JSON.stringify(proposedRegions[k].name) + " },\n";
+        const geom = (changes.find(c => c.change === "NEW" && c.region === k) || {}).geometry;
+        newRegionBlock += "  " + JSON.stringify(k) + ": {\n";
+        newRegionBlock += "    \"name\": " + JSON.stringify(proposedRegions[k].name) + ",\n";
+        newRegionBlock += "    \"geometry\": " + JSON.stringify(geom) + "\n";
+        newRegionBlock += "  },\n";
       });
       newRegionBlock += "\n";
     }

@@ -1,8 +1,21 @@
 (function () {
   const regions = window.MCDK_REGIONS || {};
   const cities = window.MCDK_CITIES || {};
-  const regionsGeo = window.MCDK_REGIONS_GEOJSON || { type: "FeatureCollection", features: [] };
-  const citiesGeo = window.MCDK_CITIES_GEOJSON || { type: "FeatureCollection", features: [] };
+  const regionsGeo = toFeatureCollection(regions, "region");
+  const citiesGeo = toFeatureCollection(cities, "city");
+
+  function toFeatureCollection(dict, propKey) {
+    return {
+      type: "FeatureCollection",
+      features: Object.entries(dict)
+        .filter(([, v]) => v && v.geometry)
+        .map(([k, v]) => ({
+          type: "Feature",
+          properties: { [propKey]: k },
+          geometry: v.geometry
+        }))
+    };
+  }
 
   const regionCli = document.getElementById("regionCli");
   const mapEl = document.getElementById("map");
@@ -131,7 +144,7 @@
       regionTitle.style.display = "";
 
       let cli = "region put eu\nregion put dk";
-      valid.forEach(k => { cli += "\nregion put " + regions[k].channel; });
+      valid.forEach(k => { cli += "\nregion put " + k; });
       regionCli.innerHTML = "<code>" + escapeHtml(cli + "\nregion save") + "</code>";
 
       regionsLayer.eachLayer(l => {
