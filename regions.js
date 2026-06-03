@@ -102,7 +102,7 @@ window.MCDK_REGIONS = {
   },
   "dk-jylland": {
     name: "Jylland",
-    channel: "jylland"
+    channel: "dk-jylland"
   }
 };
 
