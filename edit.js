@@ -398,48 +398,44 @@
   });
 
   // Export buttons.
+  function nameForRegion(key) {
+    return (regions[key] || proposedRegions[key] || { name: key }).name;
+  }
+  function buildChangeBlock() {
+    const regionEntries = collectChanges()
+      .filter(c => c.change !== "DELETED")
+      .map(c => formatRegionEntry(c.region, nameForRegion(c.region), c.geometry));
+    const cityEntries = collectCityChanges()
+      .filter(c => c.change !== "DELETED")
+      .map(c => formatCityEntry(c.key, c.meta, c.latlng));
+    const parts = [];
+    if (regionEntries.length) parts.push("// regions.js:\n" + regionEntries.join(",\n") + ",");
+    if (cityEntries.length) parts.push("// cities.js:\n" + cityEntries.join(",\n") + ",");
+    return parts.length ? parts.join("\n\n") + "\n" : "";
+  }
+
   btnCopy.addEventListener("click", async () => {
-    const text = serialize();
+    const text = buildChangeBlock();
+    if (!text) { setStatus("Ingen ændringer at kopiere."); return; }
     try {
       await navigator.clipboard.writeText(text);
-      setStatus("Kopieret " + featureCount() + " features til udklipsholder.");
+      setStatus("Ændringer kopieret til udklipsholder.");
     } catch (err) {
-      // Fallback: vis text i en prompt saa brugeren selv kan kopiere.
       window.prompt("Kopier manuelt:", text);
     }
   });
   btnEmail.addEventListener("click", async () => {
-    const changes = collectChanges();
-    const cityChanges = collectCityChanges();
-    if (changes.length === 0 && cityChanges.length === 0) {
-      setStatus("Ingen ændringer at sende.");
-      return;
-    }
+    const body = buildChangeBlock();
+    if (!body) { setStatus("Ingen ændringer at sende."); return; }
 
-    const totalNew = changes.filter(c => c.change === "NEW").length + cityChanges.filter(c => c.change === "NEW").length;
-    const totalMod = changes.filter(c => c.change === "MODIFIED").length + cityChanges.filter(c => c.change === "MODIFIED").length;
-    const totalDel = changes.filter(c => c.change === "DELETED").length + cityChanges.filter(c => c.change === "DELETED").length;
+    const totalNew = collectChanges().filter(c => c.change === "NEW").length + collectCityChanges().filter(c => c.change === "NEW").length;
+    const totalMod = collectChanges().filter(c => c.change === "MODIFIED").length + collectCityChanges().filter(c => c.change === "MODIFIED").length;
+    const totalDel = collectChanges().filter(c => c.change === "DELETED").length + collectCityChanges().filter(c => c.change === "DELETED").length;
     const subjectParts = [];
     if (totalNew) subjectParts.push(totalNew + " ny");
     if (totalMod) subjectParts.push(totalMod + " ændret");
     if (totalDel) subjectParts.push(totalDel + " slettet");
     const subject = "Bidrag: " + subjectParts.join(", ");
-
-    function nameFor(key) {
-      return (regions[key] || proposedRegions[key] || { name: key }).name;
-    }
-
-    const regionEntries = changes
-      .filter(c => c.change !== "DELETED")
-      .map(c => formatRegionEntry(c.region, nameFor(c.region), c.geometry));
-    const cityEntries = cityChanges
-      .filter(c => c.change !== "DELETED")
-      .map(c => formatCityEntry(c.key, c.meta, c.latlng));
-
-    const parts = [];
-    if (regionEntries.length) parts.push("// regions.js:\n" + regionEntries.join(",\n") + ",");
-    if (cityEntries.length) parts.push("// cities.js:\n" + cityEntries.join(",\n") + ",");
-    const body = parts.join("\n\n") + (parts.length ? "\n" : "");
 
     try {
       await navigator.clipboard.writeText(body);
@@ -514,17 +510,32 @@
   }
 
   btnDownload.addEventListener("click", () => {
-    const text = serialize();
+    const fc = { type: "FeatureCollection", features: [] };
+    regionsLayer.eachLayer(l => {
+      const gj = l.toGeoJSON();
+      if (gj.type === "Feature" && gj.properties && gj.properties.region) fc.features.push(gj);
+      else if (gj.type === "FeatureCollection") fc.features.push(...gj.features.filter(f => f.properties && f.properties.region));
+    });
+    citiesLayer.eachLayer(m => {
+      if (!(m instanceof L.Marker) || !m._cityKey) return;
+      const ll = m.getLatLng();
+      fc.features.push({
+        type: "Feature",
+        properties: { city: m._cityKey, name: m._cityMeta.name, scope: m._cityMeta.scope, localChat: m._cityMeta.localChat },
+        geometry: { type: "Point", coordinates: [ll.lng, ll.lat] }
+      });
+    });
+    const text = JSON.stringify(fc, null, 2);
     const blob = new Blob([text], { type: "application/geo+json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "regions.geojson";
+    a.download = "mcdk-export.geojson";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    setStatus("Downloaded " + featureCount() + " features.");
+    setStatus("Downloaded " + fc.features.length + " features.");
   });
 
   // Format a region entry to match the existing regions.js style, so the
@@ -577,30 +588,6 @@
            "  }";
   }
 
-  function serialize() {
-    const fc = { type: "FeatureCollection", features: [] };
-    regionsLayer.eachLayer(l => {
-      // Geoman tilfoejer layers direkte til map naar de tegnes; vi flytter dem ind i regionsLayer
-      // i pm:create-handleren, saa eachLayer ser dem her.
-      const gj = l.toGeoJSON();
-      // toGeoJSON paa et child-layer giver en single Feature; men hvis layeret er en GeoJSON-gruppe
-      // returnerer det en FeatureCollection. Haandter begge.
-      if (gj.type === "Feature") fc.features.push(gj);
-      else if (gj.type === "FeatureCollection") fc.features.push(...gj.features);
-    });
-    // Sikrer at hver Feature har properties.region (drop ellers).
-    fc.features = fc.features.filter(f => f.properties && f.properties.region);
-    return JSON.stringify(fc, null, 2);
-  }
-  function featureCount() {
-    let n = 0;
-    regionsLayer.eachLayer(l => {
-      const gj = l.toGeoJSON();
-      if (gj.type === "Feature" && gj.properties && gj.properties.region) n++;
-      else if (gj.type === "FeatureCollection") n += gj.features.filter(f => f.properties && f.properties.region).length;
-    });
-    return n;
-  }
   function setStatus(msg) {
     statusEl.textContent = msg;
     clearTimeout(setStatus._t);
