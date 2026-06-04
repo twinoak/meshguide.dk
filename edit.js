@@ -36,9 +36,7 @@
   const nrConfirm = document.getElementById("newRegionConfirm");
   const nrCancel = document.getElementById("newRegionCancel");
   const cityModal = document.getElementById("cityModal");
-  const cityKeyInput = document.getElementById("cityKey");
-  const cityNameInput = document.getElementById("cityName");
-  const cityScopeSelect = document.getElementById("cityScope");
+  const cityScopeInput = document.getElementById("cityScope");
   const cityChatInput = document.getElementById("cityChat");
   const cityError = document.getElementById("cityError");
   const cityConfirm = document.getElementById("cityConfirm");
@@ -346,38 +344,23 @@
   // City modal handling.
   let cityResolver = null;
   let cityEditing = null; // marker being edited, or null for new
-  function rebuildCityScopeSelect(selected) {
-    cityScopeSelect.innerHTML = "";
-    const blank = document.createElement("option");
-    blank.value = "";
-    blank.textContent = "(intet scope)";
-    cityScopeSelect.appendChild(blank);
-    Object.keys(regions).forEach(k => {
-      const opt = document.createElement("option");
-      opt.value = k;
-      opt.textContent = k + " — " + regions[k].name;
-      cityScopeSelect.appendChild(opt);
-    });
-    Object.keys(proposedRegions).forEach(k => {
-      const opt = document.createElement("option");
-      opt.value = k;
-      opt.textContent = k + " — " + proposedRegions[k].name + " (ny)";
-      cityScopeSelect.appendChild(opt);
-    });
-    cityScopeSelect.value = selected || "";
+  function deriveKeyFromChat(chat) {
+    return chat.replace(/^#/, "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  function deriveNameFromChat(chat) {
+    const slug = chat.replace(/^#/, "").trim();
+    if (!slug) return "";
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
   }
   function promptForCity(marker, latlng, cb) {
     cityResolver = cb;
     cityEditing = marker;
-    const meta = marker ? marker._cityMeta : { name: "", scope: "", localChat: "" };
-    cityKeyInput.value = marker ? marker._cityKey : "";
-    cityKeyInput.disabled = !!marker; // dont allow renaming existing cities
-    cityNameInput.value = meta.name || "";
-    rebuildCityScopeSelect(meta.scope || "");
+    const meta = marker ? marker._cityMeta : { scope: "", localChat: "" };
     cityChatInput.value = meta.localChat || "";
+    cityScopeInput.value = meta.scope || "";
     cityError.textContent = "";
     cityModal.hidden = false;
-    (marker ? cityNameInput : cityKeyInput).focus();
+    cityChatInput.focus();
   }
   function resolveCity(key, meta) {
     cityModal.hidden = true;
@@ -387,19 +370,19 @@
     if (cb) cb(key, meta);
   }
   function submitCity() {
-    const key = cityKeyInput.value.trim().toLowerCase();
-    const name = cityNameInput.value.trim();
-    const scope = cityScopeSelect.value;
     const localChat = cityChatInput.value.trim();
+    const scope = cityScopeInput.value.trim();
+    if (!localChat) { cityError.textContent = "Chat-kanal er påkrævet."; return; }
+    const key = cityEditing ? cityEditing._cityKey : deriveKeyFromChat(localChat);
     if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(key)) {
-      cityError.textContent = "Nøglen må kun indeholde små bogstaver, tal og bindestreger.";
+      cityError.textContent = "Kunne ikke udlede en gyldig nøgle fra chat-kanalen.";
       return;
     }
     if (!cityEditing && cities[key]) {
-      cityError.textContent = "Nøglen findes allerede.";
+      cityError.textContent = "En by med nøglen " + key + " findes allerede.";
       return;
     }
-    if (!name) { cityError.textContent = "Navn er påkrævet."; return; }
+    const name = (cityEditing && cityEditing._cityMeta && cityEditing._cityMeta.name) || deriveNameFromChat(localChat);
     resolveCity(key, { name, scope, localChat });
   }
   cityConfirm.addEventListener("click", submitCity);

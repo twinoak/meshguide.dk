@@ -68,15 +68,10 @@
 <div class="modal-backdrop" id="cityModal" hidden>
   <div class="modal" role="dialog" aria-label="By-metadata">
     <h3>By</h3>
-    <p class="muted">Udfyld oplysningerne om byen.</p>
-    <label for="cityKey">Nøgle <span class="muted">— kort id, kun små bogstaver/tal/bindestreger (fx <code>horsens</code>)</span></label>
-    <input type="text" id="cityKey" maxlength="32" placeholder="horsens" autocomplete="off">
-    <label for="cityName">Navn <span class="muted">— vises i kort og lister (fx <code>Horsens</code>)</span></label>
-    <input type="text" id="cityName" maxlength="80" placeholder="Horsens">
-    <label for="cityScope">Scope <span class="muted">— regionen byen hører til (valgfri)</span></label>
-    <select id="cityScope"></select>
-    <label for="cityChat">Lokal chat-kanal <span class="muted">— meshcore-kanalnavn (fx <code>#horsens</code>)</span></label>
+    <label for="cityChat">Hashchat kanal navn<span class="muted">- (fx <code>#horsens</code>)</span></label>
     <input type="text" id="cityChat" maxlength="64" placeholder="#horsens" autocomplete="off">
+    <label for="cityScope">Scope</label>
+    <input type="text" id="cityScope" maxlength="64" placeholder="dk-horsens" autocomplete="off">
     <p class="muted error" id="cityError" aria-live="polite"></p>
     <div class="modal-actions">
       <button type="button" id="cityCancel">Annuller</button>
