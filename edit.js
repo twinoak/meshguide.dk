@@ -308,38 +308,14 @@
     const subjectTag = newKeys.length ? " [NY SCOPE: " + newKeys.join(", ") + "]" : "";
     const subject = "Region-bidrag: " + subjectParts.join(", ") + subjectTag;
 
-    let newRegionBlock = "";
-    if (newKeys.length) {
-      newRegionBlock = "Nye scopes (tilføj til regions.js):\n";
-      newKeys.forEach(k => {
-        const geom = (changes.find(c => c.change === "NEW" && c.region === k) || {}).geometry;
-        newRegionBlock += "  " + JSON.stringify(k) + ": {\n";
-        newRegionBlock += "    \"name\": " + JSON.stringify(proposedRegions[k].name) + ",\n";
-        newRegionBlock += "    \"geometry\": " + JSON.stringify(geom) + "\n";
-        newRegionBlock += "  },\n";
-      });
-      newRegionBlock += "\n";
+    function nameFor(key) {
+      return (regions[key] || proposedRegions[key] || { name: key }).name;
     }
 
-    const summaryLines = changes.map(c => {
-      const ctr = c.center.map(v => v.toFixed(3)).join(", ");
-      const tag = c.change === "MODIFIED" && c.oldRegion && c.oldRegion !== c.region
-        ? c.oldRegion + " → " + c.region
-        : c.region;
-      return "  [" + c.change.padEnd(8) + "] " + tag.padEnd(14) + " " + c.vertexCount + " hjørner, center " + ctr;
-    }).join("\n");
-
-    const fc = {
-      type: "FeatureCollection",
-      features: changes.map(c => ({
-        type: "Feature",
-        properties: { region: c.region, change: c.change },
-        geometry: c.geometry
-      }))
-    };
-    const geo = JSON.stringify(fc, null, 2);
-
-    const body = newRegionBlock + geo + "\n";
+    const entries = changes
+      .filter(c => c.change !== "DELETED")
+      .map(c => formatRegionEntry(c.region, nameFor(c.region), c.geometry));
+    const body = entries.length ? entries.join(",\n") + ",\n" : "";
 
     try {
       await navigator.clipboard.writeText(body);
@@ -405,6 +381,42 @@
     URL.revokeObjectURL(url);
     setStatus("Downloaded " + featureCount() + " features.");
   });
+
+  // Format a region entry to match the existing regions.js style, so the
+  // output can be pasted directly into window.MCDK_REGIONS.
+  function fmtNum(n) {
+    // 6 decimals matches the precision used in regions.js.
+    return +n.toFixed(6);
+  }
+  function fmtPoint(p) {
+    return "[" + fmtNum(p[0]) + ", " + fmtNum(p[1]) + "]";
+  }
+  function fmtRing(ring, pad) {
+    const outer = " ".repeat(pad);
+    const inner = " ".repeat(pad + 2);
+    return outer + "[\n" +
+      ring.map(p => inner + fmtPoint(p)).join(",\n") + "\n" +
+      outer + "]";
+  }
+  function formatGeometry(geom) {
+    if (geom.type === "Polygon") {
+      const rings = geom.coordinates.map(r => fmtRing(r, 6)).join(",\n");
+      return '{ "type": "Polygon", "coordinates": [\n' + rings + "\n    ] }";
+    }
+    if (geom.type === "MultiPolygon") {
+      const polys = geom.coordinates.map(poly =>
+        "      [\n" + poly.map(r => fmtRing(r, 8)).join(",\n") + "\n      ]"
+      ).join(",\n");
+      return '{ "type": "MultiPolygon", "coordinates": [\n' + polys + "\n    ] }";
+    }
+    return JSON.stringify(geom);
+  }
+  function formatRegionEntry(key, name, geometry) {
+    return "  " + JSON.stringify(key) + ": {\n" +
+           '    "name": ' + JSON.stringify(name) + ",\n" +
+           '    "geometry": ' + formatGeometry(geometry) + "\n" +
+           "  }";
+  }
 
   function serialize() {
     const fc = { type: "FeatureCollection", features: [] };
