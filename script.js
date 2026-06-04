@@ -214,70 +214,43 @@
   const floodInterval = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
   document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 
-  // Horizontal scroll via mousewheel with momentum.
+  // Expandable screenshot grids: show only the first row teaser, with a one-shot reveal button.
+  const SHOW_LABEL = "Vis alle billeder";
   document.querySelectorAll(".screenshot-grid").forEach(grid => {
-    let vel = 0, rafId = null;
+    grid.classList.add("collapsed");
 
-    function animate() {
-      if (Math.abs(vel) < 0.5) { vel = 0; rafId = null; return; }
-      vel *= 0.9;
-      grid.scrollLeft += vel;
-      rafId = requestAnimationFrame(animate);
-    }
+    const wrap = document.createElement("div");
+    wrap.className = "screenshot-grid-wrap";
+    grid.parentNode.insertBefore(wrap, grid);
+    wrap.appendChild(grid);
 
-    function startMomentum() {
-      if (!rafId) rafId = requestAnimationFrame(animate);
-    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "screenshot-expand";
+    btn.textContent = SHOW_LABEL;
+    wrap.appendChild(btn);
 
-    function hideScrollHint() {
-      const hint = grid.querySelector(".scroll-hint");
-      if (hint) hint.classList.add("hidden");
-    }
+    const expand = () => {
+      grid.classList.remove("collapsed");
+      btn.remove();
+      window.removeEventListener("resize", refresh);
+      if (ro) ro.disconnect();
+    };
+    btn.addEventListener("click", expand);
 
-    grid.addEventListener("wheel", e => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        vel += e.deltaX * 0.05;
-      } else {
-        vel += e.deltaY * 0.03;
-      }
-      startMomentum();
-      hideScrollHint();
-      e.preventDefault();
-    }, { passive: false });
-
-    // Touch support with momentum.
-    let touchStartX, touchScrollLeft, touchVel = 0, lastTouchX;
-    grid.addEventListener("touchstart", e => {
-      touchStartX = e.touches[0].clientX;
-      touchScrollLeft = grid.scrollLeft;
-      touchVel = 0;
-      lastTouchX = touchStartX;
-    }, { passive: true });
-    grid.addEventListener("touchmove", e => {
-      const x = e.touches[0].clientX;
-      touchVel = x - lastTouchX;
-      lastTouchX = x;
-    }, { passive: true });
-    grid.addEventListener("touchend", () => {
-      vel = touchVel * 0.5;
-      startMomentum();
-      hideScrollHint();
-    });
-
-    // Also hide on scrollbar drag / keyboard scroll.
-    grid.addEventListener("scroll", () => {
-      if (grid.scrollLeft > 0) hideScrollHint();
-    }, { passive: true });
-
-    // Click the arrow to jolt the scroll forward.
-    const hint = grid.querySelector(".scroll-hint");
-    if (hint) {
-      hint.classList.add("interactive");
-      hint.addEventListener("click", e => {
-        e.stopPropagation();
-        grid.scrollBy({ left: 200, behavior: "smooth" });
-        hideScrollHint();
-      });
+    const refresh = () => {
+      const first = grid.firstElementChild;
+      if (!first) return;
+      grid.style.setProperty("--row-h", first.offsetHeight + "px");
+      const fits = grid.scrollHeight <= first.offsetHeight + 1;
+      if (fits) expand();
+    };
+    let ro = null;
+    requestAnimationFrame(refresh);
+    window.addEventListener("resize", refresh);
+    if (window.ResizeObserver) {
+      ro = new ResizeObserver(refresh);
+      ro.observe(grid);
     }
   });
 

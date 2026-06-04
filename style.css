@@ -20,7 +20,7 @@ html, body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.55;
 }
-body { position: relative; overflow-x: clip; }
+body { position: relative; }
 
 a { color: var(--accent); }
 
@@ -442,88 +442,76 @@ code {
 #indstillinger > h3 { margin: 1.5rem 0 .5rem; font-size: 1.05rem; }
 
 .screenshot-grid {
-  display: flex;
+  --shot-min: 200px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(var(--shot-min), calc((100% - 2 * .75rem) / 3)), 1fr));
   gap: .75rem;
-  --grid-bleed: 6rem;
-  margin: 1rem calc(-1.5rem - var(--grid-bleed));
-  overflow-x: auto;
-  touch-action: pan-x;
-  scrollbar-width: none;
+  margin: 1rem 0 .5rem;
+}
+.screenshot-grid-wrap {
   position: relative;
-  padding: 0 calc(1.5rem + var(--grid-bleed));
-  -webkit-mask-image: linear-gradient(to right,
-    hsla(0,0%,0%,0) 0,
-    hsla(0,0%,0%,0.05) calc(var(--grid-bleed) * 0.2),
-    hsla(0,0%,0%,0.2) calc(var(--grid-bleed) * 0.45),
-    hsla(0,0%,0%,0.55) calc(var(--grid-bleed) * 0.7),
-    hsla(0,0%,0%,0.9) calc(var(--grid-bleed) * 0.9),
-    #000 var(--grid-bleed),
-    #000 calc(100% - var(--grid-bleed)),
-    hsla(0,0%,0%,0.9) calc(100% - var(--grid-bleed) * 0.9),
-    hsla(0,0%,0%,0.55) calc(100% - var(--grid-bleed) * 0.7),
-    hsla(0,0%,0%,0.2) calc(100% - var(--grid-bleed) * 0.45),
-    hsla(0,0%,0%,0.05) calc(100% - var(--grid-bleed) * 0.2),
-    hsla(0,0%,0%,0) 100%);
-          mask-image: linear-gradient(to right,
-    hsla(0,0%,0%,0) 0,
-    hsla(0,0%,0%,0.05) calc(var(--grid-bleed) * 0.2),
-    hsla(0,0%,0%,0.2) calc(var(--grid-bleed) * 0.45),
-    hsla(0,0%,0%,0.55) calc(var(--grid-bleed) * 0.7),
-    hsla(0,0%,0%,0.9) calc(var(--grid-bleed) * 0.9),
-    #000 var(--grid-bleed),
-    #000 calc(100% - var(--grid-bleed)),
-    hsla(0,0%,0%,0.9) calc(100% - var(--grid-bleed) * 0.9),
-    hsla(0,0%,0%,0.55) calc(100% - var(--grid-bleed) * 0.7),
-    hsla(0,0%,0%,0.2) calc(100% - var(--grid-bleed) * 0.45),
-    hsla(0,0%,0%,0.05) calc(100% - var(--grid-bleed) * 0.2),
-    hsla(0,0%,0%,0) 100%);
+  margin-bottom: 1rem;
 }
-.screenshot-grid::-webkit-scrollbar { display: none; }
-.screenshot-grid .scroll-hint {
-  position: absolute;
-  top: 50%;
-  right: calc(.75rem + var(--grid-bleed));
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 120px;
-  height: 120px;
-  color: var(--text);
-  pointer-events: none;
-  animation: scroll-hint-bob 1.6s ease-in-out infinite;
-  transition: opacity .3s ease;
+.screenshot-grid.collapsed {
+  max-height: calc(var(--row-h, 9999px) * 0.6);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 40%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0, #000 40%, transparent 100%);
 }
-.screenshot-grid .scroll-hint.interactive {
-  pointer-events: auto;
-  cursor: pointer;
-}
-.screenshot-grid .scroll-hint.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-.screenshot-grid .scroll-hint svg {
-  width: 100%;
-  height: 100%;
-}
-@keyframes scroll-hint-bob {
-  0%, 100% { transform: translateY(-50%) translateX(0); }
-  50% { transform: translateY(-50%) translateX(50px); }
-}
-.screenshot-grid a {
-  scroll-snap-align: start;
-}
+.screenshot-grid a { display: block; }
 .screenshot-grid img {
-  width: 350px;
+  display: block;
+  width: 100%;
   aspect-ratio: 9 / 20;
   object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg);
 }
+.screenshot-expand {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 25%);
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 48px;
+  padding: .75rem 1.5rem;
+  background: linear-gradient(135deg, #1f6feb, #58a6ff);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(31, 111, 235, 0.45), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  z-index: 2;
+  white-space: nowrap;
+}
+.screenshot-expand::after {
+  content: "";
+  width: .55em;
+  height: .55em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+}
+.screenshot-expand:hover,
+.screenshot-expand:focus-visible {
+  transform: translate(-50%, 25%) translateY(-2px);
+  box-shadow: 0 10px 24px rgba(31, 111, 235, 0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
+  filter: brightness(1.05);
+  outline: none;
+}
+.screenshot-expand:active {
+  transform: translate(-50%, 25%) translateY(1px);
+  filter: brightness(0.95);
+}
 @media (max-width: 480px) {
-  .screenshot-grid {
-    gap: .5rem;
-  }
+  .screenshot-grid { --shot-min: 120px; gap: .5rem; }
 }
