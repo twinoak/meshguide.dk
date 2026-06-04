@@ -20,7 +20,7 @@ html, body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.55;
 }
-body { position: relative; }
+body { position: relative; overflow-x: clip; }
 
 a { color: var(--accent); }
 
@@ -444,18 +444,45 @@ code {
 .screenshot-grid {
   display: flex;
   gap: .75rem;
-  margin: 1rem -1.5rem;
+  --grid-bleed: 6rem;
+  margin: 1rem calc(-1.5rem - var(--grid-bleed));
   overflow-x: auto;
   touch-action: pan-x;
-  scrollbar-width: thick;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-width: none;
   position: relative;
-  padding: 0 1.5rem;
+  padding: 0 calc(1.5rem + var(--grid-bleed));
+  -webkit-mask-image: linear-gradient(to right,
+    hsla(0,0%,0%,0) 0,
+    hsla(0,0%,0%,0.05) calc(var(--grid-bleed) * 0.2),
+    hsla(0,0%,0%,0.2) calc(var(--grid-bleed) * 0.45),
+    hsla(0,0%,0%,0.55) calc(var(--grid-bleed) * 0.7),
+    hsla(0,0%,0%,0.9) calc(var(--grid-bleed) * 0.9),
+    #000 var(--grid-bleed),
+    #000 calc(100% - var(--grid-bleed)),
+    hsla(0,0%,0%,0.9) calc(100% - var(--grid-bleed) * 0.9),
+    hsla(0,0%,0%,0.55) calc(100% - var(--grid-bleed) * 0.7),
+    hsla(0,0%,0%,0.2) calc(100% - var(--grid-bleed) * 0.45),
+    hsla(0,0%,0%,0.05) calc(100% - var(--grid-bleed) * 0.2),
+    hsla(0,0%,0%,0) 100%);
+          mask-image: linear-gradient(to right,
+    hsla(0,0%,0%,0) 0,
+    hsla(0,0%,0%,0.05) calc(var(--grid-bleed) * 0.2),
+    hsla(0,0%,0%,0.2) calc(var(--grid-bleed) * 0.45),
+    hsla(0,0%,0%,0.55) calc(var(--grid-bleed) * 0.7),
+    hsla(0,0%,0%,0.9) calc(var(--grid-bleed) * 0.9),
+    #000 var(--grid-bleed),
+    #000 calc(100% - var(--grid-bleed)),
+    hsla(0,0%,0%,0.9) calc(100% - var(--grid-bleed) * 0.9),
+    hsla(0,0%,0%,0.55) calc(100% - var(--grid-bleed) * 0.7),
+    hsla(0,0%,0%,0.2) calc(100% - var(--grid-bleed) * 0.45),
+    hsla(0,0%,0%,0.05) calc(100% - var(--grid-bleed) * 0.2),
+    hsla(0,0%,0%,0) 100%);
 }
+.screenshot-grid::-webkit-scrollbar { display: none; }
 .screenshot-grid .scroll-hint {
   position: absolute;
   top: 50%;
-  right: .75rem;
+  right: calc(.75rem + var(--grid-bleed));
   transform: translateY(-50%);
   z-index: 2;
   display: flex;
@@ -483,16 +510,6 @@ code {
 @keyframes scroll-hint-bob {
   0%, 100% { transform: translateY(-50%) translateX(0); }
   50% { transform: translateY(-50%) translateX(50px); }
-}
-.screenshot-grid::-webkit-scrollbar {
-  height: .6rem;
-}
-.screenshot-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-.screenshot-grid::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: .3rem;
 }
 .screenshot-grid a {
   scroll-snap-align: start;
