@@ -328,28 +328,6 @@ th { color: var(--muted); font-weight: 600; }
 #regionCli { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
 #regionCli code { background: transparent; padding: 0; }
 
-.region-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: .4rem;
-}
-.region-list li {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  padding: .25rem .6rem;
-  border-radius: 999px;
-  font-size: .85rem;
-  cursor: pointer;
-}
-.region-list li.active {
-  background: var(--accent-2);
-  color: #000;
-  border-color: var(--accent-2);
-}
-
 footer {
   text-align: center;
   color: var(--muted);

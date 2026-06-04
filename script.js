@@ -18,6 +18,7 @@
   }
 
   const regionCli = document.getElementById("regionCli");
+  const regionTitle = document.getElementById("regionTitle");
   const mapEl = document.getElementById("map");
 
   const DEFAULT_REGION_COLOR = "#ffffff";
@@ -167,15 +168,6 @@
     html += "</dl>";
     html += "</div>";
     return html;
-  }
-
-  function findRegionLayer(geoLayer, key) {
-    let found = null;
-    geoLayer.eachLayer(l => {
-      const k = l.feature && l.feature.properties && l.feature.properties.region;
-      if (k === key) found = l;
-    });
-    return found;
   }
 
   // Point-in-polygon for GeoJSON Polygon/MultiPolygon. Punkt og ringe i [lng, lat].
