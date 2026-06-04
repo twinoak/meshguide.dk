@@ -45,7 +45,7 @@
     const regionsLayer = L.geoJSON(regionsGeo, {
       style: feature => ({
         className: "mcdk-region",
-        color: "#0a1830",
+        color: regionColor(feature.properties && feature.properties.region),
         weight: 1.2,
         fillColor: regionColor(feature.properties && feature.properties.region),
         fillOpacity: 0,
@@ -150,7 +150,7 @@
       regionsLayer.eachLayer(l => {
         const k = l.feature && l.feature.properties && l.feature.properties.region;
         const active = valid.includes(k);
-        l.setStyle({ fillOpacity: active ? 0.2 : 0, weight: active ? 1 : 0, opacity: active ? 1 : 0 });
+        l.setStyle({ fillOpacity: active ? 0.1 : 0, weight: active ? 1.25 : 0, opacity: active ? 1 : 0 });
         if (active) l.bringToFront();
       });
       showHint(false);
