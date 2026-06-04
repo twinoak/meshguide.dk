@@ -112,24 +112,12 @@ section h2 a {
 .muted { color: var(--muted); margin: 0; }
 
 .platform-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-  margin: 1rem 0;
+  color: var(--accent-2);
+  margin: .25rem 0 1.25rem;
 }
 .platform-links a {
-  display: inline-block;
-  padding: .45rem 1rem;
-  background: var(--accent-2);
-  color: var(--bg);
-  font-weight: 600;
-  font-size: .9rem;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: opacity .15s;
-}
-.platform-links a:hover {
-  opacity: .85;
+  color: var(--accent);
+  font-weight: 500;
 }
 
 table { width: 100%; border-collapse: collapse; font-size: .95rem; }
@@ -478,7 +466,7 @@ code {
   gap: .5rem;
   min-height: 48px;
   padding: .75rem 1.5rem;
-  background: linear-gradient(135deg, #1f6feb, #58a6ff);
+  background: #1f6feb;
   color: #fff;
   border: 0;
   border-radius: 999px;
@@ -486,7 +474,6 @@ code {
   font-weight: 600;
   letter-spacing: .01em;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(31, 111, 235, 0.45), 0 0 0 1px rgba(255,255,255,0.08) inset;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
@@ -503,8 +490,6 @@ code {
 }
 .screenshot-expand:hover,
 .screenshot-expand:focus-visible {
-  transform: translate(-50%, 25%) translateY(-2px);
-  box-shadow: 0 10px 24px rgba(31, 111, 235, 0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
   filter: brightness(1.05);
   outline: none;
 }
