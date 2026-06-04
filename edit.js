@@ -35,6 +35,14 @@
   const nrError = document.getElementById("newRegionError");
   const nrConfirm = document.getElementById("newRegionConfirm");
   const nrCancel = document.getElementById("newRegionCancel");
+  const cityModal = document.getElementById("cityModal");
+  const cityKeyInput = document.getElementById("cityKey");
+  const cityNameInput = document.getElementById("cityName");
+  const cityScopeSelect = document.getElementById("cityScope");
+  const cityChatInput = document.getElementById("cityChat");
+  const cityError = document.getElementById("cityError");
+  const cityConfirm = document.getElementById("cityConfirm");
+  const cityCancel = document.getElementById("cityCancel");
 
   if (!mapEl || typeof L === "undefined") return;
 
@@ -93,22 +101,44 @@
   });
   const deletedOriginals = [];
 
-  // Vis byer som referencepunkter, ikke-redigerbare.
+  // Byer er redigerbare markers i deres eget lag.
+  const citiesLayer = L.featureGroup().addTo(map);
+  const deletedCities = [];
+
+  function cityIcon() {
+    return L.divIcon({
+      className: "",
+      html: '<div class="mcdk-city-marker"></div>',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+  }
+  function bindCityTooltip(marker, key) {
+    const meta = marker._cityMeta || cities[key] || {};
+    const suffix = meta.name ? " — " + meta.name : "";
+    marker.unbindTooltip();
+    marker.bindTooltip((key || "?") + suffix, { sticky: true, direction: "top" });
+  }
+  function addCityMarker(key, meta, latlng, isOriginal) {
+    const marker = L.marker(latlng, { icon: cityIcon(), title: meta.name || "" });
+    marker._cityKey = key;
+    marker._cityMeta = { name: meta.name || "", scope: meta.scope || "", localChat: meta.localChat || "" };
+    if (isOriginal) {
+      marker._origCityKey = key;
+      marker._origCityLatLng = L.latLng(latlng).clone();
+      marker._origCityMeta = JSON.stringify(marker._cityMeta);
+    }
+    bindCityTooltip(marker, key);
+    citiesLayer.addLayer(marker);
+    return marker;
+  }
+
   citiesGeo.features.forEach(f => {
     if (!f.geometry || f.geometry.type !== "Point") return;
     const [lng, lat] = f.geometry.coordinates;
-    const meta = cities[f.properties && f.properties.city] || {};
-    const marker = L.marker([lat, lng], {
-      icon: L.divIcon({
-        className: "",
-        html: '<div class="mcdk-city-marker"></div>',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
-      }),
-      title: meta.name || "",
-      pmIgnore: true
-    });
-    marker.addTo(map);
+    const key = f.properties && f.properties.city;
+    const meta = cities[key] || {};
+    addCityMarker(key, meta, [lat, lng], true);
   });
 
   function styleForKey(key) {
@@ -137,6 +167,7 @@
     drawCircle: false,
     drawText: false,
     drawPolygon: true,
+    drawMarker: true,
     editMode: true,
     dragMode: false,
     cutPolygon: false,
@@ -150,9 +181,19 @@
     allowSelfIntersection: false
   });
 
-  // Naar et nyt polygon tegnes, spoerg om region-noegle.
+  // Naar et nyt polygon eller marker tegnes.
   map.on("pm:create", e => {
     const layer = e.layer;
+    if (layer instanceof L.Marker) {
+      // Nyt bymarker — fjern det tegnede og lad city-modal styre opretelsen.
+      map.removeLayer(layer);
+      promptForCity(null, layer.getLatLng(), (key, meta) => {
+        if (!key) return;
+        addCityMarker(key, meta, layer.getLatLng(), false);
+        setStatus("By tilfoejet: " + key + ".");
+      });
+      return;
+    }
     // Frisk-tegnede layers kommer ind uden feature; tilfoej en.
     layer.feature = layer.feature || { type: "Feature", properties: {}, geometry: null };
     promptForKey(null, key => {
@@ -168,6 +209,21 @@
       regionsLayer.addLayer(layer);
       setStatus("Tilfoejet " + key + ".");
     });
+  });
+
+  // Klik paa eksisterende bymarker for at redigere metadata.
+  citiesLayer.on("click", e => {
+    const marker = e.propagatedFrom || e.layer;
+    if (!marker || !(marker instanceof L.Marker)) return;
+    if (map.pm.globalEditModeEnabled() || map.pm.globalDrawModeEnabled() || map.pm.globalRemovalModeEnabled() || map.pm.globalDragModeEnabled()) return;
+    promptForCity(marker, marker.getLatLng(), (key, meta) => {
+      if (!key) return;
+      marker._cityKey = key;
+      marker._cityMeta = meta;
+      bindCityTooltip(marker, key);
+      setStatus("By opdateret: " + key + ".");
+    });
+    L.DomEvent.stopPropagation(e);
   });
 
   // Lad brugeren klikke et eksisterende polygon for at ændre dets noegle.
@@ -187,9 +243,17 @@
     L.DomEvent.stopPropagation(e);
   });
 
-  // Naar et polygon slettes via Geoman, fjern det ogsaa fra regionsLayer.
+  // Naar et polygon eller bymarker slettes via Geoman.
   map.on("pm:remove", e => {
     const l = e.layer;
+    if (l instanceof L.Marker) {
+      if (l._origCityKey) {
+        deletedCities.push({ key: l._origCityKey, meta: JSON.parse(l._origCityMeta), latlng: l._origCityLatLng });
+      }
+      if (citiesLayer.hasLayer(l)) citiesLayer.removeLayer(l);
+      setStatus("By slettet.");
+      return;
+    }
     if (l && l._origKey) {
       deletedOriginals.push({
         region: l._origKey,
@@ -279,6 +343,77 @@
     }
   });
 
+  // City modal handling.
+  let cityResolver = null;
+  let cityEditing = null; // marker being edited, or null for new
+  function rebuildCityScopeSelect(selected) {
+    cityScopeSelect.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "(intet scope)";
+    cityScopeSelect.appendChild(blank);
+    Object.keys(regions).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k + " — " + regions[k].name;
+      cityScopeSelect.appendChild(opt);
+    });
+    Object.keys(proposedRegions).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k + " — " + proposedRegions[k].name + " (ny)";
+      cityScopeSelect.appendChild(opt);
+    });
+    cityScopeSelect.value = selected || "";
+  }
+  function promptForCity(marker, latlng, cb) {
+    cityResolver = cb;
+    cityEditing = marker;
+    const meta = marker ? marker._cityMeta : { name: "", scope: "", localChat: "" };
+    cityKeyInput.value = marker ? marker._cityKey : "";
+    cityKeyInput.disabled = !!marker; // dont allow renaming existing cities
+    cityNameInput.value = meta.name || "";
+    rebuildCityScopeSelect(meta.scope || "");
+    cityChatInput.value = meta.localChat || "";
+    cityError.textContent = "";
+    cityModal.hidden = false;
+    (marker ? cityNameInput : cityKeyInput).focus();
+  }
+  function resolveCity(key, meta) {
+    cityModal.hidden = true;
+    const cb = cityResolver;
+    cityResolver = null;
+    cityEditing = null;
+    if (cb) cb(key, meta);
+  }
+  function submitCity() {
+    const key = cityKeyInput.value.trim().toLowerCase();
+    const name = cityNameInput.value.trim();
+    const scope = cityScopeSelect.value;
+    const localChat = cityChatInput.value.trim();
+    if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(key)) {
+      cityError.textContent = "Nøglen må kun indeholde små bogstaver, tal og bindestreger.";
+      return;
+    }
+    if (!cityEditing && cities[key]) {
+      cityError.textContent = "Nøglen findes allerede.";
+      return;
+    }
+    if (!name) { cityError.textContent = "Navn er påkrævet."; return; }
+    resolveCity(key, { name, scope, localChat });
+  }
+  cityConfirm.addEventListener("click", submitCity);
+  cityCancel.addEventListener("click", () => resolveCity(null));
+  cityModal.addEventListener("click", e => { if (e.target === cityModal) resolveCity(null); });
+  document.addEventListener("keydown", e => {
+    if (cityModal.hidden) return;
+    if (e.key === "Escape") resolveCity(null);
+    if (e.key === "Enter" && e.target && e.target.tagName === "INPUT") {
+      e.preventDefault();
+      submitCity();
+    }
+  });
+
   // Export buttons.
   btnCopy.addEventListener("click", async () => {
     const text = serialize();
@@ -292,30 +427,36 @@
   });
   btnEmail.addEventListener("click", async () => {
     const changes = collectChanges();
-    if (changes.length === 0) {
+    const cityChanges = collectCityChanges();
+    if (changes.length === 0 && cityChanges.length === 0) {
       setStatus("Ingen ændringer at sende.");
       return;
     }
 
-    const byType = { NEW: [], MODIFIED: [], DELETED: [] };
-    changes.forEach(c => byType[c.change].push(c));
-    const newKeys = Object.keys(proposedRegions).filter(k => changes.some(c => c.region === k));
-
+    const totalNew = changes.filter(c => c.change === "NEW").length + cityChanges.filter(c => c.change === "NEW").length;
+    const totalMod = changes.filter(c => c.change === "MODIFIED").length + cityChanges.filter(c => c.change === "MODIFIED").length;
+    const totalDel = changes.filter(c => c.change === "DELETED").length + cityChanges.filter(c => c.change === "DELETED").length;
     const subjectParts = [];
-    if (byType.NEW.length) subjectParts.push(byType.NEW.length + " ny");
-    if (byType.MODIFIED.length) subjectParts.push(byType.MODIFIED.length + " ændret");
-    if (byType.DELETED.length) subjectParts.push(byType.DELETED.length + " slettet");
-    const subjectTag = newKeys.length ? " [NY SCOPE: " + newKeys.join(", ") + "]" : "";
-    const subject = "Region-bidrag: " + subjectParts.join(", ") + subjectTag;
+    if (totalNew) subjectParts.push(totalNew + " ny");
+    if (totalMod) subjectParts.push(totalMod + " ændret");
+    if (totalDel) subjectParts.push(totalDel + " slettet");
+    const subject = "Bidrag: " + subjectParts.join(", ");
 
     function nameFor(key) {
       return (regions[key] || proposedRegions[key] || { name: key }).name;
     }
 
-    const entries = changes
+    const regionEntries = changes
       .filter(c => c.change !== "DELETED")
       .map(c => formatRegionEntry(c.region, nameFor(c.region), c.geometry));
-    const body = entries.length ? entries.join(",\n") + ",\n" : "";
+    const cityEntries = cityChanges
+      .filter(c => c.change !== "DELETED")
+      .map(c => formatCityEntry(c.key, c.meta, c.latlng));
+
+    const parts = [];
+    if (regionEntries.length) parts.push("// regions.js:\n" + regionEntries.join(",\n") + ",");
+    if (cityEntries.length) parts.push("// cities.js:\n" + cityEntries.join(",\n") + ",");
+    const body = parts.join("\n\n") + (parts.length ? "\n" : "");
 
     try {
       await navigator.clipboard.writeText(body);
@@ -327,6 +468,27 @@
     const placeholder = "(indsæt indholdet fra udklipsholderen her med Ctrl+V)";
     window.location.href = "mailto:meshcore@drkt.eu?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(placeholder);
   });
+
+  function collectCityChanges() {
+    const out = [];
+    citiesLayer.eachLayer(m => {
+      if (!(m instanceof L.Marker) || !m._cityKey) return;
+      const ll = m.getLatLng();
+      if (!m._origCityKey) {
+        out.push({ change: "NEW", key: m._cityKey, meta: m._cityMeta, latlng: ll });
+        return;
+      }
+      const moved = Math.abs(ll.lat - m._origCityLatLng.lat) > 1e-7 || Math.abs(ll.lng - m._origCityLatLng.lng) > 1e-7;
+      const metaChanged = JSON.stringify(m._cityMeta) !== m._origCityMeta;
+      if (moved || metaChanged) {
+        out.push({ change: "MODIFIED", key: m._cityKey, meta: m._cityMeta, latlng: ll });
+      }
+    });
+    deletedCities.forEach(d => {
+      out.push({ change: "DELETED", key: d.key, meta: d.meta, latlng: d.latlng });
+    });
+    return out;
+  }
 
   function collectChanges() {
     const changes = [];
@@ -410,6 +572,20 @@
       return '{ "type": "MultiPolygon", "coordinates": [\n' + polys + "\n    ] }";
     }
     return JSON.stringify(geom);
+  }
+  function fmtCityNum(n) {
+    // 4 decimals matches the precision used in cities.js.
+    return +n.toFixed(4);
+  }
+  function formatCityEntry(key, meta, latlng) {
+    const lng = fmtCityNum(latlng.lng);
+    const lat = fmtCityNum(latlng.lat);
+    return "  " + JSON.stringify(key) + ": {\n" +
+           '    "name": ' + JSON.stringify(meta.name || "") + ",\n" +
+           '    "scope": ' + JSON.stringify(meta.scope || "") + ",\n" +
+           '    "localChat": ' + JSON.stringify(meta.localChat || "") + ",\n" +
+           '    "geometry": { "type": "Point", "coordinates": [' + lng + ", " + lat + "] }\n" +
+           "  }";
   }
   function formatRegionEntry(key, name, geometry) {
     return "  " + JSON.stringify(key) + ": {\n" +

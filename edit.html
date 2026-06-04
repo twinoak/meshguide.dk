@@ -22,6 +22,7 @@
   <section>
     <h2>Region-editor</h2>
     <p>Tegn nye region-polygoner eller ret eksisterende. Hver gang du tegner et nyt polygon, bliver du bedt om at vælge hvilken region (<code>dk-xx</code>) den hører til. Du kan ogsaa flytte hjørner paa eksisterende polygoner.</p>
+    <p>Du kan ogsaa placere byer ved at tegne et punkt — sa bliver du bedt om navn, scope og chat-kanal.</p>
     <p>Naar du er færdig, brug <strong>Kopier</strong> eller <strong>Download</strong> nederst.</p>
 
     <div id="editor-map" class="editor-map"></div>
@@ -60,6 +61,26 @@
     <div class="modal-actions">
       <button type="button" id="newRegionCancel">Annuller</button>
       <button type="button" id="newRegionConfirm" class="primary">Opret</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="cityModal" hidden>
+  <div class="modal" role="dialog" aria-label="By-metadata">
+    <h3>By</h3>
+    <p class="muted">Udfyld oplysningerne om byen.</p>
+    <label for="cityKey">Nøgle <span class="muted">— kort id, kun små bogstaver/tal/bindestreger (fx <code>horsens</code>)</span></label>
+    <input type="text" id="cityKey" maxlength="32" placeholder="horsens" autocomplete="off">
+    <label for="cityName">Navn <span class="muted">— vises i kort og lister (fx <code>Horsens</code>)</span></label>
+    <input type="text" id="cityName" maxlength="80" placeholder="Horsens">
+    <label for="cityScope">Scope <span class="muted">— regionen byen hører til (valgfri)</span></label>
+    <select id="cityScope"></select>
+    <label for="cityChat">Lokal chat-kanal <span class="muted">— meshcore-kanalnavn (fx <code>#horsens</code>)</span></label>
+    <input type="text" id="cityChat" maxlength="64" placeholder="#horsens" autocomplete="off">
+    <p class="muted error" id="cityError" aria-live="polite"></p>
+    <div class="modal-actions">
+      <button type="button" id="cityCancel">Annuller</button>
+      <button type="button" id="cityConfirm" class="primary">Gem</button>
     </div>
   </div>
 </div>
