@@ -37,21 +37,107 @@
     return postnumrePromise;
   }
 
+  // --- Nabo-udledning -------------------------------------------------------
+  // dk5x-laget (det 2-cifrede) skal ikke kun daekke ens eget postnummer, men
+  // ogsaa nabo-postnumrene der stoeder op til (eller ligger taet paa) det. Vi
+  // udleder naboerne ud fra polygon-geometrien ved klik: et postnummer er nabo
+  // hvis dets graense ligger inden for NEIGHBOR_DIST_M af det klikkede.
+  const NEIGHBOR_DIST_M = 2000;
+  const M_PER_DEG = 111320; // meter pr. grad bredde (og laengde ved aekvator)
+  const neighborCache = new Map();
+
+  function ringsOf(geom) {
+    if (!geom) return [];
+    if (geom.type === "Polygon") return geom.coordinates;
+    if (geom.type === "MultiPolygon") return geom.coordinates.flatMap(p => p);
+    return [];
+  }
+  function geomBBox(geom) {
+    let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    ringsOf(geom).forEach(ring => ring.forEach(([x, y]) => {
+      if (x < minx) minx = x;
+      if (x > maxx) maxx = x;
+      if (y < miny) miny = y;
+      if (y > maxy) maxy = y;
+    }));
+    return [minx, miny, maxx, maxy];
+  }
+  // Afstand fra punkt til linjestykke i meter (lokal equirektangulaer projektion).
+  function segDistM(p, a, b, sx, sy) {
+    const px = p[0] * sx, py = p[1] * sy;
+    const ax = a[0] * sx, ay = a[1] * sy, bx = b[0] * sx, by = b[1] * sy;
+    const dx = bx - ax, dy = by - ay;
+    const len = dx * dx + dy * dy;
+    let t = len ? ((px - ax) * dx + (py - ay) * dy) / len : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  }
+  // Mindste afstand fra g1's hjoerner til g2's kanter; afbryder tidligt <= limit.
+  function boundaryDistM(g1, g2, sx, sy, limit) {
+    let best = Infinity;
+    const r2 = ringsOf(g2);
+    for (const ring of ringsOf(g1)) {
+      for (const p of ring) {
+        for (const ring2 of r2) {
+          for (let i = 0; i < ring2.length - 1; i++) {
+            const d = segDistM(p, ring2[i], ring2[i + 1], sx, sy);
+            if (d < best) {
+              best = d;
+              if (best <= limit) return best;
+            }
+          }
+        }
+      }
+    }
+    return best;
+  }
+  // De distinkte 2-cifrede prefixer (dkXY) for postnumre der graenser op til key.
+  function neighborPrefixesFor(key) {
+    if (neighborCache.has(key)) return neighborCache.get(key);
+    const self = postnumre[key];
+    if (!self || !self.geometry) {
+      neighborCache.set(key, []);
+      return [];
+    }
+    const bb = geomBBox(self.geometry);
+    const refLat = (bb[1] + bb[3]) / 2;
+    const sx = M_PER_DEG * Math.cos(refLat * Math.PI / 180);
+    const sy = M_PER_DEG;
+    const padLon = NEIGHBOR_DIST_M / sx, padLat = NEIGHBOR_DIST_M / sy;
+    const seen = new Set();
+    Object.keys(postnumre).forEach(k => {
+      if (k === key) return;
+      const m = /^dk(\d{4})$/.exec(k);
+      if (!m) return;
+      const e = postnumre[k];
+      if (!e || !e.geometry) return;
+      const ob = geomBBox(e.geometry);
+      if (ob[0] > bb[2] + padLon || ob[2] < bb[0] - padLon ||
+          ob[1] > bb[3] + padLat || ob[3] < bb[1] - padLat) return;
+      const d = Math.min(
+        boundaryDistM(self.geometry, e.geometry, sx, sy, NEIGHBOR_DIST_M),
+        boundaryDistM(e.geometry, self.geometry, sx, sy, NEIGHBOR_DIST_M)
+      );
+      if (d <= NEIGHBOR_DIST_M) seen.add(`dk${m[1].slice(0, 2)}`);
+    });
+    const result = [...seen].sort();
+    neighborCache.set(key, result);
+    return result;
+  }
+
   // Udleder alle scopes som en repeater i en given region skal saette.
   // For postnummer-noegler (dk####) udvides hierarkiet ifoelge MeshCore-DK's
   // konvention: dk5230 -> dk5, dk50, dk52, dk523, dk5230. Det andet trin
-  // (foerste ciffer + "0") repraesenterer hele 1000-blokken.
+  // (foerste ciffer + "0") repraesenterer hele 1000-blokken. Paa dk5x-laget
+  // indsaettes desuden nabo-postnumrenes 2-cifrede prefixer (se ovenfor).
   function scopesFor(key) {
     const m = /^dk(\d{4})$/.exec(key);
     if (!m) return [key];
     const d = m[1];
-    return [
-      `dk${d[0]}`,
-      `dk${d[0]}0`,
-      `dk${d.slice(0, 2)}`,
-      `dk${d.slice(0, 3)}`,
-      `dk${d}`,
-    ];
+    const base = [`dk${d[0]}`, `dk${d[0]}0`, `dk${d.slice(0, 2)}`];
+    const seen = new Set(base);
+    const neighbors = neighborPrefixesFor(key).filter(s => !seen.has(s));
+    return [...base, ...neighbors, `dk${d.slice(0, 3)}`, `dk${d}`];
   }
 
   let regions, cities, regionsGeo, citiesGeo;
