@@ -1,0 +1,21 @@
+{
+  "horsens": {"name":"Horsens","scope":"dk-horsens","localChat":"#horsens","geometry":{"type":"Point","coordinates":[9.8503,55.8607]}},
+  "hornslet": {"name":"Hornslet","scope":"","localChat":"#hornslet","geometry":{"type":"Point","coordinates":[10.321,56.3149]}},
+  "oestjylland": {"name":"Østjylland","scope":"dk-oj","localChat":"#oestjylland","geometry":{"type":"Point","coordinates":[9.9493,56.0859]}},
+  "fyn": {"name":"Fyn","scope":"dk-fyn","localChat":"#dk-fyn","geometry":{"type":"Point","coordinates":[10.3405,55.3211]}},
+  "sjaelland": {"name":"Sjaelland","scope":"dk-sjl","localChat":"#dk-sjaelland","geometry":{"type":"Point","coordinates":[11.7762,55.5958]}},
+  "svendborg": {"name":"Svendborg","scope":"dk-fyn-svendborg","localChat":"#dk-fyn-svendborg","geometry":{"type":"Point","coordinates":[10.6062,55.0632]}},
+  "odense": {"name":"Odense","scope":"dk-fyn-odense","localChat":"#dk-fyn-odense","geometry":{"type":"Point","coordinates":[10.381,55.4047]}},
+  "danmark": {"name":"Danmark","scope":"dk","localChat":"#danmark","geometry":{"type":"Point","coordinates":[10.8854,55.9934]}},
+  "aalborg": {"name":"Ålborg","scope":"dk-aalborg","localChat":"#aalborg","geometry":{"type":"Point","coordinates":[9.9234,57.0402]}},
+  "gilleleje": {"name":"Gilleleje","scope":"","localChat":"#gilleleje","geometry":{"type":"Point","coordinates":[12.304,56.1234]}},
+  "nordjylland": {"name":"Nordjylland","scope":"dk-nj","localChat":"#nordjylland","geometry":{"type":"Point","coordinates":[9.4475,56.9464]}},
+  "fredericia": {"name":"Fredericia","scope":"","localChat":"#fredericia","geometry":{"type":"Point","coordinates":[9.7592,55.5646]}},
+  "aarhus": {"name":"Århus","scope":"dk-aarhus","localChat":"#aarhus","geometry":{"type":"Point","coordinates":[10.1965,56.1503]}},
+  "nyborg": {"name":"Nyborg","scope":"dk-fyn-nyborg","localChat":"#dk-fyn-nyborg","geometry":{"type":"Point","coordinates":[10.7961,55.3154]}},
+  "ringe": {"name":"Ringe","scope":"dk-fyn-ringe","localChat":"#dk-fyn-ringe","geometry":{"type":"Point","coordinates":[10.4832,55.2395]}},
+  "slagelse": {"name":"Slagelse","scope":"dk-sjl-slagelse","localChat":"#dk-sjl-slagelse","geometry":{"type":"Point","coordinates":[11.3549,55.4045]}},
+  "soroe": {"name":"Sorø","scope":"dk-sjl-soroe","localChat":"#dk-sjl-soroe","geometry":{"type":"Point","coordinates":[11.561,55.4457]}},
+  "skanderborg": {"name":"Skanderborg","scope":"dk-skanderborg","localChat":"#skanderborg","geometry":{"type":"Point","coordinates":[9.9278,56.041]}},
+  "jylland": {"name":"Jylland","scope":"dk-jylland","localChat":"#jylland","geometry":{"type":"Point","coordinates":[9.1923,56.207]}}
+}

@@ -1,9 +1,4 @@
-(function () {
-  const regions = window.MCDK_REGIONS || {};
-  const cities = window.MCDK_CITIES || {};
-  const regionsGeo = toFeatureCollection(regions, "region");
-  const citiesGeo = toFeatureCollection(cities, "city");
-
+(async function () {
   function toFeatureCollection(dict, propKey) {
     return {
       type: "FeatureCollection",
@@ -16,6 +11,61 @@
         }))
     };
   }
+
+  async function fetchJSON(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("Kunne ikke hente " + url + ": " + r.status);
+    return r.json();
+  }
+
+  // Postnumre indlaeses doven foerst naar brugeren klikker paa kortet — det
+  // sparer ~80 KB gzipped paa initial load for en feature, der typisk kun bruges
+  // én gang per besoeg.
+  let postnumre = {};
+  let postnumreGeo = { type: "FeatureCollection", features: [] };
+  let postnumrePromise = null;
+  function loadPostnumre() {
+    if (!postnumrePromise) {
+      postnumrePromise = fetchJSON("postnumre.json").then(data => {
+        postnumre = data;
+        postnumreGeo = toFeatureCollection(data, "region");
+      }).catch(err => {
+        console.warn("Kunne ikke hente postnumre.json:", err);
+        postnumrePromise = null; // tillader retry ved naeste klik
+      });
+    }
+    return postnumrePromise;
+  }
+
+  // Udleder alle scopes som en repeater i en given region skal saette.
+  // For postnummer-noegler (dk####) udvides hierarkiet ifoelge MeshCore-DK's
+  // konvention: dk5230 -> dk5, dk50, dk52, dk523, dk5230. Det andet trin
+  // (foerste ciffer + "0") repraesenterer hele 1000-blokken.
+  function scopesFor(key) {
+    const m = /^dk(\d{4})$/.exec(key);
+    if (!m) return [key];
+    const d = m[1];
+    return [
+      `dk${d[0]}`,
+      `dk${d[0]}0`,
+      `dk${d.slice(0, 2)}`,
+      `dk${d.slice(0, 3)}`,
+      `dk${d}`,
+    ];
+  }
+
+  let regions, cities, regionsGeo, citiesGeo;
+  try {
+    [regions, cities] = await Promise.all([
+      fetchJSON("regions.json"),
+      fetchJSON("cities.json")
+    ]);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+  regionsGeo = toFeatureCollection(regions, "region");
+  citiesGeo = toFeatureCollection(cities, "city");
 
   const regionCli = document.getElementById("regionCli");
   const regionTitle = document.getElementById("regionTitle");
@@ -43,31 +93,57 @@
       maxZoom: 20
     }).addTo(map);
 
-    const regionsLayer = L.geoJSON(regionsGeo, {
-      style: feature => ({
+    function regionLayerStyle(feature) {
+      return {
         className: "mcdk-region",
         color: regionColor(feature.properties && feature.properties.region),
         weight: 1.2,
         fillColor: regionColor(feature.properties && feature.properties.region),
         fillOpacity: 0,
         opacity: 0
-      }),
-      onEachFeature: (feature, layer) => {
-        const key = feature.properties && feature.properties.region;
-        layer.on("click", e => {
-          // Skift event-handling: vis alle regioner under klikket (overlap-support).
-          const hits = hitTestRegions(e.latlng);
-          render(hits.length ? hits : (key ? [key] : []));
-          showClickMarker(e.latlng);
-          e.stopPropagation();
+      };
+    }
+    function attachClick(layer, key) {
+      layer.on("click", e => {
+        const ll = e.latlng;
+        const hits = hitTestRegions(ll);
+        render(hits.length ? hits : (key ? [key] : []));
+        showClickMarker(ll);
+        L.DomEvent.stopPropagation(e);
+        loadPostnumre().then(() => {
+          ensurePostnumreLayer();
+          render(hitTestRegions(ll));
         });
+      });
+    }
+
+    const regionsLayer = L.geoJSON(regionsGeo, {
+      style: regionLayerStyle,
+      onEachFeature: (feature, layer) => {
+        attachClick(layer, feature.properties && feature.properties.region);
       }
     }).addTo(map);
+
+    // Bygges foerst naar postnumre.json er hentet (typisk ved foerste klik).
+    let postnumreLayer = null;
+    function ensurePostnumreLayer() {
+      if (postnumreLayer || !postnumreGeo.features.length) return;
+      postnumreLayer = L.geoJSON(postnumreGeo, {
+        style: regionLayerStyle,
+        onEachFeature: (feature, layer) => {
+          attachClick(layer, feature.properties && feature.properties.region);
+        }
+      }).addTo(map);
+    }
 
     function hitTestRegions(latlng) {
       const pt = [latlng.lng, latlng.lat];
       const hits = [];
       regionsGeo.features.forEach(f => {
+        const k = f.properties && f.properties.region;
+        if (k && pointInFeature(pt, f)) hits.push(k);
+      });
+      postnumreGeo.features.forEach(f => {
         const k = f.properties && f.properties.region;
         if (k && pointInFeature(pt, f)) hits.push(k);
       });
@@ -130,13 +206,28 @@
       if (hintEl) hintEl.hidden = !show;
     }
 
+    function clearLayerStyles(layer) {
+      if (!layer) return;
+      layer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
+    }
+    function highlightLayer(layer, valid) {
+      if (!layer) return;
+      layer.eachLayer(l => {
+        const k = l.feature && l.feature.properties && l.feature.properties.region;
+        const active = valid.includes(k);
+        l.setStyle({ fillOpacity: active ? 0.1 : 0, weight: active ? 1.25 : 0, opacity: active ? 1 : 0 });
+        if (active) l.bringToFront();
+      });
+    }
+
     function render(keys) {
       const arr = Array.isArray(keys) ? keys : (keys ? [keys] : []);
-      const valid = arr.filter(k => regions[k]);
+      const valid = arr.filter(k => regions[k] || postnumre[k]);
       if (valid.length === 0) {
         regionCli.style.display = "none";
         regionTitle.style.display = "none";
-        regionsLayer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
+        clearLayerStyles(regionsLayer);
+        clearLayerStyles(postnumreLayer);
         showHint(true);
         return;
       }
@@ -144,16 +235,22 @@
       regionCli.style.display = "";
       regionTitle.style.display = "";
 
+      // Udfold hver hit-noegle til dens fulde scope-hierarki (dk5230 -> dk5,
+      // dk50, dk52, dk523, dk5230) og bevar deres indbyrdes rækkefoelge.
+      const seen = new Set();
+      const scopes = [];
+      valid.forEach(k => {
+        scopesFor(k).forEach(s => {
+          if (!seen.has(s)) { seen.add(s); scopes.push(s); }
+        });
+      });
+
       let cli = "region put eu\nregion put dk";
-      valid.forEach(k => { cli += "\nregion put " + k; });
+      scopes.forEach(s => { cli += "\nregion put " + s; });
       regionCli.innerHTML = "<code>" + escapeHtml(cli + "\nregion save") + "</code>";
 
-      regionsLayer.eachLayer(l => {
-        const k = l.feature && l.feature.properties && l.feature.properties.region;
-        const active = valid.includes(k);
-        l.setStyle({ fillOpacity: active ? 0.1 : 0, weight: active ? 1.25 : 0, opacity: active ? 1 : 0 });
-        if (active) l.bringToFront();
-      });
+      highlightLayer(regionsLayer, valid);
+      highlightLayer(postnumreLayer, valid);
       showHint(false);
     }
 

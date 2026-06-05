@@ -9,14 +9,31 @@
 
 ## Kortets opbygning
 
-- `regions.geojson.js` indeholder polygon-geometrien som en GeoJSON `FeatureCollection`. Hver feature har `properties.region` som matcher en nøgle i `regions.js`.
-- `regions.js` indeholder per-region metadata (navn, kanal, dækning, noter).
-- `cities.geojson.js` + `MCDK_CITIES` i `regions.js` håndterer bymarkører og deres popup-info.
+Data ligger i tre JSON-filer, der hentes dovent med `fetch()`:
+
+- `regions.json` — håndkuraterede regioner (`dk-fyn`, `dk-jylland`, …). Hentes ved indlæsning af [index.html](index.html) og [edit.html](edit.html).
+- `cities.json` — bymarkører + deres popup-info. Hentes sammen med regions.
+- `postnumre.json` — postnummer-polygoner (`dk5000`, `dk5230`, …). Hentes først ved første klik på kortet i [index.html](index.html), så initial load forbliver let.
+
+Hierarkiske scopes udledes af noeglen: et klik der rammer `dk5230` udvides til `dk5`, `dk50`, `dk52`, `dk523`, `dk5230` i CLI-output. Lagres derfor *ikke* som separate polygoner.
+
 - `script.js` renderer kortet (Leaflet + CARTO dark tiles) på `index.html`.
 - `edit.js` driver region-editoren på `edit.html` (Leaflet-Geoman).
 
 ## Tilføj en ny region
 
-1. Tilføj region-metadata i `regions.js` (nøgle, navn, channel).
-2. Tilføj en farve til `REGION_COLORS` i både `script.js` og `edit.js`.
-3. Åbn `edit.html`, tegn polygonen, vælg den nye nøgle, og indsæt det eksporterede GeoJSON i `regions.geojson.js`.
+1. Tilføj region-metadata + geometri i `regions.json` (nøgle, navn, geometry).
+2. Tilføj en farve til `REGION_COLORS` i `script.js` (hvis du vil ændre standard).
+3. Åbn `edit.html`, tegn polygonen, vælg den nye nøgle, og indsæt det eksporterede GeoJSON i `regions.json`.
+
+## Genbyg postnumre.json
+
+Postnumre-data hentes direkte fra DAWA (api.dataforsyningen.dk), forenkles med Douglas-Peucker og skrives i samme noegle/vaerdi-struktur som `regions.json`:
+
+```sh
+python3 tools/fetch_postnumre_dawa.py postnumre.json
+```
+
+Scriptet itererer over kommunekoderne defineret i toppen af [tools/fetch_postnumre_dawa.py](tools/fetch_postnumre_dawa.py) — Fyn pr. default. Tilfoej flere kommuner for at udvide til Sjaelland, Jylland osv.
+
+Default-simplifikation: ~11 m tolerance + 4 decimalers koordinat-praecision. Juster med `--epsilon` og `--precision`.

@@ -1,6 +1,20 @@
-(function () {
-  const regions = window.MCDK_REGIONS || {};
-  const cities = window.MCDK_CITIES || {};
+(async function () {
+  async function fetchJSON(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("Kunne ikke hente " + url + ": " + r.status);
+    return r.json();
+  }
+
+  let regions, cities;
+  try {
+    [regions, cities] = await Promise.all([
+      fetchJSON("regions.json"),
+      fetchJSON("cities.json")
+    ]);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
   const initialGeo = toFeatureCollection(regions, "region");
   const citiesGeo = toFeatureCollection(cities, "city");
 
@@ -401,17 +415,49 @@
   function nameForRegion(key) {
     return (regions[key] || proposedRegions[key] || { name: key }).name;
   }
+  function fileSection(title, news, mods, dels, formatFn, keyFn) {
+    if (!news.length && !mods.length && !dels.length) return "";
+    let out = "=== " + title + " ===\n";
+    if (news.length) {
+      out += "\n# NYE entries (tilfoej til " + title + "):\n";
+      out += news.map(formatFn).join(",\n") + "\n";
+    }
+    if (mods.length) {
+      out += "\n# AENDREDE entries (udskift eksisterende med samme noegle):\n";
+      out += mods.map(c => {
+        const body = formatFn(c);
+        if (c.oldRegion && c.oldRegion !== c.region) {
+          return "// (omdoebt fra \"" + c.oldRegion + "\" — husk at fjerne den gamle noegle)\n" + body;
+        }
+        return body;
+      }).join(",\n") + "\n";
+    }
+    if (dels.length) {
+      out += "\n# SLETTEDE noegler (fjern fra " + title + "):\n";
+      out += dels.map(c => "  " + JSON.stringify(keyFn(c))).join("\n") + "\n";
+    }
+    return out;
+  }
   function buildChangeBlock() {
-    const regionEntries = collectChanges()
-      .filter(c => c.change !== "DELETED")
-      .map(c => formatRegionEntry(c.region, nameForRegion(c.region), c.geometry));
-    const cityEntries = collectCityChanges()
-      .filter(c => c.change !== "DELETED")
-      .map(c => formatCityEntry(c.key, c.meta, c.latlng));
-    const parts = [];
-    if (regionEntries.length) parts.push("// regions.js:\n" + regionEntries.join(",\n") + ",");
-    if (cityEntries.length) parts.push("// cities.js:\n" + cityEntries.join(",\n") + ",");
-    return parts.length ? parts.join("\n\n") + "\n" : "";
+    const rc = collectChanges();
+    const cc = collectCityChanges();
+    const rSec = fileSection(
+      "regions.json",
+      rc.filter(c => c.change === "NEW"),
+      rc.filter(c => c.change === "MODIFIED"),
+      rc.filter(c => c.change === "DELETED"),
+      c => formatRegionEntry(c.region, nameForRegion(c.region), c.geometry),
+      c => c.region
+    );
+    const cSec = fileSection(
+      "cities.json",
+      cc.filter(c => c.change === "NEW"),
+      cc.filter(c => c.change === "MODIFIED"),
+      cc.filter(c => c.change === "DELETED"),
+      c => formatCityEntry(c.key, c.meta, c.latlng),
+      c => c.key
+    );
+    return [rSec, cSec].filter(Boolean).join("\n");
   }
 
   btnCopy.addEventListener("click", async () => {
@@ -538,10 +584,10 @@
     setStatus("Downloaded " + fc.features.length + " features.");
   });
 
-  // Format a region entry to match the existing regions.js style, so the
-  // output can be pasted directly into window.MCDK_REGIONS.
+  // Format a region entry to match the existing regions.json style, so the
+  // output can be pasted directly into the JSON file.
   function fmtNum(n) {
-    // 6 decimals matches the precision used in regions.js.
+    // 6 decimals matches the precision used in regions.json.
     return +n.toFixed(6);
   }
   function fmtPoint(p) {
@@ -568,7 +614,7 @@
     return JSON.stringify(geom);
   }
   function fmtCityNum(n) {
-    // 4 decimals matches the precision used in cities.js.
+    // 4 decimals matches the precision used in cities.json.
     return +n.toFixed(4);
   }
   function formatCityEntry(key, meta, latlng) {
