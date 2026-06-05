@@ -126,18 +126,17 @@
   }
 
   // Udleder alle scopes som en repeater i en given region skal saette.
-  // For postnummer-noegler (dk####) udvides hierarkiet ifoelge MeshCore-DK's
-  // konvention: dk5230 -> dk5, dk50, dk52, dk523, dk5230. Det andet trin
-  // (foerste ciffer + "0") repraesenterer hele 1000-blokken. Paa dk5x-laget
-  // indsaettes desuden nabo-postnumrenes 2-cifrede prefixer (se ovenfor).
+  // For postnummer-noegler (dk####) foelges MeshCore-DK's lag-konvention:
+  // dk5 (hele landsdelen) -> dk5x (2-cifret) -> dk5xx (3-cifret) -> dk5230.
+  // Paa dk5x-laget indgaar eget 2-cifrede prefix PLUS nabo-postnumrenes (se
+  // ovenfor), sorteret. dk50 e.l. optraeder altsaa kun naar 50-omraadet reelt
+  // er nabo — ikke pr. automatik paa alle 5xxx-postnumre.
   function scopesFor(key) {
     const m = /^dk(\d{4})$/.exec(key);
     if (!m) return [key];
     const d = m[1];
-    const base = [`dk${d[0]}`, `dk${d[0]}0`, `dk${d.slice(0, 2)}`];
-    const seen = new Set(base);
-    const neighbors = neighborPrefixesFor(key).filter(s => !seen.has(s));
-    return [...base, ...neighbors, `dk${d.slice(0, 3)}`, `dk${d}`];
+    const layer2 = [...new Set([`dk${d.slice(0, 2)}`, ...neighborPrefixesFor(key)])].sort();
+    return [`dk${d[0]}`, ...layer2, `dk${d.slice(0, 3)}`, `dk${d}`];
   }
 
   let regions, cities, regionsGeo, citiesGeo;
