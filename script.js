@@ -381,7 +381,7 @@
       });
 
       const allScopes = ["eu", "dk"].concat(scopes);
-      const oldCli = allScopes.map(s => "region put " + s).join("\n") + "\nregion save";
+      const oldCli = allScopes.map(s => "region put " + s + "\nregion allowf " + s).join("\n") + "\nregion save";
       const newCli = regionDefLines(allScopes).join("\n") + "\nregion save";
       regionCli.innerHTML =
         cliBlock("Firmware 1.16.0+", newCli) +
