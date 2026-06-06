@@ -139,6 +139,56 @@
     return [`dk${d[0]}`, ...layer2, `dk${d.slice(0, 3)}`, `dk${d}`];
   }
 
+  // Region-træet er fladt: * -> eu -> dk -> alle øvrige scopes. Hvert egentligt
+  // scope (dk5, dk52, dk5230, nabo-præfikser ...) hænger direkte under dk, så
+  // vi slipper for at udlede dybere forælder/barn-relationer.
+  function parentScope(key) {
+    if (key === "eu") return "*";
+    if (key === "dk") return "eu";
+    return "dk";
+  }
+
+  // Bygger 'region def'-linjer for en ordnet scope-liste (forælder altid før
+  // barn). Hver knude placeres under den logiske cursor; formen name|jump
+  // popper cursoren tilbage op, så søskende kan sættes. Linjer holdes <= 160
+  // tegn (repeaterens serielle grænse) — passer alt på én linje, bliver det
+  // én enkelt 'region def'. Skal der splittes, leder fortsættelseslinjer med
+  // eu|<knude> for at genplacere cursoren uden at ændre træet (eu's forælder
+  // er reelt *, så et gen-put under roden er en no-op).
+  function regionDefLines(scopes) {
+    const LIMIT = 160;
+    const PREFIX = "region def ";
+    const lines = [];
+    let i = 0;
+    let lead = null;
+    while (i < scopes.length) {
+      const parts = lead ? [lead] : [];
+      const minParts = parts.length;
+      while (i < scopes.length) {
+        const node = scopes[i];
+        let jump = null;
+        if (i < scopes.length - 1) {
+          const np = parentScope(scopes[i + 1]);
+          if (np !== node) jump = np;
+        }
+        const token = jump ? node + "|" + jump : node;
+        if (PREFIX.length + parts.concat(token).join(" ").length > LIMIT &&
+            parts.length > minParts) break;
+        parts.push(token);
+        i++;
+      }
+      lines.push(PREFIX + parts.join(" "));
+      lead = i < scopes.length ? "eu|" + parentScope(scopes[i]) : null;
+    }
+    return lines;
+  }
+
+  function cliBlock(label, text) {
+    return '<div class="cli-block"><span class="cli-label">' +
+      escapeHtml(label) + '</span><pre><code>' +
+      escapeHtml(text) + '</code></pre></div>';
+  }
+
   let regions, cities, regionsGeo, citiesGeo;
   try {
     [regions, cities] = await Promise.all([
@@ -330,9 +380,12 @@
         });
       });
 
-      let cli = "region put eu\nregion put dk";
-      scopes.forEach(s => { cli += "\nregion put " + s; });
-      regionCli.innerHTML = "<code>" + escapeHtml(cli + "\nregion save") + "</code>";
+      const allScopes = ["eu", "dk"].concat(scopes);
+      const oldCli = allScopes.map(s => "region put " + s).join("\n") + "\nregion save";
+      const newCli = regionDefLines(allScopes).join("\n") + "\nregion save";
+      regionCli.innerHTML =
+        cliBlock("Firmware 1.16.0+", newCli) +
+        cliBlock("Firmware 1.11.0 - 1.15.0", oldCli);
 
       highlightLayer(regionsLayer, valid);
       highlightLayer(postnumreLayer, valid);
