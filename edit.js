@@ -590,28 +590,10 @@
     // 6 decimals matches the precision used in regions.json.
     return +n.toFixed(6);
   }
-  function fmtPoint(p) {
-    return "[" + fmtNum(p[0]) + ", " + fmtNum(p[1]) + "]";
-  }
-  function fmtRing(ring, pad) {
-    const outer = " ".repeat(pad);
-    const inner = " ".repeat(pad + 2);
-    return outer + "[\n" +
-      ring.map(p => inner + fmtPoint(p)).join(",\n") + "\n" +
-      outer + "]";
-  }
   function formatGeometry(geom) {
-    if (geom.type === "Polygon") {
-      const rings = geom.coordinates.map(r => fmtRing(r, 6)).join(",\n");
-      return '{ "type": "Polygon", "coordinates": [\n' + rings + "\n    ] }";
-    }
-    if (geom.type === "MultiPolygon") {
-      const polys = geom.coordinates.map(poly =>
-        "      [\n" + poly.map(r => fmtRing(r, 8)).join(",\n") + "\n      ]"
-      ).join(",\n");
-      return '{ "type": "MultiPolygon", "coordinates": [\n' + polys + "\n    ] }";
-    }
-    return JSON.stringify(geom);
+    // Compact single-line form matching regions.json: no spaces after
+    // colons/commas, coordinates rounded to 6 decimals.
+    return JSON.stringify(geom, (k, v) => typeof v === "number" ? fmtNum(v) : v);
   }
   function fmtCityNum(n) {
     // 4 decimals matches the precision used in cities.json.
@@ -620,18 +602,14 @@
   function formatCityEntry(key, meta, latlng) {
     const lng = fmtCityNum(latlng.lng);
     const lat = fmtCityNum(latlng.lat);
-    return "  " + JSON.stringify(key) + ": {\n" +
-           '    "name": ' + JSON.stringify(meta.name || "") + ",\n" +
-           '    "scope": ' + JSON.stringify(meta.scope || "") + ",\n" +
-           '    "localChat": ' + JSON.stringify(meta.localChat || "") + ",\n" +
-           '    "geometry": { "type": "Point", "coordinates": [' + lng + ", " + lat + "] }\n" +
-           "  }";
+    return "  " + JSON.stringify(key) + ": {\"name\":" + JSON.stringify(meta.name || "") +
+           ",\"scope\":" + JSON.stringify(meta.scope || "") +
+           ",\"localChat\":" + JSON.stringify(meta.localChat || "") +
+           ",\"geometry\":{\"type\":\"Point\",\"coordinates\":[" + lng + "," + lat + "]}}";
   }
   function formatRegionEntry(key, name, geometry) {
-    return "  " + JSON.stringify(key) + ": {\n" +
-           '    "name": ' + JSON.stringify(name) + ",\n" +
-           '    "geometry": ' + formatGeometry(geometry) + "\n" +
-           "  }";
+    return "  " + JSON.stringify(key) + ": {\"name\":" + JSON.stringify(name) +
+           ",\"geometry\":" + formatGeometry(geometry) + "}";
   }
 
   function setStatus(msg) {
