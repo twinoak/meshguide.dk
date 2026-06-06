@@ -385,7 +385,7 @@
       const newCli = regionDefLines(allScopes).join("\n") + "\nregion save";
       regionCli.innerHTML =
         cliBlock("Firmware 1.16.0+", newCli) +
-        cliBlock("Firmware 1.11.0 - 1.15.0", oldCli);
+        cliBlock("Firmware 1.12.0 - 1.15.0", oldCli);
 
       highlightLayer(regionsLayer, valid);
       highlightLayer(postnumreLayer, valid);
