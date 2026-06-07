@@ -169,6 +169,48 @@ set guest.password</code></pre>
     </article>
   </section>
 
+  <section id="radio">
+    <h2 id="radio-settings"><a href="#radio-settings">Radioindstillinger</a></h2>
+
+    <article class="setting">
+      <h3>EU/UK Narrow preset og dutycycle</h3>
+      <ul>
+        <li>Du kan sætte et preset fra appen der hedder "EU/UK Narrow", og så er du en del af det danske mesh.</li>
+        <li>Du skal sætte <code>dutycycle</code> til <code>10</code> (10%) da det er det lovlige maximum inden for EU, men EU/UK Narrow bruger 50 som default.</li>
+      </ul>
+      <pre><code>set dutycycle 10</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>Coding Rate (CR)</h3>
+      <p>Højere CR = bedre chance for at pakken overlever støj og interferens, men langsommere og mere kanalbelastning. CR er unik i MeshCore fordi den, som den eneste radioparameter, kan være forskellig mellem noder og stadig fungere. Modtageren kan afkode pakker uanset hvilken CR afsenderen brugte, så du skal sætte den efter dine lokale forhold.</p>
+      <p>Hvis du har en meget belastet repeater- eller companion-node, kan de være en god ide at sætte CR rate til lavere en 8. Hvis du er godt forbundet med dit lokale mesh, kan de være en god idé at sætte CR ned til 5 for at spare på din airtime. Dette er mindre vigtigt for companion-noder, men kan hurtigt blive meget vigtigt for en velforbundet repeater, da den ellers vil spilde airtime på redundante bits der ikke er nødvendige.</p>
+      <table>
+        <thead>
+          <tr><th>CR</th><th>Ratio</th><th>Overhead</th><th>Betydning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>5</code></td><td>4/5</td><td>+25 %</td><td>1 redundant bit pr. 4 databits</td></tr>
+          <tr><td><code>6</code></td><td>4/6</td><td>+50 %</td><td>2 redundante bits pr. 4 databits</td></tr>
+          <tr><td><code>7</code></td><td>4/7</td><td>+75 %</td><td>3 redundante bits pr. 4 databits</td></tr>
+          <tr><td><code>8</code></td><td>4/8</td><td>+100 %</td><td>4 redundante bits pr. 4 databits</td></tr>
+        </tbody>
+      </table>
+      <div class="radio-cli-wrap">
+        <div class="radio-cli-box">
+          <label for="crSelect">Coding Rate</label>
+          <select id="crSelect">
+            <option value="5">CR 5</option>
+            <option value="6">CR 6</option>
+            <option value="7">CR 7</option>
+            <option value="8" selected>CR 8 (default)</option>
+          </select>
+          <pre><code id="radioCli">set radio 869.618,62.5,8,8</code></pre>
+        </div>
+      </div>
+    </article>
+  </section>
+
   <section id="scope">
     <h2 id="scope"><a href="#scope">Tilføj Scope til en chat i den officielle app</a></h2>
 

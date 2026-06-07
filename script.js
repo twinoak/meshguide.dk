@@ -486,4 +486,13 @@
   } else {
     init();
   }
+
+  // Radio coding-rate dropdown → CLI output
+  const crSelect = document.getElementById("crSelect");
+  const radioCli = document.getElementById("radioCli");
+  if (crSelect && radioCli) {
+    crSelect.addEventListener("change", () => {
+      radioCli.textContent = "set radio 869.618,62.5,8," + crSelect.value;
+    });
+  }
 })();
