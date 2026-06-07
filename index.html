@@ -115,7 +115,7 @@
     <h2 id="de-vigtigste-indstillinger"><a href="#de-vigtigste-indstillinger">De vigtigste indstillinger</a></h2>
 
     <article class="setting">
-      <h3><code>path.hash.mode</code> - path-hash længde</h3>
+      <h3>path.hash.mode - path-hash længde</h3>
       <ul>
         <li>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et.</li>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger.</li>
@@ -127,24 +127,24 @@
           <tr><th>Indstilling</th><th>Hvad den gør</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>path.hash.mode 0</code></td><td>1-byte (64 max hops)</td></tr>
-          <tr><td><code>path.hash.mode 1</code></td><td>2-byte (32 max hops)</td></tr>
-          <tr><td><code>path.hash.mode 2</code></td><td>3-byte (21 max hops)</td></tr>
+          <tr><td>path.hash.mode 0</td><td>1-byte (64 max hops)</td></tr>
+          <tr><td>path.hash.mode 1</td><td>2-byte (32 max hops)</td></tr>
+          <tr><td>path.hash.mode 2</td><td>3-byte (21 max hops)</td></tr>
         </tbody>
       </table>
       <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>advert.interval</code> / <code>flood.advert.interval</code> - annonceringer</h3>
+      <h3>advert.interval / flood.advert.interval - annonceringer</h3>
       <table>
         <thead>
           <tr><th>Indstilling</th><th>Værdi</th><th>Hvad den gør</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>advert.interval</code></td><td>0</td><td>0-hop adverts burde slås helt fra</td></tr>
-          <tr><td><code>flood.advert.interval</code></td><td><span class="floodAdvertInterval">24</span></td><td>Netværksdækkende (flooded) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
-          <tr><td><code>guest.password</code></td><td>(tom)</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
+          <tr><td>advert.interval</td><td>0</td><td>0-hop adverts burde slås helt fra</td></tr>
+          <tr><td>flood.advert.interval</td><td><span class="floodAdvertInterval">24</span></td><td>Netværksdækkende (flooded) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
+          <tr><td>guest.password</td><td>(tom)</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
         </tbody>
       </table>
       <pre><code>set advert.interval 0
@@ -153,7 +153,7 @@ set guest.password</code></pre>
     </article>
 
     <article class="setting">
-      <h3><code>owner.info</code> - kontaktoplysninger</h3>
+      <h3>owner.info - kontaktoplysninger</h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
         <li>Synlig for alle der forespørger repeateren. Undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
@@ -190,10 +190,10 @@ set guest.password</code></pre>
           <tr><th>CR</th><th>Ratio</th><th>Overhead</th><th>Betydning</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>5</code></td><td>4/5</td><td>+25 %</td><td>1 redundant bit pr. 4 databits</td></tr>
-          <tr><td><code>6</code></td><td>4/6</td><td>+50 %</td><td>2 redundante bits pr. 4 databits</td></tr>
-          <tr><td><code>7</code></td><td>4/7</td><td>+75 %</td><td>3 redundante bits pr. 4 databits</td></tr>
-          <tr><td><code>8</code></td><td>4/8</td><td>+100 %</td><td>4 redundante bits pr. 4 databits</td></tr>
+          <tr><td>5</td><td>4/5</td><td>+25 %</td><td>1 redundant bit pr. 4 databits</td></tr>
+          <tr><td>6</td><td>4/6</td><td>+50 %</td><td>2 redundante bits pr. 4 databits</td></tr>
+          <tr><td>7</td><td>4/7</td><td>+75 %</td><td>3 redundante bits pr. 4 databits</td></tr>
+          <tr><td>8</td><td>4/8</td><td>+100 %</td><td>4 redundante bits pr. 4 databits</td></tr>
         </tbody>
       </table>
       <div class="radio-cli-wrap">
