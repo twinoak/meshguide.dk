@@ -124,8 +124,43 @@
     </div>
   </section>
 
+  <section id="radio">
+
+    <h2 id="radio-indstillinger"><a href="#radio-indstillinger">Radioindstillinger</a></h2>
+
+    <article class="setting">
+      <h3>EU/UK Narrow preset</h3>
+      <p>I Danmark bruger vi det preset der hedder EU/UK Narrow, som du kan vælge fra appen eller bruge CLI.</p>
+      <pre><code>set radio 869.618,62.5,8,8</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>Dutycycle (den lovlige grænse i EU)</h3>
+        <p>Du skal sætte <code>dutycycle</code> til <code>10</code> (10%) da det er det lovlige maximum inden for EU, men EU/UK Narrow bruger 50 som default.</p>
+      <pre><code>set dutycycle 10</code></pre>
+    </article>
+
+      <p>Coding Rate er unik i MeshCore fordi den, som den eneste radioparameter, kan være forskellig mellem noder og stadig fungere. Modtageren kan afkode pakker uanset hvilken CR afsenderen brugte, så du skal sætte den efter dine lokale forhold. Højere CR = bedre chance for at pakken overlever støj og interferens, men langsommere og mere kanalbelastning.</p>
+      <p>Hvis du har en meget belastet repeater- eller companion-node, kan de være en god ide at sætte CR rate til lavere en 8, som er default, hvis du er godt forbundet med dit lokale mesh. Det kan også være en god idé at sætte den helt ned til 5 på en velforbundet repeater, da det ofte er unødvendigt at bruge airtime på at sende alle de ekstra redundante bits.</p>
+
+    <article class="setting">
+      <h3>Coding Rate (CR)</h3>
+      <table>
+        <thead>
+          <tr><th>CR</th><th>Overhead</th><th>Betydning</th><th>Kommando</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>5</td><td>+25 %</td><td>1 redundant bit pr. 4 databits</td><td><code>set radio 869.618,62.5,8,5</code></td></tr>
+          <tr><td>6</td><td>+50 %</td><td>2 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,6</code></td></tr>
+          <tr><td>7</td><td>+75 %</td><td>3 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,7</code></td></tr>
+          <tr><td>8</td><td>+100 %</td><td>4 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,8</code></td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+
   <section id="indstillinger">
-    <h2 id="de-vigtigste-indstillinger"><a href="#de-vigtigste-indstillinger">De vigtigste indstillinger</a></h2>
+    <h2 id="diverse-indstillinger"><a href="#diverse-indstillinger">Diverse indstillinger</a></h2>
 
     <article class="setting">
       <h3>path.hash.mode - path-hash længde</h3>
@@ -179,36 +214,6 @@ set guest.password</code></pre>
         <li><strong>Installationstype</strong> - tag, mast, indendørs, portabel</li>
       </ul>
       <pre><code>set owner OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
-    </article>
-  </section>
-
-  <section id="radio">
-    <h2 id="radio-indstillinger"><a href="#radio-indstillinger">Radioindstillinger</a></h2>
-
-    <article class="setting">
-      <h3>EU/UK Narrow preset og dutycycle</h3>
-      <ul>
-        <li>Du kan sætte et preset fra appen der hedder "EU/UK Narrow", og så er du en del af det danske mesh.</li>
-        <li>Du skal sætte <code>dutycycle</code> til <code>10</code> (10%) da det er det lovlige maximum inden for EU, men EU/UK Narrow bruger 50 som default.</li>
-      </ul>
-      <pre><code>set dutycycle 10</code></pre>
-    </article>
-
-    <article class="setting">
-      <h3>Coding Rate (CR)</h3>
-      <p>Højere CR = bedre chance for at pakken overlever støj og interferens, men langsommere og mere kanalbelastning. CR er unik i MeshCore fordi den, som den eneste radioparameter, kan være forskellig mellem noder og stadig fungere. Modtageren kan afkode pakker uanset hvilken CR afsenderen brugte, så du skal sætte den efter dine lokale forhold.</p>
-      <p>Hvis du har en meget belastet repeater- eller companion-node, kan de være en god ide at sætte CR rate til lavere en 8. Hvis du er godt forbundet med dit lokale mesh, kan de være en god idé at sætte CR ned til 5 for at spare på din airtime. Dette er mindre vigtigt for companion-noder, men kan hurtigt blive meget vigtigt for en velforbundet repeater, da den ellers vil spilde airtime på redundante bits der ikke er nødvendige.</p>
-      <table>
-        <thead>
-          <tr><th>CR</th><th>Overhead</th><th>Betydning</th><th>Kommando</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>5</td><td>+25 %</td><td>1 redundant bit pr. 4 databits</td><td><code>set radio 869.618,62.5,8,5</code></td></tr>
-          <tr><td>6</td><td>+50 %</td><td>2 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,6</code></td></tr>
-          <tr><td>7</td><td>+75 %</td><td>3 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,7</code></td></tr>
-          <tr><td>8</td><td>+100 %</td><td>4 redundante bits pr. 4 databits</td><td><code>set radio 869.618,62.5,8,8</code></td></tr>
-        </tbody>
-      </table>
     </article>
   </section>
 
