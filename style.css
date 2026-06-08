@@ -331,6 +331,61 @@ th { color: var(--muted); font-weight: 600; }
 #regionCli pre { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
 #regionCli code { background: transparent; padding: 0; }
 
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem 1.1rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: .92rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  transition: background .15s ease, border-color .15s ease;
+  cursor: pointer;
+}
+.social-btn:hover,
+.social-btn:focus-visible {
+  background: var(--border);
+  border-color: var(--muted);
+}
+.social-btn.discord:hover,
+.social-btn.discord:focus-visible {
+  background: #5865f2;
+  border-color: #5865f2;
+  color: #fff;
+}
+.social-btn.editor:hover,
+.social-btn.editor:focus-visible {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #000;
+}
+.social-btn.git:hover,
+.social-btn.git:focus-visible {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+.social-btn.facebook:hover,
+.social-btn.facebook:focus-visible {
+  background: #1877f2;
+  border-color: #1877f2;
+  color: #fff;
+}
+.social-btn svg {
+  flex-shrink: 0;
+}
+
 footer {
   text-align: center;
   color: var(--muted);
