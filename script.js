@@ -18,23 +18,69 @@
     return r.json();
   }
 
-  // Postnumre indlaeses doven foerst naar brugeren klikker paa kortet — det
-  // sparer ~80 KB gzipped paa initial load for en feature, der typisk kun bruges
-  // én gang per besoeg.
+  // Postnumre indlæses dovent og delt op pr. landsdel: postnumre/index.json er
+  // et manifest, der kobler hver fil (fyn.json, sjaelland.json, …) til dens
+  // bounding box. Først ved klik henter vi *kun* de filer hvis bbox dækker
+  // klikket — et klik på Fyn trækker altså ikke Sjællands ~850 KB med. Data fra
+  // flere klik akkumuleres, så et tidligere hentet lag forbliver indlæst.
   let postnumre = {};
   let postnumreGeo = { type: "FeatureCollection", features: [] };
-  let postnumrePromise = null;
-  function loadPostnumre() {
-    if (!postnumrePromise) {
-      postnumrePromise = fetchJSON("postnumre.json").then(data => {
-        postnumre = data;
-        postnumreGeo = toFeatureCollection(data, "region");
-      }).catch(err => {
-        console.warn("Kunne ikke hente postnumre.json:", err);
-        postnumrePromise = null; // tillader retry ved naeste klik
+  let manifestPromise = null;
+  const filePromises = new Map();
+  let postnumreSink = null; // (features[]) => void; sættes af init() til at føde laget
+
+  function loadManifest() {
+    if (!manifestPromise) {
+      manifestPromise = fetchJSON("postnumre/index.json").catch(err => {
+        console.warn("Kunne ikke hente postnumre/index.json:", err);
+        manifestPromise = null; // tillader retry ved næste klik
+        return { files: [] };
       });
     }
-    return postnumrePromise;
+    return manifestPromise;
+  }
+
+  // Lille pad (~2 km) så et klik lige på kanten af en bbox stadig rammer.
+  const BBOX_PAD_DEG = 0.02;
+  function bboxContains(bbox, lng, lat) {
+    return !!bbox &&
+      lng >= bbox[0] - BBOX_PAD_DEG && lng <= bbox[2] + BBOX_PAD_DEG &&
+      lat >= bbox[1] - BBOX_PAD_DEG && lat <= bbox[3] + BBOX_PAD_DEG;
+  }
+
+  function addPostnumreData(data) {
+    const features = [];
+    Object.entries(data).forEach(([k, v]) => {
+      if (postnumre[k]) return; // allerede indlæst fra en anden fil
+      postnumre[k] = v;
+      if (!v || !v.geometry) return;
+      const feat = { type: "Feature", properties: { region: k }, geometry: v.geometry };
+      postnumreGeo.features.push(feat);
+      features.push(feat);
+    });
+    if (postnumreSink && features.length) postnumreSink(features);
+  }
+
+  function loadFile(file) {
+    if (filePromises.has(file)) return filePromises.get(file);
+    const p = fetchJSON("postnumre/" + file).then(data => {
+      addPostnumreData(data);
+    }).catch(err => {
+      console.warn("Kunne ikke hente postnumre/" + file + ":", err);
+      filePromises.delete(file); // tillader retry ved næste klik
+    });
+    filePromises.set(file, p);
+    return p;
+  }
+
+  // Henter de landsdels-filer hvis bbox dækker klikket (og som ikke allerede er
+  // hentet) og fletter dem ind i postnumre/postnumreGeo.
+  function loadPostnumre(latlng) {
+    return loadManifest().then(manifest => Promise.all(
+      (manifest.files || [])
+        .filter(f => bboxContains(f.bbox, latlng.lng, latlng.lat))
+        .map(f => loadFile(f.file))
+    ));
   }
 
   // --- Nabo-udledning -------------------------------------------------------
@@ -245,8 +291,7 @@
         render(hits.length ? hits : (key ? [key] : []));
         showClickMarker(ll);
         L.DomEvent.stopPropagation(e);
-        loadPostnumre().then(() => {
-          ensurePostnumreLayer();
+        loadPostnumre(ll).then(() => {
           render(hitTestRegions(ll));
         });
       });
@@ -259,17 +304,20 @@
       }
     }).addTo(map);
 
-    // Bygges foerst naar postnumre.json er hentet (typisk ved foerste klik).
+    // Laget bygges først ved første klik og udvides løbende med de features
+    // addPostnumreData() leverer, efterhånden som flere landsdels-filer hentes.
     let postnumreLayer = null;
-    function ensurePostnumreLayer() {
-      if (postnumreLayer || !postnumreGeo.features.length) return;
-      postnumreLayer = L.geoJSON(postnumreGeo, {
-        style: regionLayerStyle,
-        onEachFeature: (feature, layer) => {
-          attachClick(layer, feature.properties && feature.properties.region);
-        }
-      }).addTo(map);
-    }
+    postnumreSink = features => {
+      if (!postnumreLayer) {
+        postnumreLayer = L.geoJSON({ type: "FeatureCollection", features: [] }, {
+          style: regionLayerStyle,
+          onEachFeature: (feature, layer) => {
+            attachClick(layer, feature.properties && feature.properties.region);
+          }
+        }).addTo(map);
+      }
+      postnumreLayer.addData({ type: "FeatureCollection", features });
+    };
 
     function hitTestRegions(latlng) {
       const pt = [latlng.lng, latlng.lat];
@@ -485,14 +533,5 @@
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
-  }
-
-  // Radio coding-rate dropdown → CLI output
-  const crSelect = document.getElementById("crSelect");
-  const radioCli = document.getElementById("radioCli");
-  if (crSelect && radioCli) {
-    crSelect.addEventListener("change", () => {
-      radioCli.textContent = "set radio 869.618,62.5,8," + crSelect.value;
-    });
   }
 })();
