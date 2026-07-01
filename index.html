@@ -215,6 +215,23 @@ set guest.password hello</code></pre>
       </ul>
       <pre><code>set owner.info OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
+    <article class="setting">
+      <h3>loop.detect - detekter og stop 'path loops'</h3>
+      <table>
+        <thead>
+          <tr><th>Indstilling</th><th>Hvad den gør</th></tr>
+        </thead>
+        <p>Loop.detect handler kort sagt om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.
+Er den slået fra, tjekker repeateren slet ikke efter det. Er den sat til minimal, skal repeaterens eget ID dukke op ret mange gange i pakkens sti, før den reagerer, så den er ret tilgivende. Moderate strammer det op, så der skal færre gentagelser til, før pakken bliver droppet. Og strict er den mest nidkære indstilling: så snart repeateren ser sit eget ID i stien overhovedet, ryger pakken ud.</p>
+        <tbody>
+          <tr><td>loop.detect off</td><td>Ingen loop-detektion</td></tr>
+          <tr><td>loop.detect minimal</td><td>Afviser kun ved mange forekomster</td></tr>
+          <tr><td>loop.detect moderate</td><td>Afviser ved færre forekomster</td></tr>
+          <tr><td>loop.detect strict</td><td>Afviser ved kun én forekomst</td></tr>
+        </tbody>
+      </table>
+      <pre><code>set loop.detect moderate</code></pre>
+    </article>
   </section>
 
   <section id="profiler">
