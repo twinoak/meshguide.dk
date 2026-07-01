@@ -393,13 +393,6 @@ th { color: var(--muted); font-weight: 600; }
   flex-shrink: 0;
 }
 
-footer {
-  text-align: center;
-  color: var(--muted);
-  padding: 1.5rem;
-  font-size: .85rem;
-}
-
 code {
   background: var(--panel-2);
   padding: 1px 5px;
