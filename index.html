@@ -165,10 +165,11 @@
     <article class="setting">
       <h3>path.hash.mode - path-hash længde</h3>
       <ul>
-        <li>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et.</li>
+        <p>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et:</p>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger.</li>
         <li>2-byte (65 536 mulige hashes) gør kollisioner praktisk talt umulige selv i et mesh med tusindvis af noder.</li>
-        <li>2-byte gør det også meget nemmere at diagnosticere netværket og fejlfinde på, for eksempel, <a href="https://meshview.dk">meshview.dk</a>.</li>
+        <li>3-byte (16 777 216 mulige hashes) gør kollisioner praktisk talt umulige selv med millioner af noder.</li>
+        <p>2 og 3 byte path-hash gør det meget nemmere at diagnosticere netværket og fejlfinde på, for eksempel, <a href="https://meshview.dk">meshview.dk</a>.</p>
       </ul>
       <table>
         <thead>
