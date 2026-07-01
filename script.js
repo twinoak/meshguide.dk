@@ -171,11 +171,11 @@
     return result;
   }
 
-  // Udleder alle scopes som en repeater i en given region skal saette.
-  // For postnummer-noegler (dk####) foelges MeshCore-DK's lag-konvention:
+  // Udleder alle scopes som en repeater i en given region skal sætte.
+  // For postnummer-nøgler (dk####) følges MeshCore-DK's lag-konvention:
   // dk5 (hele landsdelen) -> dk5x (2-cifret) -> dk5xx (3-cifret) -> dk5230.
-  // Paa dk5x-laget indgaar eget 2-cifrede prefix PLUS nabo-postnumrenes (se
-  // ovenfor), sorteret. dk50 e.l. optraeder altsaa kun naar 50-omraadet reelt
+  // På dk5x-laget indgår eget 2-cifrede prefix PLUS nabo-postnumrenes (se
+  // ovenfor), sorteret. dk50 e.l. optraeder altsaa kun naar 50-området reelt
   // er nabo — ikke pr. automatik paa alle 5xxx-postnumre.
   function scopesFor(key) {
     const m = /^dk(\d{4})$/.exec(key);
@@ -253,7 +253,7 @@
   const mapEl = document.getElementById("map");
 
   const DEFAULT_REGION_COLOR = "#ffffff";
-  const CITY_ZOOM_MIN = 8;
+  const CITY_ZOOM_MIN = 7;
 
   function regionColor() { return DEFAULT_REGION_COLOR; }
 
@@ -383,7 +383,7 @@
 
     map.on("click", () => { render(null); hideClickMarker(); });
 
-    // Hint overlay — vis når ingen regioner er valgt.
+    // Hint overlay, vis når ingen regioner er valgt.
     const hintEl = document.getElementById("mapHint");
     function showHint(show) {
       if (hintEl) hintEl.hidden = !show;
@@ -418,8 +418,8 @@
       regionCli.style.display = "";
       regionTitle.style.display = "";
 
-      // Udfold hver hit-noegle til dens fulde scope-hierarki (dk5230 -> dk5,
-      // dk50, dk52, dk523, dk5230) og bevar deres indbyrdes rækkefoelge.
+      // Udfold hver hit-nøgle til dens fulde scope-hierarki (dk5230 -> dk5,
+      // dk50, dk52, dk523, dk5230) og bevar deres indbyrdes rækkefølge.
       const seen = new Set();
       const scopes = [];
       valid.forEach(k => {
@@ -485,11 +485,11 @@
     return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  // Tilfaeldigt flood.advert.interval i UI-tabellen, bibeholdt fra gammel script.js.
+  // Tilfældigt flood.advert.interval i UI-tabellen.
   const floodInterval = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
   document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 
-  // Expandable screenshot grids: show only the first row teaser, with a one-shot reveal button.
+  // Expandable screenshot grid
   const SHOW_LABEL = "Vis alle billeder";
   document.querySelectorAll(".screenshot-grid").forEach(grid => {
     grid.classList.add("collapsed");
