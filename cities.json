@@ -18,5 +18,6 @@
   "soroe": {"name":"Sorø","scope":"dk-sjl-soroe","localChat":"#dk-sjl-soroe","geometry":{"type":"Point","coordinates":[11.561,55.4457]}},
   "skanderborg": {"name":"Skanderborg","scope":"dk-skanderborg","localChat":"#skanderborg","geometry":{"type":"Point","coordinates":[9.9278,56.041]}},
   "jylland": {"name":"Jylland","scope":"dk-jylland","localChat":"#jylland","geometry":{"type":"Point","coordinates":[9.1923,56.207]}},
-  "dk3": {"name":"Dk3","scope":"dk3","localChat":"dk3","geometry":{"type":"Point","coordinates":[12.3363,55.9881]}}
+  "dk3": {"name":"Dk3","scope":"dk3","localChat":"dk3","geometry":{"type":"Point","coordinates":[12.3363,55.9881]}},
+  "oresund": {"name":"Oresund","scope":"oresund","localChat":"oresund","geometry":{"type":"Point","coordinates":[12.6278,55.7617]}}
 }
