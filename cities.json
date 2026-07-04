@@ -17,5 +17,6 @@
   "slagelse": {"name":"Slagelse","scope":"dk-sjl-slagelse","localChat":"#dk-sjl-slagelse","geometry":{"type":"Point","coordinates":[11.3549,55.4045]}},
   "soroe": {"name":"Sorø","scope":"dk-sjl-soroe","localChat":"#dk-sjl-soroe","geometry":{"type":"Point","coordinates":[11.561,55.4457]}},
   "skanderborg": {"name":"Skanderborg","scope":"dk-skanderborg","localChat":"#skanderborg","geometry":{"type":"Point","coordinates":[9.9278,56.041]}},
-  "jylland": {"name":"Jylland","scope":"dk-jylland","localChat":"#jylland","geometry":{"type":"Point","coordinates":[9.1923,56.207]}}
+  "jylland": {"name":"Jylland","scope":"dk-jylland","localChat":"#jylland","geometry":{"type":"Point","coordinates":[9.1923,56.207]}},
+  "dk3": {"name":"Dk3","scope":"dk3","localChat":"dk3","geometry":{"type":"Point","coordinates":[12.3363,55.9881]}}
 }
