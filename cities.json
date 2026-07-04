@@ -8,7 +8,7 @@
   "odense": {"name":"Odense","scope":"dk-fyn-odense","localChat":"#dk-fyn-odense","geometry":{"type":"Point","coordinates":[10.381,55.4047]}},
   "danmark": {"name":"Danmark","scope":"dk","localChat":"#danmark","geometry":{"type":"Point","coordinates":[10.8854,55.9934]}},
   "aalborg": {"name":"Ålborg","scope":"dk-aalborg","localChat":"#aalborg","geometry":{"type":"Point","coordinates":[9.9234,57.0402]}},
-  "gilleleje": {"name":"Gilleleje","scope":"","localChat":"#gilleleje","geometry":{"type":"Point","coordinates":[12.304,56.1234]}},
+  "gilleleje": {"name":"Gilleleje","scope":"dk-sjl-gilleleje","localChat":"#gilleleje","geometry":{"type":"Point","coordinates":[12.304,56.1234]}},
   "nordjylland": {"name":"Nordjylland","scope":"dk-nj","localChat":"#nordjylland","geometry":{"type":"Point","coordinates":[9.4475,56.9464]}},
   "fredericia": {"name":"Fredericia","scope":"","localChat":"#fredericia","geometry":{"type":"Point","coordinates":[9.7592,55.5646]}},
   "aarhus": {"name":"Århus","scope":"dk-aarhus","localChat":"#aarhus","geometry":{"type":"Point","coordinates":[10.1965,56.1503]}},
