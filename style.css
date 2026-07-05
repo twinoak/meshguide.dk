@@ -40,18 +40,21 @@ a { color: var(--accent); }
   height: 100%;
   display: block;
 }
+
 .site-mesh-bg .hdr-mesh line { stroke-opacity: .35; }
+
 .site-mesh-bg .hdr-nodes circle {
   filter: drop-shadow(0 0 6px rgba(88,166,255,.7));
 }
+
 .site-mesh-bg .hdr-pulse circle {
-  animation: hdr-pulse 3.2s ease-out infinite;
+  animation: hdr-pulse 3s ease-out infinite;
 }
-.site-mesh-bg .hdr-pulse circle:nth-child(2) { animation-delay: .8s; }
-.site-mesh-bg .hdr-pulse circle:nth-child(3) { animation-delay: 1.6s; }
+
 @keyframes hdr-pulse {
-  0%   { transform: scale(.4); opacity: .9; }
-  80%  { opacity: 0; }
+  0%   { transform: scale(.1); opacity: 0; }
+  10%  { opacity: 1;}
+  40%  { opacity: 0; }
   100% { transform: scale(1.8); opacity: 0; }
 }
 

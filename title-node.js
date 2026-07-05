@@ -1,6 +1,3 @@
-// Anchor a pulsing mesh node to the left of the header title and link it
-// to the top-left-most existing mesh node so it looks like a participant.
-
 (function () {
   const SVG_NS = "http://www.w3.org/2000/svg";
   const svg = document.querySelector(".site-mesh-bg svg");
@@ -33,17 +30,10 @@
   pulseGroup.setAttribute("fill", "none");
   pulseGroup.setAttribute("stroke", "#3fb950");
   pulseGroup.setAttribute("stroke-width", "1.5");
-  const rings = [
-    { r: 14, op: 0.8 },
-    { r: 28, op: 0.4 },
-    { r: 44, op: 0.15 },
-  ].map(({ r, op }) => {
-    const c = document.createElementNS(SVG_NS, "circle");
-    c.setAttribute("r", r);
-    c.setAttribute("opacity", op);
-    pulseGroup.appendChild(c);
-    return c;
-  });
+
+  const ring = document.createElementNS(SVG_NS, "circle");
+  ring.setAttribute("r", 80);
+  pulseGroup.appendChild(ring);
   svg.appendChild(pulseGroup);
 
   function clientToSvg(clientX, clientY) {
@@ -61,6 +51,7 @@
     const range = document.createRange();
     range.selectNodeContents(title);
     const rect = range.getBoundingClientRect();
+
     // Sit just to the left of the visible text, vertically centered.
     const p = clientToSvg(rect.left - 26, rect.top + rect.height / 2);
     if (!p) return;
@@ -76,11 +67,9 @@
     link.setAttribute("x2", target.x);
     link.setAttribute("y2", target.y);
 
-    rings.forEach((ring) => {
-      ring.setAttribute("cx", cx);
-      ring.setAttribute("cy", cy);
-      ring.style.transformOrigin = `${cx}px ${cy}px`;
-    });
+    ring.setAttribute("cx", cx);
+    ring.setAttribute("cy", cy);
+    ring.style.transformOrigin = `${cx}px ${cy}px`;
   }
 
   update();
