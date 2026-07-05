@@ -22,12 +22,6 @@ På `dk5x`-laget (det 2-cifrede, fx `dk52`) tilfoejes desuden nabo-postnumrenes 
 - `script.js` renderer kortet (Leaflet + CARTO dark tiles) på `index.html`.
 - `edit.js` driver region-editoren på `edit.html` (Leaflet-Geoman).
 
-## Tilføj en ny region
-
-1. Tilføj region-metadata + geometri i `regions.json` (nøgle, navn, geometry).
-2. Tilføj en farve til `REGION_COLORS` i `script.js` (hvis du vil ændre standard).
-3. Åbn `edit.html`, tegn polygonen, vælg den nye nøgle, og indsæt det eksporterede GeoJSON i `regions.json`.
-
 ## Genbyg postnumre
 
 Postnumre-data hentes direkte fra DAWA (api.dataforsyningen.dk), forenkles med Douglas-Peucker og skrives i samme nøgle/værdi-struktur som `regions.json`. Hver landsdel bliver sin egen fil i `postnumre/`, og scriptet skriver desuden manifestet `postnumre/index.json`:
@@ -36,6 +30,6 @@ Postnumre-data hentes direkte fra DAWA (api.dataforsyningen.dk), forenkles med D
 python3 tools/fetch_postnumre_dawa.py postnumre
 ```
 
-Scriptet itererer over landsdelene defineret i `LANDSDELE` i toppen af [tools/fetch_postnumre_dawa.py](tools/fetch_postnumre_dawa.py) - Fyn og Sjælland pr. default (Lolland-Falster og Bornholm er udeladt, da de har egne regioner). Tilføj en ny `(navn, kommuneliste)`-post i `LANDSDELE` for at udvide til Jylland osv.
+Scriptet itererer over landsdelene defineret i `LANDSDELE` i toppen af [tools/fetch_postnumre_dawa.py](tools/fetch_postnumre_dawa.py) - Fyn og Sjælland pr. default. Tilføj en ny `(navn, kommuneliste)`-post i `LANDSDELE` for at udvide til Jylland osv.
 
 Default-simplifikation: ~11 m tolerance + 4 decimalers koordinat-praecision. Juster med `--epsilon` og `--precision`.
