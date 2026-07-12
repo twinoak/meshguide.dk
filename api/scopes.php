@@ -1,22 +1,22 @@
 <?php
 // scopes.php - autoritativ scope-motor for MeshCore-DK-kortet.
 //
-// GET /api/scopes.php?lat=<bredde>&lon=<laengde>[&pretty=1]
+// GET /api/scopes.php?lat=<bredde>&lon=<længde>[&pretty=1]
 //
 // Tager et lat/lon-punkt og returnerer alle scopes for det punkt: de ramte
-// polygoner (regioner + postnumre), det udfoldede scope-hierarki, de faerdige
-// CLI-blokke til repeateren, samt geometrien for de ramte polygoner saa
+// polygoner (regioner + postnumre), det udfoldede scope-hierarki, de færdige
+// CLI-blokke til repeateren, samt geometrien for de ramte polygoner så
 // klienten kan tegne highlightet uden selv at hente polygon-data.
 //
 // Logikken er en 1:1-port af de rene funktioner i ../script.js. script.js er
-// praesentation; DENNE fil er kilden til scope-reglerne. AEndres en regel
-// (NEIGHBOR_DIST_M, lag-konventionen, regionDefLines) skal den aendres HER.
+// præsentation; DENNE fil er kilden til scope-reglerne. Ændres en regel
+// (NEIGHBOR_DIST_M, lag-konventionen, regionDefLines) skal den ændres HER.
 
 declare(strict_types=1);
 
-const M_PER_DEG        = 111320; // meter pr. grad bredde (og laengde ved aekvator)
-const NEIGHBOR_DIST_M  = 2000;   // et postnummer er nabo hvis graensen ligger <= dette
-const DEF_LIMIT        = 160;    // repeaterens serielle linjegraense
+const M_PER_DEG        = 111320; // meter pr. grad bredde (og længde ved ækvator)
+const NEIGHBOR_DIST_M  = 2000;   // et postnummer er nabo hvis grænsen ligger <= dette
+const DEF_LIMIT        = 160;    // repeaterens serielle linjegrænse
 
 // --- HTTP-rammer ----------------------------------------------------------
 
@@ -99,7 +99,7 @@ function point_in_geom(float $x, float $y, ?array $geom): bool {
     return false;
 }
 
-// Afstand fra punkt til linjestykke i meter (lokal equirektangulaer projektion).
+// Afstand fra punkt til linjestykke i meter (lokal equirektangulær projektion).
 function seg_dist_m(array $p, array $a, array $b, float $sx, float $sy): float {
     $px = $p[0] * $sx; $py = $p[1] * $sy;
     $ax = $a[0] * $sx; $ay = $a[1] * $sy;
@@ -111,7 +111,7 @@ function seg_dist_m(array $p, array $a, array $b, float $sx, float $sy): float {
     return hypot($px - ($ax + $t * $dx), $py - ($ay + $t * $dy));
 }
 
-// Mindste afstand fra g1's hjoerner til g2's kanter; afbryder tidligt <= limit.
+// Mindste afstand fra g1's hjørner til g2's kanter; afbryder tidligt <= limit.
 function boundary_dist_m(?array $g1, ?array $g2, float $sx, float $sy, float $limit): float {
     $best = INF;
     $r2 = rings_of($g2);
@@ -134,7 +134,7 @@ function boundary_dist_m(?array $g1, ?array $g2, float $sx, float $sy, float $li
 
 // --- Scope-udledning ------------------------------------------------------
 
-// De distinkte 2-cifrede prefixer (dkXY) for postnumre der graenser op til key.
+// De distinkte 2-cifrede prefixer (dkXY) for postnumre der grænser op til key.
 function neighbor_prefixes_for(string $key, array $postnumre, array $pbb): array {
     static $cache = [];
     if (isset($cache[$key])) return $cache[$key];
@@ -168,9 +168,9 @@ function neighbor_prefixes_for(string $key, array $postnumre, array $pbb): array
     return $cache[$key] = $res;
 }
 
-// Udfolder en hit-noegle til dens fulde scope-hierarki. For postnummer-noegler
-// (dk####) foelges lag-konventionen dk5 -> dk5x -> dk5xx -> dk5230; paa dk5x
-// indgaar eget 2-cifrede prefix PLUS naboernes, sorteret.
+// Udfolder en hit-nøgle til dens fulde scope-hierarki. For postnummer-nøgler
+// (dk####) følges lag-konventionen dk5 -> dk5x -> dk5xx -> dk5230; på dk5x
+// indgår eget 2-cifrede prefix PLUS naboernes, sorteret.
 function scopes_for(string $key, array $postnumre, array $pbb): array {
     if (!preg_match('/^dk(\d{4})$/', $key, $m)) return [$key];
     $d = $m[1];
@@ -182,7 +182,7 @@ function scopes_for(string $key, array $postnumre, array $pbb): array {
     return array_merge(['dk' . $d[0]], $layer2, ['dk' . substr($d, 0, 3)], ['dk' . $d]);
 }
 
-// Fladt region-trae: * -> eu -> dk -> alle oevrige scopes.
+// Fladt region-træ: * -> eu -> dk -> alle øvrige scopes.
 function parent_scope(string $key): string {
     if ($key === 'eu') return '*';
     if ($key === 'dk') return 'eu';
@@ -218,7 +218,7 @@ function region_def_lines(array $scopes): array {
     return $lines;
 }
 
-// --- Data-indlaesning (APCu-cachet, med forudberegnede bboxe) -------------
+// --- Data-indlæsning (APCu-cachet, med forudberegnede bboxe) -------------
 
 function get_dataset(string $root): array {
     $regionsPath  = $root . '/regions.json';
@@ -228,8 +228,8 @@ function get_dataset(string $root): array {
     $manifest = $manifestRaw !== false ? json_decode($manifestRaw, true) : ['files' => []];
     $files = $manifest['files'] ?? [];
 
-    // Cache-signatur = filsti + mtime for hver kilde, saa et git pull (der
-    // aendrer mtime) automatisk invaliderer den cachede struktur.
+    // Cache-signatur = filsti + mtime for hver kilde, så et git pull (der
+    // ændrer mtime) automatisk invaliderer den cachede struktur.
     $paths = [$regionsPath, $manifestPath];
     foreach ($files as $f) $paths[] = $root . '/postnumre/' . $f['file'];
     $sig = '';
@@ -243,7 +243,7 @@ function get_dataset(string $root): array {
     }
 
     $regionsRaw = @file_get_contents($regionsPath);
-    if ($regionsRaw === false) fail(500, 'kunne ikke laese regions.json');
+    if ($regionsRaw === false) fail(500, 'kunne ikke læse regions.json');
     $regions = json_decode($regionsRaw, true) ?: [];
 
     $postnumre = [];
@@ -253,7 +253,7 @@ function get_dataset(string $root): array {
         $d = json_decode($raw, true);
         if (!is_array($d)) continue;
         foreach ($d as $k => $v) {
-            if (!isset($postnumre[$k])) $postnumre[$k] = $v; // foerste fil vinder
+            if (!isset($postnumre[$k])) $postnumre[$k] = $v; // første fil vinder
         }
     }
 
@@ -276,7 +276,7 @@ function get_dataset(string $root): array {
 $latRaw = $_GET['lat'] ?? null;
 $lonRaw = $_GET['lon'] ?? null;
 if ($latRaw === null || $lonRaw === null || !is_numeric($latRaw) || !is_numeric($lonRaw)) {
-    fail(400, 'lat og lon paakraevet og skal vaere tal');
+    fail(400, 'lat og lon påkrævet og skal være tal');
 }
 $lat = (float)$latRaw;
 $lon = (float)$lonRaw;
@@ -290,8 +290,8 @@ $postnumre = $data['postnumre'];
 $rbb = $data['rbb'];
 $pbb = $data['pbb'];
 
-// Hit-test: regioner foerst, saa postnumre (samme raekkefoelge som klienten).
-// Bbox-forfilter afviser fjerne polygoner med fire sammenligninger foer ray-cast.
+// Hit-test: regioner først, så postnumre (samme rækkefølge som klienten).
+// Bbox-forfilter afviser fjerne polygoner med fire sammenligninger før ray-cast.
 $hits = [];
 foreach ($regions as $k => $v) {
     $bb = $rbb[$k] ?? null;
@@ -313,7 +313,7 @@ foreach ($hits as $k) {
     }
 }
 
-// Geometri for de ramte polygoner, saa klienten kan tegne highlightet.
+// Geometri for de ramte polygoner, så klienten kan tegne highlightet.
 $features = [];
 foreach ($hits as $k) {
     $entry = $regions[$k] ?? $postnumre[$k] ?? null;

@@ -1,4 +1,18 @@
 (async function () {
+  // Al scope-logik bor nu server-side i api/scopes.php (kilden til reglerne).
+  // Denne fil er ren præsentation: den tegner kortet, sender klik til API'et og
+  // viser det tilbagesendte resultat. Der hentes ingen polygon-data til klienten
+  // længere - API'et returnerer selv geometrien for de ramte polygoner, så vi
+  // kan tegne highlightet uden at downloade regions.json/postnumre.
+
+  const API_URL = "api/scopes.php";
+
+  async function fetchJSON(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("Kunne ikke hente " + url + ": " + r.status);
+    return r.json();
+  }
+
   function toFeatureCollection(dict, propKey) {
     return {
       type: "FeatureCollection",
@@ -12,221 +26,8 @@
     };
   }
 
-  async function fetchJSON(url) {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error("Kunne ikke hente " + url + ": " + r.status);
-    return r.json();
-  }
-
-  // Postnumre indlæses dovent og delt op pr. landsdel: postnumre/index.json er
-  // et manifest, der kobler hver fil (fyn.json, sjaelland.json, …) til dens
-  // bounding box. Først ved klik henter vi *kun* de filer hvis bbox dækker
-  // klikket — et klik på Fyn trækker altså ikke Sjællands ~850 KB med. Data fra
-  // flere klik akkumuleres, så et tidligere hentet lag forbliver indlæst.
-  let postnumre = {};
-  let postnumreGeo = { type: "FeatureCollection", features: [] };
-  let manifestPromise = null;
-  const filePromises = new Map();
-  let postnumreSink = null; // (features[]) => void; sættes af init() til at føde laget
-
-  function loadManifest() {
-    if (!manifestPromise) {
-      manifestPromise = fetchJSON("postnumre/index.json").catch(err => {
-        console.warn("Kunne ikke hente postnumre/index.json:", err);
-        manifestPromise = null; // tillader retry ved næste klik
-        return { files: [] };
-      });
-    }
-    return manifestPromise;
-  }
-
-  // Lille pad (~2 km) så et klik lige på kanten af en bbox stadig rammer.
-  const BBOX_PAD_DEG = 0.02;
-  function bboxContains(bbox, lng, lat) {
-    return !!bbox &&
-      lng >= bbox[0] - BBOX_PAD_DEG && lng <= bbox[2] + BBOX_PAD_DEG &&
-      lat >= bbox[1] - BBOX_PAD_DEG && lat <= bbox[3] + BBOX_PAD_DEG;
-  }
-
-  function addPostnumreData(data) {
-    const features = [];
-    Object.entries(data).forEach(([k, v]) => {
-      if (postnumre[k]) return; // allerede indlæst fra en anden fil
-      postnumre[k] = v;
-      if (!v || !v.geometry) return;
-      const feat = { type: "Feature", properties: { region: k }, geometry: v.geometry };
-      postnumreGeo.features.push(feat);
-      features.push(feat);
-    });
-    if (postnumreSink && features.length) postnumreSink(features);
-  }
-
-  function loadFile(file) {
-    if (filePromises.has(file)) return filePromises.get(file);
-    const p = fetchJSON("postnumre/" + file).then(data => {
-      addPostnumreData(data);
-    }).catch(err => {
-      console.warn("Kunne ikke hente postnumre/" + file + ":", err);
-      filePromises.delete(file); // tillader retry ved næste klik
-    });
-    filePromises.set(file, p);
-    return p;
-  }
-
-  // Henter de landsdels-filer hvis bbox dækker klikket (og som ikke allerede er
-  // hentet) og fletter dem ind i postnumre/postnumreGeo.
-  function loadPostnumre(latlng) {
-    return loadManifest().then(manifest => Promise.all(
-      (manifest.files || [])
-        .filter(f => bboxContains(f.bbox, latlng.lng, latlng.lat))
-        .map(f => loadFile(f.file))
-    ));
-  }
-
-  // --- Nabo-udledning -------------------------------------------------------
-  // dk5x-laget (det 2-cifrede) skal ikke kun daekke ens eget postnummer, men
-  // ogsaa nabo-postnumrene der stoeder op til (eller ligger taet paa) det. Vi
-  // udleder naboerne ud fra polygon-geometrien ved klik: et postnummer er nabo
-  // hvis dets graense ligger inden for NEIGHBOR_DIST_M af det klikkede.
-  const NEIGHBOR_DIST_M = 2000;
-  const M_PER_DEG = 111320; // meter pr. grad bredde (og laengde ved aekvator)
-  const neighborCache = new Map();
-
-  function ringsOf(geom) {
-    if (!geom) return [];
-    if (geom.type === "Polygon") return geom.coordinates;
-    if (geom.type === "MultiPolygon") return geom.coordinates.flatMap(p => p);
-    return [];
-  }
-  function geomBBox(geom) {
-    let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
-    ringsOf(geom).forEach(ring => ring.forEach(([x, y]) => {
-      if (x < minx) minx = x;
-      if (x > maxx) maxx = x;
-      if (y < miny) miny = y;
-      if (y > maxy) maxy = y;
-    }));
-    return [minx, miny, maxx, maxy];
-  }
-  // Afstand fra punkt til linjestykke i meter (lokal equirektangulaer projektion).
-  function segDistM(p, a, b, sx, sy) {
-    const px = p[0] * sx, py = p[1] * sy;
-    const ax = a[0] * sx, ay = a[1] * sy, bx = b[0] * sx, by = b[1] * sy;
-    const dx = bx - ax, dy = by - ay;
-    const len = dx * dx + dy * dy;
-    let t = len ? ((px - ax) * dx + (py - ay) * dy) / len : 0;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
-  }
-  // Mindste afstand fra g1's hjoerner til g2's kanter; afbryder tidligt <= limit.
-  function boundaryDistM(g1, g2, sx, sy, limit) {
-    let best = Infinity;
-    const r2 = ringsOf(g2);
-    for (const ring of ringsOf(g1)) {
-      for (const p of ring) {
-        for (const ring2 of r2) {
-          for (let i = 0; i < ring2.length - 1; i++) {
-            const d = segDistM(p, ring2[i], ring2[i + 1], sx, sy);
-            if (d < best) {
-              best = d;
-              if (best <= limit) return best;
-            }
-          }
-        }
-      }
-    }
-    return best;
-  }
-  // De distinkte 2-cifrede prefixer (dkXY) for postnumre der graenser op til key.
-  function neighborPrefixesFor(key) {
-    if (neighborCache.has(key)) return neighborCache.get(key);
-    const self = postnumre[key];
-    if (!self || !self.geometry) {
-      neighborCache.set(key, []);
-      return [];
-    }
-    const bb = geomBBox(self.geometry);
-    const refLat = (bb[1] + bb[3]) / 2;
-    const sx = M_PER_DEG * Math.cos(refLat * Math.PI / 180);
-    const sy = M_PER_DEG;
-    const padLon = NEIGHBOR_DIST_M / sx, padLat = NEIGHBOR_DIST_M / sy;
-    const seen = new Set();
-    Object.keys(postnumre).forEach(k => {
-      if (k === key) return;
-      const m = /^dk(\d{4})$/.exec(k);
-      if (!m) return;
-      const e = postnumre[k];
-      if (!e || !e.geometry) return;
-      const ob = geomBBox(e.geometry);
-      if (ob[0] > bb[2] + padLon || ob[2] < bb[0] - padLon ||
-          ob[1] > bb[3] + padLat || ob[3] < bb[1] - padLat) return;
-      const d = Math.min(
-        boundaryDistM(self.geometry, e.geometry, sx, sy, NEIGHBOR_DIST_M),
-        boundaryDistM(e.geometry, self.geometry, sx, sy, NEIGHBOR_DIST_M)
-      );
-      if (d <= NEIGHBOR_DIST_M) seen.add(`dk${m[1].slice(0, 2)}`);
-    });
-    const result = [...seen].sort();
-    neighborCache.set(key, result);
-    return result;
-  }
-
-  // Udleder alle scopes som en repeater i en given region skal sætte.
-  // For postnummer-nøgler (dk####) følges MeshCore-DK's lag-konvention:
-  // dk5 (hele landsdelen) -> dk5x (2-cifret) -> dk5xx (3-cifret) -> dk5230.
-  // På dk5x-laget indgår eget 2-cifrede prefix PLUS nabo-postnumrenes (se
-  // ovenfor), sorteret. dk50 e.l. optraeder altsaa kun naar 50-området reelt
-  // er nabo — ikke pr. automatik paa alle 5xxx-postnumre.
-  function scopesFor(key) {
-    const m = /^dk(\d{4})$/.exec(key);
-    if (!m) return [key];
-    const d = m[1];
-    const layer2 = [...new Set([`dk${d.slice(0, 2)}`, ...neighborPrefixesFor(key)])].sort();
-    return [`dk${d[0]}`, ...layer2, `dk${d.slice(0, 3)}`, `dk${d}`];
-  }
-
-  // Region-træet er fladt: * -> eu -> dk -> alle øvrige scopes. Hvert egentligt
-  // scope (dk5, dk52, dk5230, nabo-præfikser ...) hænger direkte under dk, så
-  // vi slipper for at udlede dybere forælder/barn-relationer.
-  function parentScope(key) {
-    if (key === "eu") return "*";
-    if (key === "dk") return "eu";
-    return "dk";
-  }
-
-  // Bygger 'region def'-linjer for en ordnet scope-liste (forælder altid før
-  // barn). Hver knude placeres under den logiske cursor; formen name|jump
-  // popper cursoren tilbage op, så søskende kan sættes. Linjer holdes <= 160
-  // tegn (repeaterens serielle grænse) — passer alt på én linje, bliver det
-  // én enkelt 'region def'. Skal der splittes, leder fortsættelseslinjer med
-  // eu|<knude> for at genplacere cursoren uden at ændre træet (eu's forælder
-  // er reelt *, så et gen-put under roden er en no-op).
-  function regionDefLines(scopes) {
-    const LIMIT = 160;
-    const PREFIX = "region def ";
-    const lines = [];
-    let i = 0;
-    let lead = null;
-    while (i < scopes.length) {
-      const parts = lead ? [lead] : [];
-      const minParts = parts.length;
-      while (i < scopes.length) {
-        const node = scopes[i];
-        let jump = null;
-        if (i < scopes.length - 1) {
-          const np = parentScope(scopes[i + 1]);
-          if (np !== node) jump = np;
-        }
-        const token = jump ? node + "|" + jump : node;
-        if (PREFIX.length + parts.concat(token).join(" ").length > LIMIT &&
-            parts.length > minParts) break;
-        parts.push(token);
-        i++;
-      }
-      lines.push(PREFIX + parts.join(" "));
-      lead = i < scopes.length ? "eu|" + parentScope(scopes[i]) : null;
-    }
-    return lines;
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   function cliBlock(label, text) {
@@ -235,30 +36,36 @@
       escapeHtml(text) + '</code></pre></div>';
   }
 
-  let regions, cities, regionsGeo, citiesGeo;
+  function cityPopupHtml(c) {
+    let html = '<div class="mcdk-city-popup-body">';
+    html += "<h4>" + escapeHtml(c.name) + "</h4>";
+    html += "<dl>";
+    html += "<dt>Chat</dt><dd><code>" + escapeHtml(c.localChat) + "</code></dd>";
+    if (c.scope) html += "<dt>Scope</dt><dd><code>" + escapeHtml(c.scope) + "</code></dd>";
+    html += "</dl>";
+    html += "</div>";
+    return html;
+  }
+
+  let cities;
   try {
-    [regions, cities] = await Promise.all([
-      fetchJSON("regions.json"),
-      fetchJSON("cities.json")
-    ]);
+    cities = await fetchJSON("cities.json");
   } catch (e) {
     console.error(e);
     return;
   }
-  regionsGeo = toFeatureCollection(regions, "region");
-  citiesGeo = toFeatureCollection(cities, "city");
+  const citiesGeo = toFeatureCollection(cities, "city");
 
-  const regionCli = document.getElementById("regionCli");
-  const regionTitle = document.getElementById("regionTitle");
-  const mapEl = document.getElementById("map");
-
-  const DEFAULT_REGION_COLOR = "#ffffff";
   const CITY_ZOOM_MIN = 7;
-
-  function regionColor() { return DEFAULT_REGION_COLOR; }
+  const HIGHLIGHT_COLOR = "#ffffff";
 
   function init() {
+    const mapEl = document.getElementById("map");
     if (!mapEl || typeof L === "undefined") return;
+
+    const regionCli = document.getElementById("regionCli");
+    const regionTitle = document.getElementById("regionTitle");
+    const hintEl = document.getElementById("mapHint");
 
     const map = L.map(mapEl, {
       center: [56.0, 11.0],
@@ -274,65 +81,7 @@
       maxZoom: 20
     }).addTo(map);
 
-    function regionLayerStyle(feature) {
-      return {
-        className: "mcdk-region",
-        color: regionColor(feature.properties && feature.properties.region),
-        weight: 1.2,
-        fillColor: regionColor(feature.properties && feature.properties.region),
-        fillOpacity: 0,
-        opacity: 0
-      };
-    }
-    function attachClick(layer, key) {
-      layer.on("click", e => {
-        const ll = e.latlng;
-        const hits = hitTestRegions(ll);
-        render(hits.length ? hits : (key ? [key] : []));
-        showClickMarker(ll);
-        L.DomEvent.stopPropagation(e);
-        loadPostnumre(ll).then(() => {
-          render(hitTestRegions(ll));
-        });
-      });
-    }
-
-    const regionsLayer = L.geoJSON(regionsGeo, {
-      style: regionLayerStyle,
-      onEachFeature: (feature, layer) => {
-        attachClick(layer, feature.properties && feature.properties.region);
-      }
-    }).addTo(map);
-
-    // Laget bygges først ved første klik og udvides løbende med de features
-    // addPostnumreData() leverer, efterhånden som flere landsdels-filer hentes.
-    let postnumreLayer = null;
-    postnumreSink = features => {
-      if (!postnumreLayer) {
-        postnumreLayer = L.geoJSON({ type: "FeatureCollection", features: [] }, {
-          style: regionLayerStyle,
-          onEachFeature: (feature, layer) => {
-            attachClick(layer, feature.properties && feature.properties.region);
-          }
-        }).addTo(map);
-      }
-      postnumreLayer.addData({ type: "FeatureCollection", features });
-    };
-
-    function hitTestRegions(latlng) {
-      const pt = [latlng.lng, latlng.lat];
-      const hits = [];
-      regionsGeo.features.forEach(f => {
-        const k = f.properties && f.properties.region;
-        if (k && pointInFeature(pt, f)) hits.push(k);
-      });
-      postnumreGeo.features.forEach(f => {
-        const k = f.properties && f.properties.region;
-        if (k && pointInFeature(pt, f)) hits.push(k);
-      });
-      return hits;
-    }
-
+    // --- Bymarkører -------------------------------------------------------
     const citiesLayer = L.layerGroup();
     citiesGeo.features.forEach(f => {
       const key = f.properties && f.properties.city;
@@ -361,6 +110,7 @@
     map.on("zoomend", syncCityLayer);
     syncCityLayer();
 
+    // --- Klik-markør ------------------------------------------------------
     let clickMarker = null;
     function showClickMarker(latlng) {
       if (clickMarker) {
@@ -381,108 +131,84 @@
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
     }
 
-    map.on("click", () => { render(null); hideClickMarker(); });
+    // --- Highlight af de ramte polygoner ----------------------------------
+    // Geometrien kommer fra API-svaret; vi bygger et frisk lag pr. klik og
+    // river det forrige ned. interactive:false så et nyt klik (også oven på
+    // et highlight) falder igennem til map-klik-handleren.
+    let highlightLayer = null;
+    function clearHighlight() {
+      if (highlightLayer) { map.removeLayer(highlightLayer); highlightLayer = null; }
+    }
+    function drawHighlight(featureCollection) {
+      clearHighlight();
+      if (!featureCollection || !featureCollection.features || !featureCollection.features.length) return;
+      highlightLayer = L.geoJSON(featureCollection, {
+        interactive: false,
+        style: {
+          className: "mcdk-region",
+          color: HIGHLIGHT_COLOR,
+          weight: 1.25,
+          fillColor: HIGHLIGHT_COLOR,
+          fillOpacity: 0.1,
+          opacity: 1
+        }
+      }).addTo(map);
+    }
 
-    // Hint overlay, vis når ingen regioner er valgt.
-    const hintEl = document.getElementById("mapHint");
     function showHint(show) {
       if (hintEl) hintEl.hidden = !show;
     }
 
-    function clearLayerStyles(layer) {
-      if (!layer) return;
-      layer.eachLayer(l => l.setStyle({ fillOpacity: 0, weight: 1.2, opacity: 0 }));
+    // --- Resultat-visning -------------------------------------------------
+    function clearResult() {
+      regionCli.style.display = "none";
+      regionTitle.style.display = "none";
+      clearHighlight();
+      hideClickMarker();
+      showHint(true);
     }
-    function highlightLayer(layer, valid) {
-      if (!layer) return;
-      layer.eachLayer(l => {
-        const k = l.feature && l.feature.properties && l.feature.properties.region;
-        const active = valid.includes(k);
-        l.setStyle({ fillOpacity: active ? 0.1 : 0, weight: active ? 1.25 : 0, opacity: active ? 1 : 0 });
-        if (active) l.bringToFront();
-      });
-    }
-
-    function render(keys) {
-      const arr = Array.isArray(keys) ? keys : (keys ? [keys] : []);
-      const valid = arr.filter(k => regions[k] || postnumre[k]);
-      if (valid.length === 0) {
-        regionCli.style.display = "none";
-        regionTitle.style.display = "none";
-        clearLayerStyles(regionsLayer);
-        clearLayerStyles(postnumreLayer);
-        showHint(true);
-        return;
-      }
-
+    function showResult(res) {
       regionCli.style.display = "";
       regionTitle.style.display = "";
-
-      // Udfold hver hit-nøgle til dens fulde scope-hierarki (dk5230 -> dk5,
-      // dk50, dk52, dk523, dk5230) og bevar deres indbyrdes rækkefølge.
-      const seen = new Set();
-      const scopes = [];
-      valid.forEach(k => {
-        scopesFor(k).forEach(s => {
-          if (!seen.has(s)) { seen.add(s); scopes.push(s); }
-        });
-      });
-
-      const allScopes = ["eu", "dk"].concat(scopes);
-      const oldCli = allScopes.map(s => "region put " + s + "\nregion allowf " + s).join("\n") + "\nregion save";
-      const newCli = regionDefLines(allScopes).join("\n") + "\nregion save";
       regionCli.innerHTML =
-        cliBlock("Firmware 1.16.0+", newCli) +
-        cliBlock("Firmware 1.12.0 - 1.15.0", oldCli);
-
-      highlightLayer(regionsLayer, valid);
-      highlightLayer(postnumreLayer, valid);
+        cliBlock("Firmware 1.16.0+", res.cli.firmware_1_16_0_plus) +
+        cliBlock("Firmware 1.12.0 - 1.15.0", res.cli.firmware_1_12_0_to_1_15_0);
+      drawHighlight(res.features);
+      showHint(false);
+    }
+    function showError() {
+      regionCli.style.display = "";
+      regionTitle.style.display = "none";
+      regionCli.innerHTML = cliBlock("Fejl", "Kunne ikke hente scopes - prøv at klikke igen.");
+      clearHighlight();
       showHint(false);
     }
 
-  }
-
-  function cityPopupHtml(c) {
-    let html = '<div class="mcdk-city-popup-body">';
-    html += "<h4>" + escapeHtml(c.name) + "</h4>";
-    html += "<dl>";
-    html += "<dt>Chat</dt><dd><code>" + escapeHtml(c.localChat) + "</code></dd>";
-    if (c.scope) html += "<dt>Scope</dt><dd><code>" + escapeHtml(c.scope) + "</code></dd>";
-    html += "</dl>";
-    html += "</div>";
-    return html;
-  }
-
-  // Point-in-polygon for GeoJSON Polygon/MultiPolygon. Punkt og ringe i [lng, lat].
-  function pointInFeature(pt, feature) {
-    const g = feature.geometry;
-    if (!g) return false;
-    if (g.type === "Polygon") return pointInPolygon(pt, g.coordinates);
-    if (g.type === "MultiPolygon") return g.coordinates.some(poly => pointInPolygon(pt, poly));
-    return false;
-  }
-  function pointInPolygon(pt, rings) {
-    if (!rings.length) return false;
-    if (!pointInRing(pt, rings[0])) return false;
-    for (let i = 1; i < rings.length; i++) {
-      if (pointInRing(pt, rings[i])) return false;
-    }
-    return true;
-  }
-  function pointInRing(pt, ring) {
-    const x = pt[0], y = pt[1];
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i][1];
-      const xj = ring[j][0], yj = ring[j][1];
-      const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    // --- Klik -> API ------------------------------------------------------
+    // En rækkefølge-tæller sikrer at et hurtigt nyt klik altid vinder over et
+    // ældre, langsommere svar (ellers kunne et forsinket svar overskrive et
+    // nyere resultat).
+    let clickSeq = 0;
+    map.on("click", async e => {
+      const seq = ++clickSeq;
+      const { lat, lng } = e.latlng;
+      showClickMarker(e.latlng);
+      let res;
+      try {
+        res = await fetchJSON(API_URL + "?lat=" + lat + "&lon=" + lng);
+      } catch (err) {
+        if (seq !== clickSeq) return;
+        console.error(err);
+        showError();
+        return;
+      }
+      if (seq !== clickSeq) return; // et nyere klik er undervejs
+      if (!res.hits || !res.hits.length) {
+        clearResult();
+        return;
+      }
+      showResult(res);
+    });
   }
 
   // Tilfældigt flood.advert.interval i UI-tabellen.
