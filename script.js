@@ -5,7 +5,7 @@
   // længere - API'et returnerer selv geometrien for de ramte polygoner, så vi
   // kan tegne highlightet uden at downloade regions.json/postnumre.
 
-  const API_URL = "api/scopes.php";
+  const API_URL = "api/scopes";
 
   async function fetchJSON(url) {
     const r = await fetch(url);

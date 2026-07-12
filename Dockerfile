@@ -17,4 +17,4 @@ WORKDIR /app
 #
 # Bind til [::] (dual-stack): en IPv6-socket på Linux accepterer både IPv6 og
 # IPv4-mappede forbindelser, så både localhost (::1) og 127.0.0.1 rammer.
-CMD ["php", "-d", "apc.enable_cli=1", "-S", "[::]:8000"]
+CMD ["php", "-d", "apc.enable_cli=1", "-S", "[::]:8000", "router.php"]

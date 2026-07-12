@@ -29,8 +29,10 @@ På `dk5x`-laget (det 2-cifrede, fx `dk52`) tilføjes desuden nabo-postnumrenes 
 [api/scopes.php](api/scopes.php) er den autoritative scope-motor. Den tager et punkt og returnerer alle scopes for det punkt:
 
 ```
-GET /api/scopes.php?lat=<bredde>&lon=<længde>[&pretty=1]
+GET /api/scopes?lat=<bredde>&lon=<længde>[&pretty=1]
 ```
+
+Den pæne URL uden `.php` leveres af en Apache-`RewriteRule` (`^/api/scopes$ → /api/scopes.php`) i produktion; lokalt gør [router.php](router.php) det samme for PHP's indbyggede server. Selve filen [api/scopes.php](api/scopes.php) er stadig direkte tilgængelig.
 
 ```json
 {
