@@ -1,7 +1,7 @@
 <?php
 // scopes.php - autoritativ scope-motor for MeshCore-DK-kortet.
 //
-// GET /api/scopes.php?lat=<bredde>&lon=<længde>[&pretty=1]
+// GET /api/scopes.php?lat=<bredde>&lon=<længde>
 //
 // Tager et lat/lon-punkt og returnerer alle scopes for det punkt: de ramte
 // polygoner (regioner + postnumre), det udfoldede scope-hierarki, de færdige
@@ -352,6 +352,4 @@ $response = [
     'features' => ['type' => 'FeatureCollection', 'features' => $features],
 ];
 
-$flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-if (isset($_GET['pretty'])) $flags |= JSON_PRETTY_PRINT;
-echo json_encode($response, $flags);
+echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
