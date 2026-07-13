@@ -276,7 +276,7 @@ function get_dataset(string $root): array {
 $latRaw = $_GET['lat'] ?? null;
 $lonRaw = $_GET['lon'] ?? null;
 if ($latRaw === null || $lonRaw === null || !is_numeric($latRaw) || !is_numeric($lonRaw)) {
-    fail(400, 'lat og lon påkrævet og skal være tal');
+    fail(400, 'lat and lon not supplied or incorrectly supplied.');
 }
 $lat = (float)$latRaw;
 $lon = (float)$lonRaw;
