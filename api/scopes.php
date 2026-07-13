@@ -243,7 +243,7 @@ function get_dataset(string $root): array {
     }
 
     $regionsRaw = @file_get_contents($regionsPath);
-    if ($regionsRaw === false) fail(500, 'kunne ikke læse regions.json');
+    if ($regionsRaw === false) fail(500, 'could not read regions.json');
     $regions = json_decode($regionsRaw, true) ?: [];
 
     $postnumre = [];
@@ -276,12 +276,12 @@ function get_dataset(string $root): array {
 $latRaw = $_GET['lat'] ?? null;
 $lonRaw = $_GET['lon'] ?? null;
 if ($latRaw === null || $lonRaw === null || !is_numeric($latRaw) || !is_numeric($lonRaw)) {
-    fail(400, 'lat and lon not supplied or incorrectly supplied.');
+    fail(400, 'lat/lon not supplied or incorrectly supplied.');
 }
 $lat = (float)$latRaw;
 $lon = (float)$lonRaw;
 if (!is_finite($lat) || !is_finite($lon) || $lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
-    fail(400, 'lat/lon uden for gyldigt interval');
+    fail(400, 'lat/lon outside valid range.');
 }
 
 $data = get_dataset(dirname(__DIR__));
