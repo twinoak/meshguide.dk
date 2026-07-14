@@ -53,6 +53,40 @@ Et punkt uden for alle polygoner giver tomme `hits`/`scopes`, `cli: null` og HTT
 
 API'et indlæser `regions.json` + alle postnummer-filer og cacher de dekodede strukturer (med forudberegnede bounding boxes) i APCu, nøglet på filernes mtime - et `git pull` invaliderer derfor cachen automatisk. Naboer udledes fra hele datasættet ved hver forespørgsel, så resultatet er deterministisk, også på tværs af landsdele.
 
+### Alle scopes
+
+```
+GET /api/scopes?all
+```
+
+I stedet for scopes for et enkelt punkt returnerer `?all` hele scope-universet: hver region-nøgle plus hvert postnummer udfoldet til sine prefix-lag (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), fladtet til én deduplikeret, sorteret liste. Fordi postnummer 5000 findes, dukker det 2-cifrede prefix `dk50` op af sig selv. Nabo-udledningen indgår *ikke* - den er punkt-specifik.
+
+```json
+{ "scopes": ["dk-fyn", "dk-fyn-odense", "dk5", "dk50", "dk500", "dk5000", "…"], "count": 1080 }
+```
+
+### Chats
+
+[api/chats.php](api/chats.php) eksponerer chat-registret som API, så en node kan slå en enkelt chat op uden at hente og parse hele datasættet. Chats kommer fra to kilder:
+
+- de håndkuraterede by-chats i [cities.json](cities.json) (`#horsens`, `#dk-fyn`, …).
+- én afledt chat pr. postnummer-scope. Hvert postnummer udfoldes til sine prefix-lag efter samme lag-konvention som scopes (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), så både de enkelte postnumre *og* aggregat-rummene (fx `#dk50`, der dækker hele 50xx) kommer med, deduplikeret. Hver chat har scope = nøglen, handle `#<nøgle>` og en centroid-`Point` som placering (bbox-centrum af postnummeret; for et aggregat-lag centrummet af alle dets postnumre). Ved kollision med en kurateret by-chat (fx `dk3`) vinder by-chatten.
+
+```
+GET /api/chats?all            # alle chats som en liste (by-chats + postnumre)
+GET /api/chats?chat=<navn>    # én chat
+```
+
+`<navn>` matcher chattens nøgle (`odense`), dens handle (`#dk-fyn-odense`, med eller uden `#`) eller dens navn (`Odense`) - ufølsom over for store/små bogstaver. Postnummer-chats slås op på deres scope (`dk5000`, `#dk5000` eller bare `5000`) - det gælder også aggregat-lagene, så `dk50` og `dk5` virker. Den korte form `/api/chats?odense` virker også.
+
+```json
+{ "chat": { "key": "odense", "name": "Odense", "scope": "dk-fyn-odense", "localChat": "#dk-fyn-odense", "geometry": { "type": "Point", "coordinates": [10.381, 55.4047] } } }
+```
+
+`?all` svarer i stedet med `{ "chats": [ … ] }`, hvor hvert element bærer sin egen `key`. En ukendt chat giver HTTP 404, og en forespørgsel uden parametre giver HTTP 400.
+
+Begge endpoints kræver ligesom `scopes` en Apache-`RewriteRule` i produktion (`^/api/chats$ → /api/chats.php`); lokalt kortlægger [router.php](router.php) automatisk enhver `/api/<navn>` til `api/<navn>.php`.
+
 ## Genbyg postnumre
 
 Postnumre-data hentes direkte fra DAWA (api.dataforsyningen.dk), forenkles med Douglas-Peucker og skrives i samme nøgle/værdi-struktur som `regions.json`. Hver landsdel bliver sin egen fil i `postnumre/`, og scriptet skriver desuden manifestet `postnumre/index.json`:

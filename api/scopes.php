@@ -182,6 +182,27 @@ function scopes_for(string $key, array $postnumre, array $pbb): array {
     return array_merge(['dk' . $d[0]], $layer2, ['dk' . substr($d, 0, 3)], ['dk' . $d]);
 }
 
+// Hele scope-universet for ?all: hver region-nøgle plus hvert postnummer
+// udfoldet til dets prefix-lag (dk5230 -> dk5, dk52, dk523, dk5230), fladtet
+// til én deduplikeret, sorteret liste. Nabo-udledning indgår IKKE - den er
+// punkt-specifik og giver ikke mening for hele datasættet; men fordi et
+// postnummer som 5000 findes, dukker dets 2-cifrede prefix dk50 op af sig selv.
+function all_scopes(array $regions, array $postnumre): array {
+    $seen = [];
+    foreach ($regions as $k => $_) $seen[$k] = true;
+    foreach ($postnumre as $k => $_) {
+        if (!preg_match('/^dk(\d{4})$/', $k, $m)) { $seen[$k] = true; continue; }
+        $d = $m[1];
+        $seen['dk' . $d[0]]           = true;
+        $seen['dk' . substr($d, 0, 2)] = true;
+        $seen['dk' . substr($d, 0, 3)] = true;
+        $seen['dk' . $d]              = true;
+    }
+    $res = array_keys($seen);
+    sort($res);
+    return $res;
+}
+
 // Fladt region-træ: * -> eu -> dk -> alle øvrige scopes.
 function parent_scope(string $key): string {
     if ($key === 'eu') return '*';
@@ -273,6 +294,20 @@ function get_dataset(string $root): array {
 
 // --- Anmodning ------------------------------------------------------------
 
+$root = dirname(__DIR__);
+
+// ?all: hele scope-universet i stedet for scopes for et enkelt punkt.
+if (isset($_GET['all'])) {
+    $data = get_dataset($root);
+    $scopes = all_scopes($data['regions'], $data['postnumre']);
+    header('Cache-Control: public, max-age=3600');
+    echo json_encode(
+        ['scopes' => $scopes, 'count' => count($scopes)],
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
+    exit;
+}
+
 $latRaw = $_GET['lat'] ?? null;
 $lonRaw = $_GET['lon'] ?? null;
 if ($latRaw === null || $lonRaw === null || !is_numeric($latRaw) || !is_numeric($lonRaw)) {
@@ -284,7 +319,7 @@ if (!is_finite($lat) || !is_finite($lon) || $lat < -90 || $lat > 90 || $lon < -1
     fail(400, 'lat/lon outside valid range.');
 }
 
-$data = get_dataset(dirname(__DIR__));
+$data = get_dataset($root);
 $regions   = $data['regions'];
 $postnumre = $data['postnumre'];
 $rbb = $data['rbb'];
