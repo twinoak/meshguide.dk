@@ -537,6 +537,46 @@ code {
   transform: translate(-50%, 25%) translateY(1px);
   filter: brightness(0.95);
 }
+@media (max-width: 900px) {
+  /* Reclaim horizontal space: drop main's side padding and let panels run
+     edge-to-edge (no side border/radius), with slim inner padding. */
+  main { padding: .75rem 0 1.5rem; }
+  section {
+    padding: 1rem 0rem;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    overflow-x: clip;
+  }
+  /* Map bleeds to the section edges; keep in sync with section side padding. */
+  #map { margin: 0 -.85rem; }
+
+  /* Articles carry their own side padding on top of the section's - strip it
+     (and side borders/radius) so their content runs full-bleed to the section
+     edges. The lighter --panel-2 bg + top/bottom borders keep them distinct. */
+  .setting,
+  .profile-card {
+    padding-left: 0;
+    padding-right: 0;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  /* Collapse the 3-column profile cards to a single column. */
+  .profile-card {
+    grid-template-columns: 1fr;
+    gap: .6rem;
+    align-items: start;
+  }
+
+  /* Let wide tables scroll horizontally instead of overflowing the page. */
+  table { display: block; overflow-x: auto; }
+
+  /* Long code tokens (radio strings, owner.info) shouldn't force width. */
+  code { overflow-wrap: anywhere; }
+}
+
 @media (max-width: 480px) {
   .screenshot-grid { --shot-min: 120px; gap: .5rem; }
 }
