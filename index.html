@@ -84,16 +84,8 @@
 
   <section id="regioner">
     <h2 id="region-scopes"><a href="#region-scopes">Region Scopes</a></h2>
-    <p>Region Scopes er den vigtigste mekanisme til at holde MeshCore-netværket i Danmark sundt. En Region Scope er et navngivet kanal-segment, der begrænser, hvor langt flood-trafik fra en gruppesamtale breder sig.</p>
-    <p><strong>Hvorfor scopes?</strong> Uden scopes ville alle pakker sendes igennem hele mesh-netværket, hvilket hurtigt ville gøre det ubrugeligt. Lokal-chat på Fyn behøver for eksempel ikke at kunne læses af brugere i Midtjylland, og slet ikke i Tyskland.</p>
-    <p><strong>Vigtigt: scope <code>*</code> er ikke et wildcard.</strong> En Repeater, der kun har scope <code>*</code>, kan <strong>ikke</strong> videresende pakker med scope <code>dk</code> (eller andre scopes). Scope <code>*</code> betyder faktisk <code>null</code>; altså ingen scope. En Repeater skal derfor eksplicit have alle de scopes konfigureret, som den skal videresende. Uden det kan den kun håndtere pakker uden scope.</p>
-    <p><strong>Dette gælder kun flood-pakker og Repeatere!</strong> Privat-beskeder kan sendes frit gennem hele mesh-netværket uanset scopes. Companion-noder skal blot sætte en scope på de chats, de bruger, og så kører det.</p>
-    <ul>
-      <li><strong>Bakketop-repeater på Ejer Bavnehøj</strong> dækker bredt og bør inkludere <code>*</code>, <code>eu</code>, <code>dk</code>, <code>dk-jylland</code>, <code>dk-oj</code>, <code>dk-mj</code>.</li>
-      <li><strong>Lokal repeater i Horsens</strong> dækker kun byen og bør inkludere <code>*</code>, <code>eu</code>, <code>dk</code>, <code>dk-jylland</code>, <code>dk-oj</code>, <code>dk-mj</code>, <code>dk-horsens</code>.</li>
-      <li><code>#horsens</code> er en lokal-chat og brugere skal sætte Scope til <code>dk-horsens</code>.</li>
-    </ul>
-    <p style="color:var(--accent-2);">Du kan hjælpe med at udvide kortet på <a href="edit.html">denne side</a>!</p>
+    <p>Region scopes en af de vigtigste mekanismer til at holde netværket i Danmark sundt og brugbart. Et 'scope' er et ekstra stykke data som en datapakke kan have der begrænser hvor langt flood-trafik breder sig. Repeatere kan så bestemme om de vil gentage bestemte scopes. <a href="https://wiki.meshnet.dk/index.php?title=Regioner">Læs mere.</a></p>
+    <p>Du kan hjælpe med at udvide kortet på <a href="edit.html">denne side</a>!</p>
 
     <div class="map-wrap">
       <div id="map" role="img" aria-label="Danmarkskort opdelt i regionsområder">
