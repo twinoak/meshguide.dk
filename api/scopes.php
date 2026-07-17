@@ -18,6 +18,16 @@ const M_PER_DEG        = 111320; // meter pr. grad bredde (og længde ved ækvat
 const NEIGHBOR_DIST_M  = 2000;   // et postnummer er nabo hvis grænsen ligger <= dette
 const DEF_LIMIT        = 160;    // repeaterens serielle linjegrænse
 
+// De faste top-scopes der ikke udledes af geometri, med deres forælder i
+// scope-træet: * -> {eu, europe} -> dk -> alt andet. 'eu' og 'europe' er begge
+// i brug og redundante (som #dk/#danmark), men skal begge findes. Dette er den
+// eneste kilde til de faste scopes - både ?all og CLI-blokkene læser herfra.
+const FIXED_SCOPE_PARENTS = [
+    'eu'     => '*',
+    'europe' => '*',
+    'dk'     => 'eu',
+];
+
 // --- HTTP-rammer ----------------------------------------------------------
 
 header('Content-Type: application/json; charset=utf-8');
@@ -183,13 +193,15 @@ function scopes_for(string $key, array $postnumre, array $pbb): array {
     return array_merge(['dk' . $d[0]], $layer2, ['dk' . substr($d, 0, 3)], ['dk' . $d]);
 }
 
-// Hele scope-universet for ?all: hver region-nøgle plus hvert postnummer
-// udfoldet til dets prefix-lag (dk5230 -> dk5, dk52, dk523, dk5230), fladtet
-// til én deduplikeret, sorteret liste. Nabo-udledning indgår IKKE - den er
+// Hele scope-universet for ?all: de faste top-scopes (eu, europe, dk) plus hver
+// region-nøgle plus hvert postnummer udfoldet til dets prefix-lag (dk5230 ->
+// dk5, dk52, dk523, dk5230), fladtet til én deduplikeret, sorteret liste.
+// Nabo-udledning indgår IKKE - den er
 // punkt-specifik og giver ikke mening for hele datasættet; men fordi et
 // postnummer som 5000 findes, dukker dets 2-cifrede prefix dk50 op af sig selv.
 function all_scopes(array $regions, array $postnumre): array {
     $seen = [];
+    foreach (array_keys(FIXED_SCOPE_PARENTS) as $k) $seen[$k] = true;
     foreach ($regions as $k => $_) $seen[$k] = true;
     foreach ($postnumre as $k => $_) {
         if (!preg_match('/^dk(\d{4})$/', $k, $m)) { $seen[$k] = true; continue; }
@@ -204,11 +216,9 @@ function all_scopes(array $regions, array $postnumre): array {
     return $res;
 }
 
-// Fladt region-træ: * -> eu -> dk -> alle øvrige scopes.
+// Fladt region-træ: * -> {eu, europe} -> dk -> alle øvrige scopes.
 function parent_scope(string $key): string {
-    if ($key === 'eu') return '*';
-    if ($key === 'dk') return 'eu';
-    return 'dk';
+    return FIXED_SCOPE_PARENTS[$key] ?? 'dk';
 }
 
 // Bygger 'region def'-linjer (<= 160 tegn) for en ordnet scope-liste.
@@ -364,7 +374,7 @@ foreach ($hits as $k) {
 // CLI: kun hvis der faktisk er hits (klienten skjuler blokken ved tomt klik).
 $cli = null;
 if ($scopes) {
-    $allScopes = array_merge(['eu', 'dk'], $scopes);
+    $allScopes = array_merge(array_keys(FIXED_SCOPE_PARENTS), $scopes);
     $oldCli = implode("\n", array_map(
         fn($s) => "region put $s\nregion allowf $s",
         $allScopes

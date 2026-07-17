@@ -59,7 +59,7 @@ API'et indlæser `regions.json` + alle postnummer-filer og cacher de dekodede st
 GET /api/scopes?all
 ```
 
-I stedet for scopes for et enkelt punkt returnerer `?all` hele scope-universet: hver region-nøgle plus hvert postnummer udfoldet til sine prefix-lag (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), fladtet til én deduplikeret, sorteret liste. Fordi postnummer 5000 findes, dukker det 2-cifrede prefix `dk50` op af sig selv. Nabo-udledningen indgår *ikke* - den er punkt-specifik.
+I stedet for scopes for et enkelt punkt returnerer `?all` hele scope-universet: de faste top-scopes (`eu`, `europe`, `dk`) plus hver region-nøgle plus hvert postnummer udfoldet til sine prefix-lag (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), fladtet til én deduplikeret, sorteret liste. Fordi postnummer 5000 findes, dukker det 2-cifrede prefix `dk50` op af sig selv. Nabo-udledningen indgår *ikke* - den er punkt-specifik.
 
 ```json
 { "scopes": ["dk-fyn", "dk-fyn-odense", "dk5", "dk50", "dk500", "dk5000", "…"], "count": 1080 }
