@@ -24,6 +24,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(204);
@@ -166,8 +167,6 @@ function get_postal_chats(string $root): array {
 
 $root  = dirname(__DIR__);
 $chats = get_chats($root);
-
-header('Cache-Control: public, max-age=3600');
 
 // ?all: hele registret som en liste - by-chats først (håndkuraterede), så én
 // chat pr. postnummer-scope. Ved kollision (fx en kurateret dk3 og det

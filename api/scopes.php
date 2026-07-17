@@ -23,6 +23,7 @@ const DEF_LIMIT        = 160;    // repeaterens serielle linjegrænse
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(204);
@@ -300,7 +301,6 @@ $root = dirname(__DIR__);
 if (isset($_GET['all'])) {
     $data = get_dataset($root);
     $scopes = all_scopes($data['regions'], $data['postnumre']);
-    header('Cache-Control: public, max-age=3600');
     echo json_encode(
         ['scopes' => $scopes, 'count' => count($scopes)],
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
@@ -375,8 +375,6 @@ if ($scopes) {
         'firmware_1_12_0_to_1_15_0' => $oldCli,
     ];
 }
-
-header('Cache-Control: public, max-age=3600');
 
 $response = [
     'lat'      => $lat,
