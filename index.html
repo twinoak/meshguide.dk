@@ -167,7 +167,7 @@
     <h2 id="diverse-indstillinger"><a href="#diverse-indstillinger">Diverse indstillinger</a></h2>
 
     <article class="setting">
-      <h3>path.hash.mode - path-hash længde</h3>
+      <h3>path.hash.mode</h3>
       <ul>
         <p>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et:</p>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger.</li>
@@ -189,14 +189,14 @@
     </article>
 
     <article class="setting">
-      <h3>advert.interval / flood.advert.interval - annonceringer</h3>
+      <h3>advert.interval / flood.advert.interval</h3>
       <table>
         <thead>
           <tr><th>Indstilling</th><th>Værdi</th><th>Hvad den gør</th></tr>
         </thead>
         <tbody>
           <tr><td>advert.interval</td><td>0</td><td>0-hop adverts burde slås helt fra</td></tr>
-          <tr><td>flood.advert.interval</td><td><span class="floodAdvertInterval">48</span></td><td>Netværksdækkende (flooded) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
+          <tr><td>flood.advert.interval</td><td><span class="floodAdvertInterval">48</span></td><td>Netværksdækkende (flood) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
           <tr><td>guest.password</td><td>hello</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
         </tbody>
       </table>
@@ -207,14 +207,14 @@ set guest.password hello</code></pre>
 
     <article class="setting">
       <h3>region default</h3>
-      <p>Det er muligt at sætte et scope der ikke er * som default, hvilket gør at alle datapakker, der ikke bliver overskrevet et andet sted, bruger det scope. Det kan være en god idé at sætte dette til dk.</p>
-      <p>Dette betyder i praksis at datapakker som ikke ellers vil have et scope, som adverts, vil bære et scope i stedet for at være unscoped, og kan derfor, i en situation hvor mange Repeatere bruger Flood.max.unscoped, komme længere rundt i netværket. </p>
-      <p>Sæt den til et region der dækker dit behov, for eksempel 'dk'.</p>
+      <p>Det er muligt at sætte et scope der ikke er <code>*</code> som default, hvilket gør at alle datapakker, der ikke bliver overskrevet et andet sted, bruger det scope. Det kan være en god idé at sætte dette til <code>dk</code>.</p>
+      <p>Dette betyder i praksis at datapakker der ikke normalt vil have et scope, som adverts, vil bære et scope i stedet for at være unscoped, og kan derfor, i en situation hvor mange Repeatere bruger <code>flood.max.unscoped</code>, komme længere rundt i netværket. </p>
+      <p>Sæt den til et region der dækker dit behov, for eksempel <code>dk</code>.</p>
       <pre><code>region default dk</code></pre>
     </article>
 
     <article class="setting">
-      <h3>owner.info - kontaktoplysninger</h3>
+      <h3>owner.info</h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
         <li>Synlig for alle der forespørger repeateren. Undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
@@ -229,7 +229,7 @@ set guest.password hello</code></pre>
       <pre><code>set owner.info OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
     <article class="setting">
-      <h3>loop.detect - detekter og stop 'path loops'</h3>
+      <h3>loop.detect</h3>
       <p><code>loop.detect</code>handler om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.</p>
       <p>Hvornår en pakke bliver smidt ud kommer an på om der er tale om en 1, 2 eller 3-byte path-hash.</p>
       <table>
