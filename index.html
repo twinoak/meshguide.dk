@@ -206,6 +206,14 @@ set guest.password hello</code></pre>
     </article>
 
     <article class="setting">
+      <h3>region default</h3>
+      <p>Det er muligt at sætte et scope der ikke er * som default, hvilket gør at alle datapakker, der ikke bliver overskrevet et andet sted, bruger det scope. Det kan være en god idé at sætte dette til dk.</p>
+      <p>Dette betyder i praksis at datapakker som ikke ellers vil have et scope, som adverts, vil bære et scope i stedet for at være unscoped, og kan derfor, i en situation hvor mange Repeatere bruger Flood.max.unscoped, komme længere rundt i netværket. </p>
+      <p>Sæt den til et region der dækker dit behov, for eksempel 'dk'.</p>
+      <pre><code>region default dk</code></pre>
+    </article>
+
+    <article class="setting">
       <h3>owner.info - kontaktoplysninger</h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
@@ -222,7 +230,7 @@ set guest.password hello</code></pre>
     </article>
     <article class="setting">
       <h3>loop.detect - detekter og stop 'path loops'</h3>
-      <p>Loop.detect handler om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.</p>
+      <p><code>loop.detect</code>handler om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.</p>
       <p>Hvornår en pakke bliver smidt ud kommer an på om der er tale om en 1, 2 eller 3-byte path-hash.</p>
       <table>
         <thead>
