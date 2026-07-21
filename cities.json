@@ -19,8 +19,8 @@
   "soroe": {"name":"Sorø","scope":"dk-sjl-soroe","localChat":"#dk-sjl-soroe","geometry":{"type":"Point","coordinates":[11.561,55.4457]}},
   "skanderborg": {"name":"Skanderborg","scope":"dk-skanderborg","localChat":"#skanderborg","geometry":{"type":"Point","coordinates":[9.9278,56.041]}},
   "jylland": {"name":"Jylland","scope":"dk-jylland","localChat":"#jylland","geometry":{"type":"Point","coordinates":[9.1923,56.207]}},
-  "dk3": {"name":"Dk3","scope":"dk3","localChat":"dk3","geometry":{"type":"Point","coordinates":[12.3363,55.9881]}},
   "oresund": {"name":"Oresund","scope":"oresund","localChat":"oresund","geometry":{"type":"Point","coordinates":[12.6278,55.7617]}},
   "djursland": {"name":"Djursland","scope":"dk-djurs","localChat":"#djursland","geometry":{"type":"Point","coordinates":[10.5867,56.3551]}},
-  "dk-sjl-jyderup": {"name":"Jyderup","scope":"dk-sjl-jyderup","localChat":"#dk-sjl-jyderup","geometry":{"type":"Point","coordinates":[11.4071,55.6536]}}
+  "dk-sjl-jyderup": {"name":"Jyderup","scope":"dk-sjl-jyderup","localChat":"#dk-sjl-jyderup","geometry":{"type":"Point","coordinates":[11.4071,55.6536]}},
+  "dk-nordsjaelland": {"name":"Dk-nordsjaelland","scope":"dk-nordsjaelland","localChat":"dk-nordsjaelland","geometry":{"type":"Point","coordinates":[12.2278,55.9383]}}
 }
