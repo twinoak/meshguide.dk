@@ -22,5 +22,5 @@
   "oresund": {"name":"Oresund","scope":"oresund","localChat":"oresund","geometry":{"type":"Point","coordinates":[12.6278,55.7617]}},
   "djursland": {"name":"Djursland","scope":"dk-djurs","localChat":"#djursland","geometry":{"type":"Point","coordinates":[10.5867,56.3551]}},
   "dk-sjl-jyderup": {"name":"Jyderup","scope":"dk-sjl-jyderup","localChat":"#dk-sjl-jyderup","geometry":{"type":"Point","coordinates":[11.4071,55.6536]}},
-  "dk-nordsjaelland": {"name":"Dk-nordsjaelland","scope":"dk-nordsjaelland","localChat":"dk-nordsjaelland","geometry":{"type":"Point","coordinates":[12.2278,55.9383]}}
+  "dk-nordsjaelland": {"name":"Dk-nordsjaelland","scope":"dk-nordsjaelland","localChat":"#dk-nordsjaelland","geometry":{"type":"Point","coordinates":[12.2278,55.9383]}}
 }
