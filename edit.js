@@ -32,7 +32,14 @@
   }
 
   const DEFAULT_COLOR = "#4a8db8";
-  const colorFor = () => DEFAULT_COLOR;
+  // Stabil "tilfaeldig" farve pr. region-noegle: samme noegle giver altid samme
+  // farve, saa polygoner og knap-swatches matcher paa tvaers af gen-tegninger.
+  function colorFor(key) {
+    if (!key) return DEFAULT_COLOR;
+    let h = 0;
+    for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    return "hsl(" + (h % 360) + ", 65%, 55%)";
+  }
 
   const mapEl = document.getElementById("editor-map");
   const statusEl = document.getElementById("editorStatus");
@@ -167,7 +174,11 @@
       btn.type = "button";
       btn.className = "region-toggle" + (on ? " active" : "");
       btn.setAttribute("aria-pressed", on ? "true" : "false");
-      btn.textContent = key + " — " + nameForRegion(key);
+      const swatch = document.createElement("span");
+      swatch.className = "region-toggle-swatch";
+      swatch.style.background = colorFor(key);
+      btn.appendChild(swatch);
+      btn.appendChild(document.createTextNode(key + " — " + nameForRegion(key)));
       btn.addEventListener("click", () => setKeyVisible(key, !visibleKeys.has(key)));
       togglesListEl.appendChild(btn);
     });

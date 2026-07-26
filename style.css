@@ -274,6 +274,9 @@ th { color: var(--muted); font-weight: 600; }
 }
 .region-toggles-empty { color: var(--muted); font-size: .9rem; }
 .region-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
   background: var(--panel);
   color: var(--muted);
   border: 1px solid var(--border);
@@ -283,6 +286,13 @@ th { color: var(--muted); font-weight: 600; }
   font-size: .85rem;
   cursor: pointer;
   transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.region-toggle-swatch {
+  width: .8rem;
+  height: .8rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.35);
+  flex-shrink: 0;
 }
 .region-toggle:hover {
   border-color: var(--muted);
