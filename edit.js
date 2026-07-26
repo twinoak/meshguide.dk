@@ -113,6 +113,80 @@
   });
   const deletedOriginals = [];
 
+  // --- Region-synlighed --------------------------------------------------
+  // Alle tegnede region-lag holdes her uanset om de vises, saa eksport/diff
+  // stadig ser dem alle. Kortet (regionsLayer) indeholder kun de lag hvis
+  // noegle er i visibleKeys. Regioner er skjult som standard, saa man kan se
+  // basemap og de nederste lag; brug knapperne under kortet for at vise dem.
+  const allRegionLayers = new Set();
+  regionsLayer.eachLayer(l => allRegionLayers.add(l));
+  const visibleKeys = new Set();
+
+  const togglesListEl = document.getElementById("regionTogglesList");
+  const btnShowAll = document.getElementById("btnShowAll");
+  const btnHideAll = document.getElementById("btnHideAll");
+
+  function keyOfLayer(l) {
+    return l.feature && l.feature.properties && l.feature.properties.region;
+  }
+  function currentRegionKeys() {
+    const keys = new Set();
+    allRegionLayers.forEach(l => { const k = keyOfLayer(l); if (k) keys.add(k); });
+    return [...keys].sort();
+  }
+  function applyVisibility() {
+    allRegionLayers.forEach(l => {
+      const key = keyOfLayer(l);
+      const show = key && visibleKeys.has(key);
+      const inGroup = regionsLayer.hasLayer(l);
+      if (show && !inGroup) regionsLayer.addLayer(l);
+      else if (!show && inGroup) regionsLayer.removeLayer(l);
+    });
+  }
+  function setKeyVisible(key, visible) {
+    if (visible) visibleKeys.add(key); else visibleKeys.delete(key);
+    applyVisibility();
+    rebuildRegionToggles();
+  }
+  function rebuildRegionToggles() {
+    if (!togglesListEl) return;
+    const keys = currentRegionKeys();
+    // Ryd synligheds-flag for noegler der ikke laengere har et lag.
+    [...visibleKeys].forEach(k => { if (!keys.includes(k)) visibleKeys.delete(k); });
+    togglesListEl.innerHTML = "";
+    if (!keys.length) {
+      const empty = document.createElement("span");
+      empty.className = "region-toggles-empty";
+      empty.textContent = "Ingen regioner.";
+      togglesListEl.appendChild(empty);
+      return;
+    }
+    keys.forEach(key => {
+      const on = visibleKeys.has(key);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "region-toggle" + (on ? " active" : "");
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.textContent = key + " — " + nameForRegion(key);
+      btn.addEventListener("click", () => setKeyVisible(key, !visibleKeys.has(key)));
+      togglesListEl.appendChild(btn);
+    });
+  }
+  if (btnShowAll) btnShowAll.addEventListener("click", () => {
+    currentRegionKeys().forEach(k => visibleKeys.add(k));
+    applyVisibility();
+    rebuildRegionToggles();
+  });
+  if (btnHideAll) btnHideAll.addEventListener("click", () => {
+    visibleKeys.clear();
+    applyVisibility();
+    rebuildRegionToggles();
+  });
+
+  // Skjul alle regioner som standard.
+  applyVisibility();
+  rebuildRegionToggles();
+
   // Byer er redigerbare markers i deres eget lag.
   const citiesLayer = L.featureGroup().addTo(map);
   const deletedCities = [];
@@ -218,7 +292,10 @@
       layer.feature.properties.region = key;
       layer.setStyle(styleForKey(key));
       bindLayerTooltip(layer, key);
+      allRegionLayers.add(layer);
+      visibleKeys.add(key);
       regionsLayer.addLayer(layer);
+      rebuildRegionToggles();
       setStatus("Tilfoejet " + key + ".");
     });
   });
@@ -250,6 +327,9 @@
       layer.feature.properties.region = key;
       layer.setStyle(styleForKey(key));
       bindLayerTooltip(layer, key);
+      visibleKeys.add(key);
+      applyVisibility();
+      rebuildRegionToggles();
       setStatus("Aendret til " + key + ".");
     });
     L.DomEvent.stopPropagation(e);
@@ -273,6 +353,8 @@
       });
     }
     if (regionsLayer.hasLayer(l)) regionsLayer.removeLayer(l);
+    allRegionLayers.delete(l);
+    rebuildRegionToggles();
     setStatus("Slettet.");
   });
 
@@ -517,7 +599,7 @@
 
   function collectChanges() {
     const changes = [];
-    regionsLayer.eachLayer(l => {
+    allRegionLayers.forEach(l => {
       const gj = l.toGeoJSON();
       const key = gj.properties && gj.properties.region;
       if (!key) return;
@@ -557,7 +639,7 @@
 
   btnDownload.addEventListener("click", () => {
     const fc = { type: "FeatureCollection", features: [] };
-    regionsLayer.eachLayer(l => {
+    allRegionLayers.forEach(l => {
       const gj = l.toGeoJSON();
       if (gj.type === "Feature" && gj.properties && gj.properties.region) fc.features.push(gj);
       else if (gj.type === "FeatureCollection") fc.features.push(...gj.features.filter(f => f.properties && f.properties.region));

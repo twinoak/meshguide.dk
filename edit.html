@@ -27,6 +27,17 @@
 
     <div id="editor-map" class="editor-map"></div>
 
+    <div class="editor-region-toggles" aria-label="Vis regioner">
+      <div class="region-toggles-head">
+        <span class="region-toggles-label" style="color:var(--accent2)">Vis regioner</span>
+        <div class="region-toggles-actions">
+          <button type="button" id="btnShowAll">Vis alle</button>
+          <button type="button" id="btnHideAll">Skjul alle</button>
+        </div>
+      </div>
+      <div class="region-toggles-list" id="regionTogglesList"></div>
+    </div>
+
     <div class="editor-toolbar">
       <button type="button" id="btnCopy">Kopier GeoJSON</button>
       <button type="button" id="btnDownload">Download .geojson</button>
