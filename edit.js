@@ -174,11 +174,12 @@
       btn.type = "button";
       btn.className = "region-toggle" + (on ? " active" : "");
       btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.title = key;
       const swatch = document.createElement("span");
       swatch.className = "region-toggle-swatch";
       swatch.style.background = colorFor(key);
       btn.appendChild(swatch);
-      btn.appendChild(document.createTextNode(key + " — " + nameForRegion(key)));
+      btn.appendChild(document.createTextNode(nameForRegion(key)));
       btn.addEventListener("click", () => setKeyVisible(key, !visibleKeys.has(key)));
       togglesListEl.appendChild(btn);
     });
