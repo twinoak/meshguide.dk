@@ -8,6 +8,7 @@
   --accent: #58a6ff;
   --accent-2: #f0883e;
   --hl: #3fb950;
+  --wiki-icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M4%2019.5A2.5%202.5%200%200%201%206.5%2017H20'/%3E%3Cpath%20d='M6.5%202H20v20H6.5A2.5%202.5%200%200%201%204%2019.5v-15A2.5%202.5%200%200%201%206.5%202z'/%3E%3C/svg%3E");
 }
 
 * { box-sizing: border-box; }
@@ -106,6 +107,10 @@ section h2 {
   font-size: 1.4rem;
   border-bottom: 1px solid var(--border);
   padding-bottom: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
 }
 section h2 a {
   color: inherit;
@@ -521,7 +526,26 @@ code {
   padding: .9rem 1.1rem;
   margin-bottom: .75rem;
 }
-.setting h3 { margin: 0 0 .5rem; color: var(--accent-2); font-size: 1rem; }
+.setting h3 { margin: 0 0 .5rem; color: var(--accent-2); font-size: 1rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.setting h3 .social-btn,
+section h2 .social-btn {
+  flex: none;
+  padding: .3rem .7rem;
+  font-size: .78rem;
+  color: var(--accent);
+  border-color: rgba(88, 166, 255, .35);
+  background: transparent;
+}
+.setting h3 .social-btn::before,
+section h2 .social-btn::before {
+  content: "";
+  flex: none;
+  width: 15px;
+  height: 15px;
+  background-color: currentColor;
+  -webkit-mask: var(--wiki-icon) center / contain no-repeat;
+  mask: var(--wiki-icon) center / contain no-repeat;
+}
 .setting ul { margin: 0; padding-left: 1.2rem; }
 .setting li { font-size: .92rem; margin-bottom: .2rem; }
 .setting code { background: var(--bg); }
