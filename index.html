@@ -83,7 +83,7 @@
 <main>
 
   <section id="regioner">
-    <h2 id="region-scopes"><a href="#region-scopes">Region Scopes</a></h2>
+    <h2 id="region-scopes"><a href="#region-scopes">Region Scopes</a><a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Regioner" target="_blank">Wiki</a></h2>
     <p>Region scopes en af de vigtigste mekanismer til at holde netværket i Danmark sundt og brugbart. Et 'scope' er et ekstra stykke data som en datapakke kan have, der begrænser hvor langt flood-trafik breder sig. Repeatere kan så bestemme om de vil gentage bestemte scopes. <a href="https://wiki.meshnet.dk/index.php?title=Regioner">Læs mere.</a></p>
     <p>Du kan hjælpe med at udvide kortet på <a href="edit.html">denne side</a>!</p>
 
@@ -130,7 +130,7 @@
 
   <section id="radio">
 
-    <h2 id="radio-indstillinger"><a href="#radio-indstillinger">Radioindstillinger</a></h2>
+    <h2 id="radio-indstillinger"><a href="#radio-indstillinger">Radioindstillinger</a><a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Radioindstillinger" target="_blank">Wiki</a></h2>
 
     <article class="setting">
       <h3>EU/UK Narrow preset</h3>
@@ -167,7 +167,7 @@
     <h2 id="diverse-indstillinger"><a href="#diverse-indstillinger">Diverse indstillinger</a></h2>
 
     <article class="setting">
-      <h3>path.hash.mode</h3>
+      <h3>path.hash.mode<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Path.hash.mode" target="_blank">Wiki</a></h3>
       <ul>
         <p>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et:</p>
         <li>1-byte (256 mulige hashes) giver hurtigt kollisioner når antallet af repeatere stiger.</li>
@@ -189,7 +189,7 @@
     </article>
 
     <article class="setting">
-      <h3>advert.interval / flood.advert.interval</h3>
+      <h3>advert.interval / flood.advert.interval<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Advert" target="_blank">Wiki</a></h3>
       <table>
         <thead>
           <tr><th>Indstilling</th><th>Værdi</th><th>Hvad den gør</th></tr>
@@ -206,7 +206,7 @@ set guest.password hello</code></pre>
     </article>
 
     <article class="setting">
-      <h3>region default</h3>
+      <h3>region default<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Regioner" target="_blank">Wiki</a></h3>
       <p>Det er muligt at sætte et scope der ikke er <code>*</code> som default, hvilket gør at alle datapakker, der ikke bliver overskrevet et andet sted, bruger det scope. Det kan være en god idé at sætte dette til <code>dk</code>.</p>
       <p>Dette betyder i praksis at datapakker der ikke normalt vil have et scope, som adverts, vil bære et scope i stedet for at være unscoped, og kan derfor, i en situation hvor mange Repeatere bruger <code>flood.max.unscoped</code>, komme længere rundt i netværket. </p>
       <p>Sæt den til et region der dækker dit behov, for eksempel <code>dk</code>.</p>
@@ -214,7 +214,7 @@ set guest.password hello</code></pre>
     </article>
 
     <article class="setting">
-      <h3>owner.info</h3>
+      <h3>owner.info<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Owner.info" target="_blank">Wiki</a></h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
         <li>Synlig for alle der forespørger repeateren. Undgå personfølsomme oplysninger. Et håndtag, en e-mail eller et kaldesignal er nok.</li>
@@ -229,7 +229,7 @@ set guest.password hello</code></pre>
       <pre><code>set owner.info OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
     <article class="setting">
-      <h3>loop.detect</h3>
+      <h3>loop.detect<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Loop.detect" target="_blank">Wiki</a></h3>
       <p><code>loop.detect</code>handler om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.</p>
       <p>Hvornår en pakke bliver smidt ud kommer an på om der er tale om en 1, 2 eller 3-byte path-hash.</p>
       <table>
@@ -244,25 +244,38 @@ set guest.password hello</code></pre>
         <tbody>
           <tr>
             <td>minimal</td>
-            <td>Dropper ved 4+ forekomster</td>
-            <td>Dropper ved 2+ forekomster</td>
-            <td>Dropper ved 1+ forekomst</td>
+            <td>Drop ved 4+ forekomster</td>
+            <td>Drop ved 2+ forekomster</td>
+            <td>Drop ved 1+ forekomst</td>
           </tr>
           <tr>
             <td>moderate</td>
-            <td>Dropper ved 2+ forekomster</td>
-            <td>Dropper ved 1+ forekomst</td>
-            <td>Dropper ved 1+ forekomst</td>
+            <td>Drop ved 2+ forekomster</td>
+            <td>Drop ved 1+ forekomst</td>
+            <td>Drop ved 1+ forekomst</td>
           </tr>
           <tr>
             <td>strict</td>
-            <td>Dropper ved 1+ forekomst</td>
-            <td>Dropper ved 1+ forekomst</td>
-            <td>Dropper ved 1+ forekomst</td>
+            <td>Drop ved 1+ forekomst</td>
+            <td>Drop ved 1+ forekomst</td>
+            <td>Drop ved 1+ forekomst</td>
           </tr>
         </tbody>
       </table>
       <pre><code>set loop.detect moderate</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>flood.max.unscoped<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Flood.max.unscoped" target="_blank">Wiki</a></h3>
+      <p>Det er muligt at særbehandle datapakker uden et scope, hvis din Repeater bliver overbelastet af langvejstrafik. Hvis en flood datapakke uden scope ankommer til en Repeater der har sat flood.max.unscoped til 15, og pakken allerede har hoppet mere end 15 gange, vil Repeateren droppe datapakken. </p>
+      <pre><code>set flood.max.unscoped 15</code></pre>
+    </article>
+
+    <article class="setting" id="gps" hidden>
+      <h3>gps<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/GPS" target="_blank">Wiki</a></h3>
+      <p>Hvis du har valgt en lokation på kortet, og ikke vil bruge et GPS modul, kan du kopiere GPS koordinaterne her:</p>
+        <pre><code id="gpsCoords">set lat (klik på kortet)
+set lon (klik på kortet)</code></pre>
     </article>
   </section>
 
@@ -300,16 +313,6 @@ set rxdelay 3</code></pre>
         </div>
         <pre><code>set txdelay 0.3
 set direct.txdelay 0.1
-set rxdelay 3</code></pre>
-      </article>
-      <article class="profile-card">
-        <header><h3>MOBIL</h3><span>Variabel højde · variabelt antal naboer</span></header>
-        <div class="profile-body">
-          <p>Bevæger sig gennem mesh'et. Viger altid for fast infrastruktur.</p>
-          <p class="profile-examples">Eksempler: bil, cykel, vandretur</p>
-        </div>
-        <pre><code>set txdelay 3.0
-set direct.txdelay 2.5
 set rxdelay 3</code></pre>
       </article>
     </div>

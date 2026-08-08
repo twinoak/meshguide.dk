@@ -163,16 +163,22 @@
     function clearResult() {
       regionCli.style.display = "none";
       regionTitle.style.display = "none";
+      document.getElementById("gps").hidden = true;
       clearHighlight();
       hideClickMarker();
       showHint(true);
     }
-    function showResult(res) {
+    function showResult(res, latlng) {
       regionCli.style.display = "";
       regionTitle.style.display = "";
       regionCli.innerHTML =
         cliBlock("Firmware 1.16.0+", res.cli.firmware_1_16_0_plus) +
         cliBlock("Firmware 1.12.0 - 1.15.0", res.cli.firmware_1_12_0_to_1_15_0);
+
+      const lat = latlng.lat.toFixed(7);
+      const lon = latlng.lng.toFixed(7);
+      document.getElementById("gpsCoords").textContent = "set lat " + lat + "\nset lon " + lon + "\ngps advert prefs";
+      document.getElementById("gps").hidden = false;
       drawHighlight(res.features);
       showHint(false);
     }
@@ -207,7 +213,7 @@
         clearResult();
         return;
       }
-      showResult(res);
+      showResult(res, e.latlng);
     });
   }
 
