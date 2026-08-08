@@ -177,7 +177,7 @@
 
       const lat = latlng.lat.toFixed(7);
       const lon = latlng.lng.toFixed(7);
-      document.getElementById("gpsCoords").textContent = "set lat " + lat + "\nset lon " + lon;
+      document.getElementById("gpsCoords").textContent = "set lat " + lat + "\nset lon " + lon + "\ngps advert prefs";
       document.getElementById("gps").hidden = false;
       drawHighlight(res.features);
       showHint(false);
