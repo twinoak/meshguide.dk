@@ -265,6 +265,12 @@ set guest.password hello</code></pre>
       <pre><code>set loop.detect moderate</code></pre>
     </article>
 
+    <article class="setting">
+      <h3>flood.max.unscoped<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Flood.max.unscoped" target="_blank">Wiki</a></h3>
+      <p>Det er muligt at særbehandle datapakker uden et scope, hvis din Repeater bliver overbelastet af langvejstrafik. Hvis en flood datapakke uden scope ankommer til en Repeater der har sat flood.max.unscoped til 15, og pakken allerede har hoppet mere end 15 gange, vil Repeateren droppe datapakken. </p>
+      <pre><code>set flood.max.unscoped 15</code></pre>
+    </article>
+
     <article class="setting" id="gps" hidden>
       <h3>gps<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/GPS" target="_blank">Wiki</a></h3>
       <p>Hvis du har valgt en lokation på kortet, og ikke vil bruge et GPS modul, kan du kopiere GPS koordinaterne her:</p>
