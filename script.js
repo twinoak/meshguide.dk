@@ -1,9 +1,9 @@
 (async function () {
-  // Al scope-logik bor nu server-side i api/scopes.php (kilden til reglerne).
-  // Denne fil er ren præsentation: den tegner kortet, sender klik til API'et og
-  // viser det tilbagesendte resultat. Der hentes ingen polygon-data til klienten
-  // længere - API'et returnerer selv geometrien for de ramte polygoner, så vi
-  // kan tegne highlightet uden at downloade regions.json/postnumre.
+  // All scope logic now lives server-side in api/scopes.php (the source of the
+  // rules). This file is pure presentation: it draws the map, sends clicks to
+  // the API and shows the returned result. No polygon data is fetched to the
+  // client anymore - the API returns the geometry for the hit polygons itself,
+  // so we can draw the highlight without downloading regions.json/postnumre.
 
   const API_URL = "api/scopes";
 
@@ -81,7 +81,7 @@
       maxZoom: 20
     }).addTo(map);
 
-    // --- Bymarkører -------------------------------------------------------
+    // --- City markers -----------------------------------------------------
     const citiesLayer = L.layerGroup();
     citiesGeo.features.forEach(f => {
       const key = f.properties && f.properties.city;
@@ -110,7 +110,7 @@
     map.on("zoomend", syncCityLayer);
     syncCityLayer();
 
-    // --- Klik-markør ------------------------------------------------------
+    // --- Click marker -----------------------------------------------------
     let clickMarker = null;
     function showClickMarker(latlng) {
       if (clickMarker) {
@@ -131,10 +131,10 @@
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
     }
 
-    // --- Highlight af de ramte polygoner ----------------------------------
-    // Geometrien kommer fra API-svaret; vi bygger et frisk lag pr. klik og
-    // river det forrige ned. interactive:false så et nyt klik (også oven på
-    // et highlight) falder igennem til map-klik-handleren.
+    // --- Highlight of the hit polygons ------------------------------------
+    // The geometry comes from the API response; we build a fresh layer per
+    // click and tear down the previous one. interactive:false so a new click
+    // (even on top of a highlight) falls through to the map click handler.
     let highlightLayer = null;
     function clearHighlight() {
       if (highlightLayer) { map.removeLayer(highlightLayer); highlightLayer = null; }
@@ -159,7 +159,7 @@
       if (hintEl) hintEl.hidden = !show;
     }
 
-    // --- Resultat-visning -------------------------------------------------
+    // --- Result display ---------------------------------------------------
     function clearResult() {
       regionCli.style.display = "none";
       regionTitle.style.display = "none";
@@ -190,10 +190,10 @@
       showHint(false);
     }
 
-    // --- Klik -> API ------------------------------------------------------
-    // En rækkefølge-tæller sikrer at et hurtigt nyt klik altid vinder over et
-    // ældre, langsommere svar (ellers kunne et forsinket svar overskrive et
-    // nyere resultat).
+    // --- Click -> API -----------------------------------------------------
+    // A sequence counter ensures a quick new click always wins over an older,
+    // slower response (otherwise a delayed response could overwrite a newer
+    // result).
     let clickSeq = 0;
     map.on("click", async e => {
       const seq = ++clickSeq;
@@ -208,7 +208,7 @@
         showError();
         return;
       }
-      if (seq !== clickSeq) return; // et nyere klik er undervejs
+      if (seq !== clickSeq) return; // a newer click is on its way
       if (!res.hits || !res.hits.length) {
         clearResult();
         return;
@@ -217,7 +217,7 @@
     });
   }
 
-  // Tilfældigt flood.advert.interval i UI-tabellen.
+  // Random flood.advert.interval in the UI table.
   const floodInterval = Math.floor(Math.random() * (85 - 60 + 1)) + 60;
   document.querySelectorAll(".floodAdvertInterval").forEach(el => { el.textContent = floodInterval; });
 

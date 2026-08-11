@@ -150,7 +150,7 @@ th { color: var(--muted); font-weight: 600; }
 }
 #map .leaflet-container { background: #111; }
 
-/* Per-region farver paa GeoJSON-laget. Sat via JS-stylefunktion paa Leaflet pathOptions. */
+/* Per-region colors on the GeoJSON layer. Set via a JS style function on Leaflet pathOptions. */
 .mcdk-region {
   cursor: pointer;
 }

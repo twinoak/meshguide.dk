@@ -32,8 +32,8 @@
   }
 
   const DEFAULT_COLOR = "#4a8db8";
-  // Stabil "tilfaeldig" farve pr. region-noegle: samme noegle giver altid samme
-  // farve, saa polygoner og knap-swatches matcher paa tvaers af gen-tegninger.
+  // Stable "random" color per region key: the same key always gives the same
+  // color, so polygons and button swatches match across re-renders.
   function colorFor(key) {
     if (!key) return DEFAULT_COLOR;
     let h = 0;
@@ -104,7 +104,7 @@
     maxZoom: 20
   }).addTo(map);
 
-  // Lag der holder de redigerbare region-polygoner. Each layer's feature.properties.region er noeglen.
+  // Layer holding the editable region polygons. Each layer's feature.properties.region is the key.
   const regionsLayer = L.geoJSON(initialGeo, {
     style: feature => styleForKey(feature.properties && feature.properties.region),
     onEachFeature: (feature, layer) => {
@@ -120,11 +120,12 @@
   });
   const deletedOriginals = [];
 
-  // --- Region-synlighed --------------------------------------------------
-  // Alle tegnede region-lag holdes her uanset om de vises, saa eksport/diff
-  // stadig ser dem alle. Kortet (regionsLayer) indeholder kun de lag hvis
-  // noegle er i visibleKeys. Regioner er skjult som standard, saa man kan se
-  // basemap og de nederste lag; brug knapperne under kortet for at vise dem.
+  // --- Region visibility -------------------------------------------------
+  // All drawn region layers are held here regardless of whether they show, so
+  // export/diff still sees them all. The map (regionsLayer) only contains the
+  // layers whose key is in visibleKeys. Regions are hidden by default, so you
+  // can see the basemap and the lower layers; use the buttons under the map to
+  // show them.
   const allRegionLayers = new Set();
   regionsLayer.eachLayer(l => allRegionLayers.add(l));
   const visibleKeys = new Set();
@@ -158,7 +159,7 @@
   function rebuildRegionToggles() {
     if (!togglesListEl) return;
     const keys = currentRegionKeys();
-    // Ryd synligheds-flag for noegler der ikke laengere har et lag.
+    // Clear visibility flags for keys that no longer have a layer.
     [...visibleKeys].forEach(k => { if (!keys.includes(k)) visibleKeys.delete(k); });
     togglesListEl.innerHTML = "";
     if (!keys.length) {
@@ -195,11 +196,11 @@
     rebuildRegionToggles();
   });
 
-  // Skjul alle regioner som standard.
+  // Hide all regions by default.
   applyVisibility();
   rebuildRegionToggles();
 
-  // Byer er redigerbare markers i deres eget lag.
+  // Cities are editable markers in their own layer.
   const citiesLayer = L.featureGroup().addTo(map);
   const deletedCities = [];
 
@@ -279,11 +280,11 @@
     allowSelfIntersection: false
   });
 
-  // Naar et nyt polygon eller marker tegnes.
+  // When a new polygon or marker is drawn.
   map.on("pm:create", e => {
     const layer = e.layer;
     if (layer instanceof L.Marker) {
-      // Nyt bymarker — fjern det tegnede og lad city-modal styre opretelsen.
+      // New city marker — remove the drawn one and let the city modal drive creation.
       map.removeLayer(layer);
       promptForCity(null, layer.getLatLng(), (key, meta) => {
         if (!key) return;
@@ -292,7 +293,7 @@
       });
       return;
     }
-    // Frisk-tegnede layers kommer ind uden feature; tilfoej en.
+    // Freshly drawn layers come in without a feature; add one.
     layer.feature = layer.feature || { type: "Feature", properties: {}, geometry: null };
     promptForKey(null, key => {
       if (!key) {
@@ -312,7 +313,7 @@
     });
   });
 
-  // Klik paa eksisterende bymarker for at redigere metadata.
+  // Click an existing city marker to edit its metadata.
   citiesLayer.on("click", e => {
     const marker = e.propagatedFrom || e.layer;
     if (!marker || !(marker instanceof L.Marker)) return;
@@ -327,7 +328,7 @@
     L.DomEvent.stopPropagation(e);
   });
 
-  // Lad brugeren klikke et eksisterende polygon for at ændre dets noegle.
+  // Let the user click an existing polygon to change its key.
   regionsLayer.on("click", e => {
     if (!e.propagatedFrom) return;
     if (map.pm.globalEditModeEnabled() || map.pm.globalDrawModeEnabled() || map.pm.globalRemovalModeEnabled()) return;
@@ -347,7 +348,7 @@
     L.DomEvent.stopPropagation(e);
   });
 
-  // Naar et polygon eller bymarker slettes via Geoman.
+  // When a polygon or city marker is deleted via Geoman.
   map.on("pm:remove", e => {
     const l = e.layer;
     if (l instanceof L.Marker) {

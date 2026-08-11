@@ -1,6 +1,6 @@
 FROM php:8.3-cli
 
-# APCu så lokal udvikling matcher serveren (inkl. cache-stien i api/scopes.php).
+# APCu so local development matches the server (incl. the cache path in api/scopes.php).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
  && pecl install apcu \
@@ -10,11 +10,11 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# PHP's indbyggede server serverer de statiske filer OG kører .php - samme som
-# produktion, uden nginx/fpm. apc.enable_cli=1 er nødvendig: APCu er slået fra
-# under CLI-SAPI'en som standard, og den indbyggede server kører som CLI, så
-# uden flaget engagerer cachen aldrig.
+# PHP's built-in server serves the static files AND runs .php - same as
+# production, without nginx/fpm. apc.enable_cli=1 is required: APCu is disabled
+# under the CLI SAPI by default, and the built-in server runs as CLI, so without
+# the flag the cache never engages.
 #
-# Bind til [::] (dual-stack): en IPv6-socket på Linux accepterer både IPv6 og
-# IPv4-mappede forbindelser, så både localhost (::1) og 127.0.0.1 rammer.
+# Bind to [::] (dual-stack): an IPv6 socket on Linux accepts both IPv6 and
+# IPv4-mapped connections, so both localhost (::1) and 127.0.0.1 hit.
 CMD ["php", "-d", "apc.enable_cli=1", "-S", "[::]:8000", "router.php"]

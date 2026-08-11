@@ -1,34 +1,35 @@
 <?php
-// scopes.php - autoritativ scope-motor for MeshCore-DK-kortet.
+// scopes.php - authoritative scope engine for the MeshCore-DK map.
 //
-// GET /api/scopes.php?lat=<bredde>&lon=<længde>
+// GET /api/scopes.php?lat=<latitude>&lon=<longitude>
 //
-// Tager et lat/lon-punkt og returnerer alle scopes for det punkt: de ramte
-// polygoner (regioner + postnumre), det udfoldede scope-hierarki, de færdige
-// CLI-blokke til repeateren, samt geometrien for de ramte polygoner så
-// klienten kan tegne highlightet uden selv at hente polygon-data.
+// Takes a lat/lon point and returns all scopes for that point: the hit
+// polygons (regions + postal codes), the expanded scope hierarchy, the
+// finished CLI blocks for the repeater, plus the geometry of the hit polygons
+// so the client can draw the highlight without fetching polygon data itself.
 //
-// Logikken er en 1:1-port af de rene funktioner i ../script.js. script.js er
-// præsentation; DENNE fil er kilden til scope-reglerne. Ændres en regel
-// (NEIGHBOR_DIST_M, lag-konventionen, regionDefLines) skal den ændres HER.
+// The logic is a 1:1 port of the pure functions in ../script.js. script.js is
+// presentation; THIS file is the source of the scope rules. If a rule changes
+// (NEIGHBOR_DIST_M, the layer convention, regionDefLines) it must change HERE.
 
 declare(strict_types=1);
 
-const M_PER_DEG        = 111320; // meter pr. grad bredde (og længde ved ækvator)
-const NEIGHBOR_DIST_M  = 2000;   // et postnummer er nabo hvis grænsen ligger <= dette
-const DEF_LIMIT        = 160;    // repeaterens serielle linjegrænse
+const M_PER_DEG        = 111320; // meters per degree latitude (and longitude at the equator)
+const NEIGHBOR_DIST_M  = 2000;   // a postal code is a neighbor if the border lies <= this
+const DEF_LIMIT        = 160;    // the repeater's serial line limit
 
-// De faste top-scopes der ikke udledes af geometri, med deres forælder i
-// scope-træet: * -> {eu, europe} -> dk -> alt andet. 'eu' og 'europe' er begge
-// i brug og redundante (som #dk/#danmark), men skal begge findes. Dette er den
-// eneste kilde til de faste scopes - både ?all og CLI-blokkene læser herfra.
+// The fixed top-level scopes that are not derived from geometry, with their
+// parent in the scope tree: * -> {eu, europe} -> dk -> everything else. 'eu'
+// and 'europe' are both in use and redundant (like #dk/#danmark), but both must
+// exist. This is the only source of the fixed scopes - both ?all and the CLI
+// blocks read from here.
 const FIXED_SCOPE_PARENTS = [
     'eu'     => '*',
     'europe' => '*',
     'dk'     => 'eu',
 ];
 
-// --- HTTP-rammer ----------------------------------------------------------
+// --- HTTP scaffolding ------------------------------------------------------
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -46,7 +47,7 @@ function fail(int $code, string $msg): void {
     exit;
 }
 
-// --- Geometri-primitiver (port af script.js) ------------------------------
+// --- Geometry primitives (port of script.js) ------------------------------
 
 function rings_of(?array $geom): array {
     if (!$geom) return [];
@@ -75,7 +76,7 @@ function geom_bbox(?array $geom): array {
     return [$minx, $miny, $maxx, $maxy];
 }
 
-// Ray-casting point-in-polygon. Punkt og ringe i [lng, lat].
+// Ray-casting point-in-polygon. Point and rings in [lng, lat].
 function point_in_ring(float $x, float $y, array $ring): bool {
     $inside = false;
     $n = count($ring);
@@ -93,7 +94,7 @@ function point_in_polygon(float $x, float $y, array $rings): bool {
     if (!$rings) return false;
     if (!point_in_ring($x, $y, $rings[0])) return false;
     for ($i = 1; $i < count($rings); $i++) {
-        if (point_in_ring($x, $y, $rings[$i])) return false; // hul
+        if (point_in_ring($x, $y, $rings[$i])) return false; // hole
     }
     return true;
 }
@@ -110,7 +111,7 @@ function point_in_geom(float $x, float $y, ?array $geom): bool {
     return false;
 }
 
-// Afstand fra punkt til linjestykke i meter (lokal equirektangulær projektion).
+// Distance from point to line segment in meters (local equirectangular projection).
 function seg_dist_m(array $p, array $a, array $b, float $sx, float $sy): float {
     $px = $p[0] * $sx; $py = $p[1] * $sy;
     $ax = $a[0] * $sx; $ay = $a[1] * $sy;
@@ -122,7 +123,7 @@ function seg_dist_m(array $p, array $a, array $b, float $sx, float $sy): float {
     return hypot($px - ($ax + $t * $dx), $py - ($ay + $t * $dy));
 }
 
-// Mindste afstand fra g1's hjørner til g2's kanter; afbryder tidligt <= limit.
+// Smallest distance from g1's corners to g2's edges; short-circuits <= limit.
 function boundary_dist_m(?array $g1, ?array $g2, float $sx, float $sy, float $limit): float {
     $best = INF;
     $r2 = rings_of($g2);
@@ -143,9 +144,9 @@ function boundary_dist_m(?array $g1, ?array $g2, float $sx, float $sy, float $li
     return $best;
 }
 
-// --- Scope-udledning ------------------------------------------------------
+// --- Scope derivation ------------------------------------------------------
 
-// De distinkte 2-cifrede prefixer (dkXY) for postnumre der grænser op til key.
+// The distinct 2-digit prefixes (dkXY) for postal codes bordering key.
 function neighbor_prefixes_for(string $key, array $postnumre, array $pbb): array {
     static $cache = [];
     if (isset($cache[$key])) return $cache[$key];
@@ -179,9 +180,9 @@ function neighbor_prefixes_for(string $key, array $postnumre, array $pbb): array
     return $cache[$key] = $res;
 }
 
-// Udfolder en hit-nøgle til dens fulde scope-hierarki. For postnummer-nøgler
-// (dk####) følges lag-konventionen dk5 -> dk5x -> dk5xx -> dk5230; på dk5x
-// indgår eget 2-cifrede prefix PLUS naboernes, sorteret.
+// Expands a hit key into its full scope hierarchy. For postal code keys
+// (dk####) the layer convention dk5 -> dk5x -> dk5xx -> dk5230 is followed; at
+// dk5x the own 2-digit prefix PLUS the neighbors' are included, sorted.
 function scopes_for(string $key, array $postnumre, array $pbb): array {
     if (!preg_match('/^dk(\d{4})$/', $key, $m)) return [$key];
     $d = $m[1];
@@ -193,12 +194,12 @@ function scopes_for(string $key, array $postnumre, array $pbb): array {
     return array_merge(['dk' . $d[0]], $layer2, ['dk' . substr($d, 0, 3)], ['dk' . $d]);
 }
 
-// Hele scope-universet for ?all: de faste top-scopes (eu, europe, dk) plus hver
-// region-nøgle plus hvert postnummer udfoldet til dets prefix-lag (dk5230 ->
-// dk5, dk52, dk523, dk5230), fladtet til én deduplikeret, sorteret liste.
-// Nabo-udledning indgår IKKE - den er
-// punkt-specifik og giver ikke mening for hele datasættet; men fordi et
-// postnummer som 5000 findes, dukker dets 2-cifrede prefix dk50 op af sig selv.
+// The entire scope universe for ?all: the fixed top-level scopes (eu, europe,
+// dk) plus every region key plus every postal code expanded to its prefix
+// layers (dk5230 -> dk5, dk52, dk523, dk5230), flattened into one deduplicated,
+// sorted list. Neighbor derivation is NOT included - it is point-specific and
+// makes no sense for the whole dataset; but because a postal code like 5000
+// exists, its 2-digit prefix dk50 shows up on its own.
 function all_scopes(array $regions, array $postnumre): array {
     $seen = [];
     foreach (array_keys(FIXED_SCOPE_PARENTS) as $k) $seen[$k] = true;
@@ -216,12 +217,12 @@ function all_scopes(array $regions, array $postnumre): array {
     return $res;
 }
 
-// Fladt region-træ: * -> {eu, europe} -> dk -> alle øvrige scopes.
+// Flat region tree: * -> {eu, europe} -> dk -> all other scopes.
 function parent_scope(string $key): string {
     return FIXED_SCOPE_PARENTS[$key] ?? 'dk';
 }
 
-// Bygger 'region def'-linjer (<= 160 tegn) for en ordnet scope-liste.
+// Builds 'region def' lines (<= 160 chars) for an ordered scope list.
 function region_def_lines(array $scopes): array {
     $prefix = 'region def ';
     $lines = [];
@@ -250,7 +251,7 @@ function region_def_lines(array $scopes): array {
     return $lines;
 }
 
-// --- Data-indlæsning (APCu-cachet, med forudberegnede bboxe) -------------
+// --- Data loading (APCu-cached, with precomputed bboxes) -----------------
 
 function get_dataset(string $root): array {
     $regionsPath  = $root . '/regions.json';
@@ -260,8 +261,8 @@ function get_dataset(string $root): array {
     $manifest = $manifestRaw !== false ? json_decode($manifestRaw, true) : ['files' => []];
     $files = $manifest['files'] ?? [];
 
-    // Cache-signatur = filsti + mtime for hver kilde, så et git pull (der
-    // ændrer mtime) automatisk invaliderer den cachede struktur.
+    // Cache signature = file path + mtime for each source, so a git pull (which
+    // changes mtime) automatically invalidates the cached structure.
     $paths = [$regionsPath, $manifestPath];
     foreach ($files as $f) $paths[] = $root . '/postnumre/' . $f['file'];
     $sig = '';
@@ -285,7 +286,7 @@ function get_dataset(string $root): array {
         $d = json_decode($raw, true);
         if (!is_array($d)) continue;
         foreach ($d as $k => $v) {
-            if (!isset($postnumre[$k])) $postnumre[$k] = $v; // første fil vinder
+            if (!isset($postnumre[$k])) $postnumre[$k] = $v; // first file wins
         }
     }
 
@@ -303,11 +304,11 @@ function get_dataset(string $root): array {
     return $dataset;
 }
 
-// --- Anmodning ------------------------------------------------------------
+// --- Request --------------------------------------------------------------
 
 $root = dirname(__DIR__);
 
-// ?all: hele scope-universet i stedet for scopes for et enkelt punkt.
+// ?all: the entire scope universe instead of scopes for a single point.
 if (isset($_GET['all'])) {
     $data = get_dataset($root);
     $scopes = all_scopes($data['regions'], $data['postnumre']);
@@ -335,8 +336,8 @@ $postnumre = $data['postnumre'];
 $rbb = $data['rbb'];
 $pbb = $data['pbb'];
 
-// Hit-test: regioner først, så postnumre (samme rækkefølge som klienten).
-// Bbox-forfilter afviser fjerne polygoner med fire sammenligninger før ray-cast.
+// Hit test: regions first, then postal codes (same order as the client).
+// Bbox pre-filter rejects distant polygons with four comparisons before ray-cast.
 $hits = [];
 foreach ($regions as $k => $v) {
     $bb = $rbb[$k] ?? null;
@@ -349,7 +350,7 @@ foreach ($postnumre as $k => $v) {
     if (point_in_geom($lon, $lat, $v['geometry'] ?? null)) $hits[] = $k;
 }
 
-// Udfold hits til det ordnede, unikke scope-hierarki.
+// Expand hits into the ordered, unique scope hierarchy.
 $seen = [];
 $scopes = [];
 foreach ($hits as $k) {
@@ -358,7 +359,7 @@ foreach ($hits as $k) {
     }
 }
 
-// Geometri for de ramte polygoner, så klienten kan tegne highlightet.
+// Geometry for the hit polygons, so the client can draw the highlight.
 $features = [];
 foreach ($hits as $k) {
     $entry = $regions[$k] ?? $postnumre[$k] ?? null;
@@ -371,7 +372,7 @@ foreach ($hits as $k) {
     }
 }
 
-// CLI: kun hvis der faktisk er hits (klienten skjuler blokken ved tomt klik).
+// CLI: only if there actually are hits (the client hides the block on an empty click).
 $cli = null;
 if ($scopes) {
     $allScopes = array_merge(array_keys(FIXED_SCOPE_PARENTS), $scopes);

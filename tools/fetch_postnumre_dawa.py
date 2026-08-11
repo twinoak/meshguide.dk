@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Henter postnumre fra DAWA (api.dataforsyningen.dk), forenkler geometrien og
-# skriver postnumre.json i samme stil som regions.json.
+# Fetches postal codes from DAWA (api.dataforsyningen.dk), simplifies the
+# geometry and writes postnumre.json in the same style as regions.json.
 #
-# Brug: python3 tools/fetch_postnumre_dawa.py [postnumre.json]
+# Usage: python3 tools/fetch_postnumre_dawa.py [postnumre.json]
 #
-# Kommunekoderne nedenfor dækker Fyn og Sjælland. Tilføj flere lister for at
-# udvide til Jylland osv. Lolland-Falster (0360, 0376) og Bornholm (0400, 0411)
-# er bevidst udeladt — de har egne regioner (dk-lo-fa, dk-bhm).
+# The municipality codes below cover Fyn and Sjælland. Add more lists to expand
+# to Jylland etc. Lolland-Falster (0360, 0376) and Bornholm (0400, 0411) are
+# deliberately left out — they have their own regions (dk-lo-fa, dk-bhm).
 
 import argparse
 import json
@@ -30,8 +30,8 @@ FYN_KOMMUNER = [
     ("0492", "Ærø"),
 ]
 
-# Sjælland = Region Hovedstaden (uden Bornholm) + Region Sjælland (uden
-# Lolland og Guldborgsund). Dækker postnumrene ~1000–4793, inkl. Møn.
+# Sjælland = Region Hovedstaden (without Bornholm) + Region Sjælland (without
+# Lolland and Guldborgsund). Covers postal codes ~1000–4793, incl. Møn.
 SJAELLAND_KOMMUNER = [
     ("0101", "København"),
     ("0147", "Frederiksberg"),
@@ -78,9 +78,9 @@ SJAELLAND_KOMMUNER = [
     ("0390", "Vordingborg"),
 ]
 
-# Hver landsdel skrives som sin egen fil (postnumre/<key>.json) og indlæses
-# først når et klik rammer dens bounding box — så et klik på Fyn ikke henter
-# Sjællands postnumre. Tilføj nye landsdele her.
+# Each region is written as its own file (postnumre/<key>.json) and only loaded
+# when a click hits its bounding box — so a click on Fyn does not fetch
+# Sjælland's postal codes. Add new regions here.
 LANDSDELE = [
     ("fyn", FYN_KOMMUNER),
     ("sjaelland", SJAELLAND_KOMMUNER),
@@ -139,8 +139,8 @@ def vertex_count(coords):
 
 
 def fetch_json(url, retries=5):
-    # DAWA rate-limiter (HTTP 429) rammer ved mange hurtige kald — vent og prøv
-    # igen med eksponentiel backoff.
+    # DAWA's rate limiter (HTTP 429) triggers on many fast calls — wait and
+    # retry with exponential backoff.
     for attempt in range(retries):
         try:
             with urllib.request.urlopen(url) as r:
@@ -148,15 +148,15 @@ def fetch_json(url, retries=5):
         except urllib.error.HTTPError as e:
             if e.code == 429 and attempt < retries - 1:
                 wait = 2 ** attempt
-                print(f"  429 — venter {wait}s og prøver igen", file=sys.stderr)
+                print(f"  429 — waiting {wait}s and retrying", file=sys.stderr)
                 time.sleep(wait)
                 continue
             raise
 
 
 def update_bbox(coords, bb):
-    # Udvider bb=[minlon, minlat, maxlon, maxlat] in-place med alle punkter i en
-    # vilkaarligt nested coordinate-struktur.
+    # Expands bb=[minlon, minlat, maxlon, maxlat] in-place with all points in an
+    # arbitrarily nested coordinate structure.
     if isinstance(coords[0], (int, float)):
         x, y = coords[0], coords[1]
         bb[0] = min(bb[0], x)
@@ -169,7 +169,7 @@ def update_bbox(coords, bb):
 
 
 def write_entries(path, entries):
-    # Pretty-ish JSON: top-level keys en pr. linje, geometri kompakt.
+    # Pretty-ish JSON: top-level keys one per line, geometry compact.
     lines = [
         "  " + json.dumps(k) + ": "
         + json.dumps(v, separators=(",", ":"), ensure_ascii=False)
@@ -180,7 +180,7 @@ def write_entries(path, entries):
 
 
 def fetch_landsdel(kommuner, args):
-    # 1. Saml unikke postnummer-numre fra landsdelens kommuner.
+    # 1. Collect unique postal code numbers from the region's municipalities.
     numbers = set()
     for code, name in kommuner:
         url = f"https://api.dataforsyningen.dk/postnumre?kommunekode={code}"
@@ -189,17 +189,17 @@ def fetch_landsdel(kommuner, args):
             numbers.add(p["nr"])
         print(f"  {code} {name}: {len(data)} postnumre", file=sys.stderr)
 
-    # 2. Hent fuld geometri som GeoJSON per postnummer.
+    # 2. Fetch full geometry as GeoJSON per postal code.
     entries = {}
     bb = [math.inf, math.inf, -math.inf, -math.inf]
     before = after = 0
     for nr in sorted(numbers):
         url = f"https://api.dataforsyningen.dk/postnumre/{nr}?format=geojson"
         gj = fetch_json(url)
-        time.sleep(0.1)  # skån DAWA's rate-limiter ved mange postnumre
+        time.sleep(0.1)  # spare DAWA's rate limiter when there are many postal codes
         geom = gj.get("geometry")
         if not geom:
-            print(f"  skip {nr}: ingen geometri", file=sys.stderr)
+            print(f"  skip {nr}: no geometry", file=sys.stderr)
             continue
         coords = process_coords(geom["coordinates"], args.epsilon, args.precision)
         before += vertex_count(geom["coordinates"])
@@ -224,8 +224,8 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
 
-    # Hver landsdel skrives som sin egen fil; manifestet (index.json) kobler hver
-    # fil til dens bounding box, saa klienten kun henter de relevante.
+    # Each region is written as its own file; the manifest (index.json) links
+    # each file to its bounding box, so the client only fetches the relevant ones.
     manifest = []
     total_before = total_after = total_entries = 0
     for key, kommuner in LANDSDELE:

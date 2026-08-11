@@ -1,25 +1,25 @@
 <?php
-// chats.php - opslag i by-/chat-registret (cities.json).
+// chats.php - lookup in the city/chat registry (cities.json).
 //
-// GET /api/chats?all           -> alle chats som en liste
-// GET /api/chats?chat=<navn>   -> én chat
+// GET /api/chats?all           -> all chats as a list
+// GET /api/chats?chat=<name>   -> a single chat
 //
-// Chats kommer fra to kilder: de håndkuraterede by-chats i cities.json, OG en
-// afledt chat pr. postnummer - hvert postnummer (dk5000, dk5230, …) har sit
-// eget chatrum #dk5000 med scope dk5000 og en centroid-Point som placering.
+// Chats come from two sources: the hand-curated city chats in cities.json, AND
+// a derived chat per postal code - each postal code (dk5000, dk5230, …) has its
+// own chat room #dk5000 with scope dk5000 and a centroid Point as its location.
 //
-// <navn> matcher chattens nøgle ("odense"), dens handle ("#dk-fyn-odense",
-// med eller uden #) eller dens navn ("Odense") - ufølsom over for store/små
-// bogstaver. Postnummer-chats slås op på "dk5000", "#dk5000" eller bare
-// "5000". Den korte form /api/chats?odense virker også.
+// <name> matches the chat's key ("odense"), its handle ("#dk-fyn-odense", with
+// or without #) or its name ("Odense") - case-insensitive. Postal code chats
+// are looked up by "dk5000", "#dk5000" or just "5000". The short form
+// /api/chats?odense also works.
 //
-// cities.json og postnummer-filerne er de samme data resten af siden bruger;
-// dette endpoint eksponerer dem som API, så en node kan slå en enkelt chat op
-// uden at hente og parse hele datasættet.
+// cities.json and the postal code files are the same data the rest of the site
+// uses; this endpoint exposes them as an API, so a node can look up a single
+// chat without fetching and parsing the entire dataset.
 
 declare(strict_types=1);
 
-// --- HTTP-rammer ----------------------------------------------------------
+// --- HTTP scaffolding ------------------------------------------------------
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -37,7 +37,7 @@ function fail(int $code, string $msg): void {
     exit;
 }
 
-// --- Data-indlæsning (APCu-cachet, mtime-nøglet - samme mønster som scopes.php) --
+// --- Data loading (APCu-cached, mtime-keyed - same pattern as scopes.php) --
 
 function get_chats(string $root): array {
     $path = $root . '/cities.json';
@@ -58,12 +58,12 @@ function get_chats(string $root): array {
     return $chats;
 }
 
-// Fladt entry -> nøgle-forsynet objekt, så klienten kender chattens id.
+// Flat entry -> key-tagged object, so the client knows the chat's id.
 function chat_entry(string $key, array $v): array {
     return array_merge(['key' => $key], $v);
 }
 
-// Bbox for et Polygon/MultiPolygon som [minx, miny, maxx, maxy], eller null.
+// Bbox for a Polygon/MultiPolygon as [minx, miny, maxx, maxy], or null.
 function geom_bbox(?array $geom): ?array {
     if (!$geom) return null;
     $type = $geom['type'] ?? '';
@@ -89,14 +89,14 @@ function geom_bbox(?array $geom): ?array {
     return [$minx, $miny, $maxx, $maxy];
 }
 
-// Én afledt chat pr. postnummer-scope. Hvert postnummer udfoldes til sine
-// prefix-lag efter samme lag-konvention som scopes.php (dk5230 -> dk5, dk52,
-// dk523, dk5230), så aggregat-chatrummene (fx dk50, der dækker hele 50xx) også
-// kommer med. Hvert postnummers bbox merges ind i alle sine lag, så et
-// aggregat-rum får centroid-Point'en for centrummet af ALLE sine postnumre.
-// Indlæser postnummer-filerne via manifestet og cacher det afledte resultat i
-// APCu, nøglet på filernes mtime - som scopes.php, så et git pull invaliderer
-// cachen automatisk.
+// One derived chat per postal code scope. Each postal code is expanded into
+// its prefix layers using the same layer convention as scopes.php (dk5230 ->
+// dk5, dk52, dk523, dk5230), so the aggregate chat rooms (e.g. dk50, covering
+// all of 50xx) are included too. Each postal code's bbox is merged into all of
+// its layers, so an aggregate room gets the centroid Point for the center of
+// ALL its postal codes. Loads the postal code files via the manifest and caches
+// the derived result in APCu, keyed on the files' mtime - like scopes.php, so a
+// git pull invalidates the cache automatically.
 function get_postal_chats(string $root): array {
     $manifestPath = $root . '/postnumre/index.json';
     $manifestRaw = @file_get_contents($manifestPath);
@@ -115,7 +115,7 @@ function get_postal_chats(string $root): array {
         if ($ok) return $cached;
     }
 
-    // Saml (merget) bbox pr. scope-nøgle på tværs af alle prefix-lag.
+    // Collect (merged) bbox per scope key across all prefix layers.
     $bb = [];
     $seenLeaf = [];
     foreach ($files as $f) {
@@ -125,7 +125,7 @@ function get_postal_chats(string $root): array {
         if (!is_array($d)) continue;
         foreach ($d as $k => $v) {
             if (!preg_match('/^dk(\d{4})$/', $k, $m)) continue;
-            if (isset($seenLeaf[$k])) continue;       // første fil vinder (som scopes.php)
+            if (isset($seenLeaf[$k])) continue;       // first file wins (like scopes.php)
             $seenLeaf[$k] = true;
             $box = geom_bbox($v['geometry'] ?? null);
             if (!$box) continue;
@@ -163,29 +163,29 @@ function get_postal_chats(string $root): array {
     return $out;
 }
 
-// --- Anmodning ------------------------------------------------------------
+// --- Request --------------------------------------------------------------
 
 $root  = dirname(__DIR__);
 $chats = get_chats($root);
 
-// ?all: hele registret som en liste - by-chats først (håndkuraterede), så én
-// chat pr. postnummer-scope. Ved kollision (fx en kurateret dk3 og det
-// udfoldede postnummer-lag dk3) vinder by-chatten. Hvert element bærer sin
-// egen nøgle.
+// ?all: the entire registry as a list - city chats first (hand-curated), then
+// one chat per postal code scope. On a collision (e.g. a curated dk3 and the
+// expanded postal code layer dk3) the city chat wins. Each element carries its
+// own key.
 if (isset($_GET['all'])) {
     $out = [];
     $seen = [];
     foreach ($chats as $k => $v) { $out[] = chat_entry($k, $v); $seen[$k] = true; }
     foreach (get_postal_chats($root) as $entry) {
         if (isset($seen[$entry['key']])) continue;
-        $out[] = $entry; // allerede nøgle-forsynet
+        $out[] = $entry; // already key-tagged
     }
     echo json_encode(['chats' => $out], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Ellers: én chat. Referencen kan gives eksplicit som ?chat=/?id=<navn>,
-// eller som en bar query-nøgle (/api/chats?odense).
+// Otherwise: a single chat. The reference can be given explicitly as
+// ?chat=/?id=<name>, or as a bare query key (/api/chats?odense).
 $ref = $_GET['chat'] ?? $_GET['id'] ?? null;
 if ($ref === null) {
     foreach ($_GET as $k => $v) {
@@ -197,7 +197,7 @@ if ($ref === null || $ref === '') {
     fail(400, 'specify ?all or ?chat=<name>.');
 }
 
-// Match på nøgle, handle (#...) eller navn - ufølsom over for # og case.
+// Match on key, handle (#...) or name - insensitive to # and case.
 $needle = ltrim(strtolower((string)$ref), '#');
 foreach ($chats as $k => $v) {
     $cands = [strtolower($k)];
@@ -209,8 +209,8 @@ foreach ($chats as $k => $v) {
     }
 }
 
-// Postnummer-chat (inkl. aggregat-lag): "dk50", "#dk5000" (allerede strippet)
-// eller bare "5000". 1-4 cifre, så både dk5 og dk5000 slår op.
+// Postal code chat (incl. aggregate layers): "dk50", "#dk5000" (already
+// stripped) or just "5000". 1-4 digits, so both dk5 and dk5000 resolve.
 $pk = null;
 if (preg_match('/^dk\d{1,4}$/', $needle))    $pk = $needle;
 elseif (preg_match('/^\d{1,4}$/', $needle))  $pk = 'dk' . $needle;
