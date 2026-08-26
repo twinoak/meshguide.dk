@@ -21,7 +21,7 @@ Hierarkiske scopes udledes af nøglen efter lag-konventionen `dk5` → `dk5x` �
 
 På `dk5x`-laget (det 2-cifrede, fx `dk52`) tilføjes desuden nabo-postnumrenes 2-cifrede prefixer, så laget dækker ens eget postnummer *og* dem der støder op til det. Et postnummer regnes som nabo hvis dets grænse ligger inden for `NEIGHBOR_DIST_M` (2 km) af det klikkede. Et klik på 5220 giver derfor fx `dk5, dk50, dk52, dk53, dk55, dk57, dk58, dk522, dk5220` (her er `dk50` med fordi 5000 reelt grænser op).
 
-- `script.js` renderer kortet (Leaflet + CARTO dark tiles) på `index.html` og kalder API'et ved klik.
+- `script.js` renderer kortet (Leaflet + MapLibre GL med OpenFreeMap dark vector-tiles) på `index.html` og kalder API'et ved klik.
 - `edit.js` driver region-editoren på `edit.html` (Leaflet-Geoman).
 
 ## API

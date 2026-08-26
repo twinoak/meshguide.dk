@@ -98,10 +98,10 @@
     maxZoom: 14
   });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: "abcd",
-    maxZoom: 20
+  // OpenFreeMap dark - see the matching comment in script.js.
+  L.maplibreGL({
+    style: "https://tiles.openfreemap.org/styles/dark",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere &copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
   }).addTo(map);
 
   // Layer holding the editable region polygons. Each layer's feature.properties.region is the key.
