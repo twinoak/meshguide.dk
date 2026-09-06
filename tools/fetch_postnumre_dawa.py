@@ -31,7 +31,7 @@ FYN_KOMMUNER = [
 ]
 
 # Sjælland = Region Hovedstaden (without Bornholm) + Region Sjælland (without
-# Lolland and Guldborgsund). Covers postal codes ~1000–4793, incl. Møn.
+# Lolland and Guldborgsund). Covers postal codes ~3000–4793, incl. Møn.
 SJAELLAND_KOMMUNER = [
     ("0101", "København"),
     ("0147", "Frederiksberg"),
@@ -77,6 +77,13 @@ SJAELLAND_KOMMUNER = [
     ("0370", "Næstved"),
     ("0390", "Vordingborg"),
 ]
+
+# Postal codes 1000–2999 (København and omegn) are skipped: they are hundreds of
+# tiny street-level districts that add a lot of geometry without being useful as
+# region names.
+def excluded(nr):
+    return nr[0] in ("1", "2")
+
 
 # Each region is written as its own file (postnumre/<key>.json) and only loaded
 # when a click hits its bounding box — so a click on Fyn does not fetch
@@ -186,7 +193,8 @@ def fetch_landsdel(kommuner, args):
         url = f"https://api.dataforsyningen.dk/postnumre?kommunekode={code}"
         data = fetch_json(url)
         for p in data:
-            numbers.add(p["nr"])
+            if not excluded(p["nr"]):
+                numbers.add(p["nr"])
         print(f"  {code} {name}: {len(data)} postnumre", file=sys.stderr)
 
     # 2. Fetch full geometry as GeoJSON per postal code.
