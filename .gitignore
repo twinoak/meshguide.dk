@@ -2,3 +2,5 @@
 *.swp
 .claude
 .qwen
+node_modules/
+_site/

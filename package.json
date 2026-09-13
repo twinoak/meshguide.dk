@@ -1,0 +1,11 @@
+{
+  "name": "meshguide.dk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.js",
+    "serve": "node tools/serve.js",
+    "build": "node tools/build-api.js _site",
+    "test": "node --test tools/scopes.test.js tools/checks.test.js"
+  }
+}

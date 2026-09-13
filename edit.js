@@ -582,11 +582,11 @@
       await navigator.clipboard.writeText(body);
       setStatus("Indhold kopieret — indsæt i e-mailen med Ctrl+V.");
     } catch (err) {
-      window.prompt("Kopier dette og indsæt i din e-mail til meshcore@drkt.eu:", body);
+      window.prompt("Kopier dette og indsæt i din e-mail til thomas@twinoak.dk:", body);
       return;
     }
     const placeholder = "(indsæt indholdet fra udklipsholderen her med Ctrl+V)";
-    window.location.href = "mailto:meshcore@drkt.eu?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(placeholder);
+    window.location.href = "mailto:thomas@twinoak.dk?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(placeholder);
   });
 
   function collectCityChanges() {

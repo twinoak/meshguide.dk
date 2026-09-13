@@ -9,83 +9,70 @@
 
 ## Kortets opbygning
 
-Data ligger i JSON-filer:
+Hele siden er statisk - der er ingen backend. Data ligger i JSON-filer, og al scope-logik kører i browseren:
 
-- `regions.json` - håndkuraterede regioner (`dk-fyn`, `dk-jylland`, …). Læses af API'et og af [edit.html](edit.html).
-- `cities.json` - bymarkører + deres popup-info. Den eneste datafil klienten selv henter ([index.html](index.html)).
+- `regions.json` - håndkuraterede regioner (`dk-fyn`, `dk-jylland`, …).
+- `cities.json` - bymarkører + deres popup-info.
 - `postnumre/` - postnummer-polygoner (`dk5000`, `dk5230`, …) delt op pr. landsdel: `postnumre/fyn.json`, `postnumre/sjaelland.json`, … plus `postnumre/index.json`, et manifest der kobler hver fil til dens bounding box.
-
-Scopes beregnes server-side af [api/scopes.php](api/scopes.php) (se **API** nedenfor). Klienten henter derfor ikke `regions.json` eller postnummer-polygonerne - ved klik kalder den API'et, som svarer med både scopes og geometrien for de ramte polygoner, så highlightet kan tegnes uden at downloade polygon-data.
 
 Hierarkiske scopes udledes af nøglen efter lag-konventionen `dk5` → `dk5x` → `dk5xx` → `dk5230`: et klik der rammer `dk5230` udvides til `dk5`, `dk52`, `dk523`, `dk5230`. Lagres derfor *ikke* som separate polygoner.
 
-På `dk5x`-laget (det 2-cifrede, fx `dk52`) tilføjes desuden nabo-postnumrenes 2-cifrede prefixer, så laget dækker ens eget postnummer *og* dem der støder op til det. Et postnummer regnes som nabo hvis dets grænse ligger inden for `NEIGHBOR_DIST_M` (2 km) af det klikkede. Et klik på 5220 giver derfor fx `dk5, dk50, dk52, dk53, dk55, dk57, dk58, dk522, dk5220` (her er `dk50` med fordi 5000 reelt grænser op).
+På `dk5x`-laget (det 2-cifrede, fx `dk52`) tilføjes desuden nabo-postnumrenes 2-cifrede prefixer, så laget dækker ens eget postnummer *og* dem der støder op til det. Et postnummer regnes som nabo hvis dets grænse ligger inden for `NEIGHBOR_DIST_M` (2 km) af det klikkede. Et klik på 5220 giver derfor fx `dk5, dk50, dk52, dk53, dk55, dk57, dk58, dk522, dk5220` (her er `dk50` med fordi 5000 reelt grænser op). Naboer udledes fra hele datasættet, så resultatet er deterministisk, også på tværs af landsdele (fx er `dk42` nabo til `dk5800` hen over Storebælt).
 
-- `script.js` renderer kortet (Leaflet + MapLibre GL med OpenFreeMap dark vector-tiles) på `index.html` og kalder API'et ved klik.
+- `scopes.js` er scope-motoren og den eneste kilde til reglerne: hit-test, nabo-udledning, scope-hierarki og `region def`-linjer (≤ 160 bytes pr. linje). Rene funktioner uden DOM eller netværk - samme modul bruges af browseren og af build-scriptet. Ændres en regel (`NEIGHBOR_DIST_M`, lag-konventionen, `regionDefLines`), ændres den *her*.
+- `script.js` renderer kortet (Leaflet + MapLibre GL med OpenFreeMap dark vector-tiles) på `index.html`. Ved indlæsning hentes `regions.json` og alle postnummer-filer (ca. 200 KB komprimeret), og ved klik kaldes `scopesForPoint()` fra `scopes.js`.
 - `edit.js` driver region-editoren på `edit.html` (Leaflet-Geoman).
+- `tools/chats.js` udleder chat-registret (se **API** nedenfor). Bruges kun af build-scriptet.
 
 ## API
 
-[api/scopes.php](api/scopes.php) er den autoritative scope-motor. Den tager et punkt og returnerer alle scopes for det punkt:
-
-```
-GET /api/scopes?lat=<bredde>&lon=<længde>
-```
-
-Den pæne URL uden `.php` leveres af en Apache-`RewriteRule` (`^/api/scopes$ → /api/scopes.php`) i produktion; lokalt gør [router.php](router.php) det samme for PHP's indbyggede server. Selve filen [api/scopes.php](api/scopes.php) er stadig direkte tilgængelig.
-
-```json
-{
-  "lat": 55.3959, "lon": 10.3883,
-  "hits": ["dk-fyn", "dk-fyn-odense", "dk5000"],
-  "scopes": ["dk-fyn", "dk-fyn-odense", "dk5", "dk50", "dk52", "dk53", "dk54", "dk500", "dk5000"],
-  "cli": { "firmware_1_16_0_plus": "…", "firmware_1_12_0_to_1_15_0": "…" },
-  "features": { "type": "FeatureCollection", "features": [] }
-}
-```
-
-- `hits` - de ramte polygoner (regioner + postnumre).
-- `scopes` - det udfoldede, ordnede scope-hierarki.
-- `cli` - de færdige CLI-blokke til repeateren (to firmware-varianter); `null` når intet er ramt.
-- `features` - geometrien for de ramte polygoner, så klienten kan tegne highlightet.
-
-Et punkt uden for alle polygoner giver tomme `hits`/`scopes`, `cli: null` og HTTP 200. Ugyldige koordinater giver HTTP 400.
-
-API'et indlæser `regions.json` + alle postnummer-filer og cacher de dekodede strukturer (med forudberegnede bounding boxes) i APCu, nøglet på filernes mtime - et `git pull` invaliderer derfor cachen automatisk. Naboer udledes fra hele datasættet ved hver forespørgsel, så resultatet er deterministisk, også på tværs af landsdele.
+API'et er statiske JSON-filer, der genereres af `npm run build` fra de samme datafiler og den samme `scopes.js` som kortet bruger. De ligger under `/api/` på det udgivne site, ikke i repoet.
 
 ### Alle scopes
 
 ```
-GET /api/scopes?all
+GET /api/scopes.json
 ```
 
-I stedet for scopes for et enkelt punkt returnerer `?all` hele scope-universet: de faste top-scopes (`eu`, `europe`, `dk`) plus hver region-nøgle plus hvert postnummer udfoldet til sine prefix-lag (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), fladtet til én deduplikeret, sorteret liste. Fordi postnummer 5000 findes, dukker det 2-cifrede prefix `dk50` op af sig selv. Nabo-udledningen indgår *ikke* - den er punkt-specifik.
+Hele scope-universet: de faste top-scopes (`eu`, `europe`, `dk`) plus hver region-nøgle plus hvert postnummer udfoldet til sine prefix-lag (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), fladtet til én deduplikeret, sorteret liste. Fordi postnummer 5000 findes, dukker det 2-cifrede prefix `dk50` op af sig selv. Nabo-udledningen indgår *ikke* - den er punkt-specifik.
 
 ```json
-{ "scopes": ["dk-fyn", "dk-fyn-odense", "dk5", "dk50", "dk500", "dk5000", "…"], "count": 1080 }
+{ "scopes": ["dk", "dk-3kant", "dk-aalborg", "dk-aarhus", "…", "dk5", "dk50", "dk500", "dk5000", "…"], "count": 425 }
 ```
+
+Scopes for et *enkelt punkt* (det tidligere `/api/scopes?lat=&lon=`) findes ikke som statisk fil - det er en funktion af et vilkårligt punkt. Brug `scopesForPoint()` i `scopes.js` direkte; modulet har ingen afhængigheder og kan importeres i både browser og Node.
 
 ### Chats
 
-[api/chats.php](api/chats.php) eksponerer chat-registret som API, så en node kan slå en enkelt chat op uden at hente og parse hele datasættet. Chats kommer fra to kilder:
+Chat-registret kommer fra to kilder:
 
 - de håndkuraterede by-chats i [cities.json](cities.json) (`#horsens`, `#dk-fyn`, …).
-- én afledt chat pr. postnummer-scope. Hvert postnummer udfoldes til sine prefix-lag efter samme lag-konvention som scopes (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), så både de enkelte postnumre *og* aggregat-rummene (fx `#dk50`, der dækker hele 50xx) kommer med, deduplikeret. Hver chat har scope = nøglen, handle `#<nøgle>` og en centroid-`Point` som placering (bbox-centrum af postnummeret; for et aggregat-lag centrummet af alle dets postnumre). Ved kollision med en kurateret by-chat (fx `dk3`) vinder by-chatten.
+- én afledt chat pr. postnummer-scope. Hvert postnummer udfoldes til sine prefix-lag efter samme lag-konvention som scopes (`dk5230` → `dk5`, `dk52`, `dk523`, `dk5230`), så både de enkelte postnumre *og* aggregat-rummene (fx `#dk50`, der dækker hele 50xx) kommer med, deduplikeret. Hver chat har scope = nøglen, handle `#<nøgle>` og en centroid-`Point` som placering (bbox-centrum af postnummeret; for et aggregat-lag centrummet af alle dets postnumre). Ved kollision med en kurateret by-chat vinder by-chatten.
 
 ```
-GET /api/chats?all            # alle chats som en liste (by-chats + postnumre)
-GET /api/chats?chat=<navn>    # én chat
+GET /api/chats.json             # alle chats som en liste (by-chats + postnumre)
+GET /api/chats/<navn>.json      # én chat
 ```
 
-`<navn>` matcher chattens nøgle (`odense`), dens handle (`#dk-fyn-odense`, med eller uden `#`) eller dens navn (`Odense`) - ufølsom over for store/små bogstaver. Postnummer-chats slås op på deres scope (`dk5000`, `#dk5000` eller bare `5000`) - det gælder også aggregat-lagene, så `dk50` og `dk5` virker. Den korte form `/api/chats?odense` virker også.
+`<navn>` er chattens nøgle (`odense`), dens handle uden `#` (`dk-fyn-odense`) eller dens navn (`Odense`) - med små bogstaver (`odense`). Postnummer-chats slås op på deres scope (`dk5000`) eller bare cifrene (`5000`) - det gælder også aggregat-lagene, så `dk50` og `50` virker. En ukendt chat giver HTTP 404.
 
 ```json
 { "chat": { "key": "odense", "name": "Odense", "scope": "dk-fyn-odense", "localChat": "#dk-fyn-odense", "geometry": { "type": "Point", "coordinates": [10.381, 55.4047] } } }
 ```
 
-`?all` svarer i stedet med `{ "chats": [ … ] }`, hvor hvert element bærer sin egen `key`. En ukendt chat giver HTTP 404, og en forespørgsel uden parametre giver HTTP 400.
+`chats.json` svarer i stedet med `{ "chats": [ … ] }`, hvor hvert element bærer sin egen `key`.
 
-Begge endpoints kræver ligesom `scopes` en Apache-`RewriteRule` i produktion (`^/api/chats$ → /api/chats.php`); lokalt kortlægger [router.php](router.php) automatisk enhver `/api/<navn>` til `api/<navn>.php`.
+## Automagisk opsætning (eksperimentel)
+
+[automagical/](automagical/) er et underprojekt: en side der sætter en repeater op via USB direkte fra browseren, i stedet for at brugeren selv skriver kommandoer. Den bruger Web Serial og virker derfor kun i Chrome/Edge på en computer, og kun over HTTPS eller `localhost`.
+
+Forløbet: tilslut porten → læs enhedens indstillinger via CLI'en (`ver`, `board`, `get …`, `gps advert`, `region …`) → find positionen (fra enheden, ellers ved klik på kortet) → udled scopes med `scopes.js` → sammenlign med anbefalingerne fra forsiden → vis en liste over ændringer med et **Anvend valgte**-knap, der sender kommandoerne og læser enheden igen.
+
+- `automagical/serial.js` taler repeaterens serielle CLI: kommandoer afsluttes med `\r`, enheden ekkoer hvert tegn, og svar kommer som én linje med præfikset `  -> ` (kan indeholde linjeskift, fx region-træet). Et svar regnes for færdigt efter 200 ms stilhed.
+- `automagical/checks.js` er reglerne (rene funktioner): parser svarene til en typet tilstand og laver listen af anbefalinger med de præcise kommandoer. `flood.advert.interval` vælges deterministisk ud fra enhedens public key i intervallet 60–85. Testes uden enhed i `tools/checks.test.js`.
+- `automagical/automagical.js` er UI'et (kort, tabeller, anvend/genstart).
+
+Siden bygges og udgives sammen med resten af sitet (`/automagical/`), men linkes ikke fra forsiden endnu.
 
 ## Genbyg postnumre
 
@@ -101,10 +88,22 @@ Default-simplifikation: ~11 m tolerance + 4 decimalers koordinat-præcision. Jus
 
 ## Lokal udvikling
 
-Kør hele siden lokalt i en container - PHP + APCu, samme opførsel som serveren, uden at installere andet end `podman` på værten:
+Siden er rene statiske filer, men skal serveres over HTTP (ES-modules og `fetch()` virker ikke fra `file://`). Repoet har sin egen lille dev-server uden afhængigheder ([tools/serve.js](tools/serve.js), kun Node):
 
 ```sh
-./run.sh        # bygger imaget (near-instant når cachet) og serverer på :8000
+npm start         # serverer repoet på http://localhost:8000 (PORT=3000 npm start for en anden port)
 ```
 
-Åbn http://localhost:8000. Repoet er bind-mountet, så ændringer i `script.js`, `api/scopes.php` eller JSON-filerne slår igennem ved at genindlæse browseren. `run.sh` genbygger imaget hver gang, men det er near-instant med mindre [Dockerfile](Dockerfile) har ændret sig.
+Åbn http://localhost:8000 (forsiden), http://localhost:8000/edit.html (editoren) eller http://localhost:8000/automagical/ (USB-opsætning; `localhost` tæller som sikker kontekst, så Web Serial virker). Alt sendes med `Cache-Control: no-cache`, så ændringer i `script.js`, `scopes.js` eller JSON-filerne slår igennem ved at genindlæse browseren. Der er intet at installere - Node (≥ 20) er det eneste krav:
+
+```sh
+npm test                    # regressionstest af scope-motoren, chat-registret og automagical-reglerne
+npm run build               # bygger det færdige site i _site/, inkl. det statiske API
+node tools/serve.js _site   # serverer build-output, hvis du vil se /api/ lokalt
+```
+
+## Deploy
+
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml) kører `npm test` og `npm run build` ved push til `main` og udgiver `_site/` til GitHub Pages. Repoet skal have *Settings → Pages → Source: GitHub Actions*. For at bruge domænet `meshguide.dk` skal der ligge en fil `CNAME` med indholdet `meshguide.dk` i repoets rod (den kopieres med til `_site/`), og domænets DNS skal pege på GitHub Pages.
+
+Skal siden hostes et andet sted, er `_site/` fra `npm run build` det der skal serveres.

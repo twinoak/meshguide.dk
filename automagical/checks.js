@@ -1,0 +1,302 @@
+// checks.js - the "best practice" rules for a Danish MeshCore repeater.
+//
+// Pure functions: parse the raw CLI replies into a typed device state, then
+// compare that state (plus the chosen location and its scopes) with the
+// recommendations on the front page, producing a list of findings with the
+// exact CLI commands that would fix each one. No DOM, no serial - so this can
+// be unit tested in Node (tools/checks.test.js).
+
+import { FIXED_SCOPE_PARENTS, regionDefLines } from "../scopes.js";
+
+// The recommendations from index.html, in one place.
+export const BEST_PRACTICE = Object.freeze({
+  radio: { freq: 869.618, bw: 62.5, sf: 8, cr: 8, crRange: [5, 8] },
+  dutycycle: 10,
+  pathHashModeMin: 1,
+  advertInterval: 0,
+  floodAdvertInterval: [60, 85],
+  guestPassword: "hello",
+  regionDefault: "dk",
+  loopDetect: "moderate",
+  floodMaxUnscoped: 15
+});
+
+// The get/other commands that describe a repeater. Order matters only for display.
+export const READ_COMMANDS = Object.freeze({
+  ver: "ver",
+  board: "board",
+  role: "get role",
+  name: "get name",
+  publicKey: "get public.key",
+  radio: "get radio",
+  tx: "get tx",
+  lat: "get lat",
+  lon: "get lon",
+  dutycycle: "get dutycycle",
+  advertInterval: "get advert.interval",
+  floodAdvertInterval: "get flood.advert.interval",
+  guestPassword: "get guest.password",
+  pathHashMode: "get path.hash.mode",
+  loopDetect: "get loop.detect",
+  floodMaxUnscoped: "get flood.max.unscoped",
+  ownerInfo: "get owner.info",
+  gpsAdvert: "gps advert",
+  regionDefault: "region default",
+  regionsAllowed: "region list allowed",
+  regionTree: "region"
+});
+
+// "v1.17.1 (Build: 12 Sep 2026)" -> { text: "v1.17.1", major, minor, patch, build }
+export function parseVersion(s) {
+  if (!s) return null;
+  const m = /v?(\d+)\.(\d+)(?:\.(\d+))?/.exec(s);
+  if (!m) return { text: s, major: 0, minor: 0, patch: 0, build: null };
+  const b = /\(Build: ([^)]*)\)/.exec(s);
+  return { text: "v" + m[1] + "." + m[2] + "." + (m[3] || "0"), major: +m[1], minor: +m[2], patch: +(m[3] || 0), build: b ? b[1] : null };
+}
+
+export function versionAtLeast(v, major, minor) {
+  if (!v) return false;
+  return v.major > major || (v.major === major && v.minor >= minor);
+}
+
+function num(s) {
+  if (s === null || s === undefined) return null;
+  const n = parseFloat(String(s).replace("%", ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+// replies: { key: string | null } where null means the firmware did not understand
+// the command (or gave no reply). Values are the raw text after "> " for get
+// commands and the whole reply for the others.
+export function parseState(replies) {
+  const r = replies;
+  const radio = r.radio ? r.radio.split(",").map(num) : null;
+  const allowed = r.regionsAllowed && r.regionsAllowed !== "-none-"
+    ? r.regionsAllowed.split(",").map(s => s.trim()).filter(Boolean)
+    : (r.regionsAllowed === "-none-" ? [] : null);
+  const def = r.regionDefault ? /default scope is (?:now )?(\S+)/.exec(r.regionDefault) : null;
+  return {
+    version: parseVersion(r.ver),
+    board: r.board || null,
+    role: r.role || null,
+    name: r.name ?? null,
+    publicKey: r.publicKey || null,
+    radio: radio && radio.length === 4 && radio.every(x => x !== null)
+      ? { freq: radio[0], bw: radio[1], sf: radio[2], cr: radio[3], text: r.radio }
+      : null,
+    txPower: num(r.tx),
+    lat: num(r.lat),
+    lon: num(r.lon),
+    dutycycle: num(r.dutycycle),
+    advertInterval: num(r.advertInterval),
+    floodAdvertInterval: num(r.floodAdvertInterval),
+    guestPassword: r.guestPassword ?? null,
+    pathHashMode: num(r.pathHashMode),
+    loopDetect: r.loopDetect || null,
+    floodMaxUnscoped: num(r.floodMaxUnscoped),
+    ownerInfo: r.ownerInfo ?? null,
+    gpsAdvert: r.gpsAdvert || null,            // "none" | "prefs" | "share" | null (no GPS support in firmware)
+    regionDefault: def ? def[1] : null,        // "<null>" when unset
+    regionsAllowed: allowed,                    // ["*", "eu", "dk", ...] or null
+    regionTree: r.regionTree || null
+  };
+}
+
+export function hasDeviceLocation(state) {
+  return state.lat !== null && state.lon !== null && (state.lat !== 0 || state.lon !== 0);
+}
+
+// Deterministic per device, spread over the recommended range: the same
+// repeater always gets the same interval, but different repeaters differ.
+export function floodAdvertIntervalFor(publicKey) {
+  const [lo, hi] = BEST_PRACTICE.floodAdvertInterval;
+  let h = 0;
+  for (const c of String(publicKey || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return lo + (h % (hi - lo + 1));
+}
+
+function close(a, b, eps = 0.001) {
+  return a !== null && Math.abs(a - b) <= eps;
+}
+
+function fmt(v) {
+  return v === null || v === undefined || v === "" ? "–" : String(v);
+}
+
+// state: from parseState(). location: { lat, lon, source: "device" | "map" } or
+// null. scopes: the result of scopesForPoint() for that location, or null.
+// input: { ownerInfo } - free-text values the user typed for "input" findings.
+//
+// Returns findings, each { id, label, current, recommended, status, commands, note }
+// where status is "ok" | "change" | "input" | "unknown" | "unsupported".
+export function evaluate(state, location, scopes, input = {}) {
+  const BP = BEST_PRACTICE;
+  const out = [];
+  const add = f => { out.push({ commands: [], note: "", ...f }); };
+
+  // --- Radio -----------------------------------------------------------------
+  if (!state.radio) {
+    add({ id: "radio", label: "Radio (freq, bw, sf, cr)", current: "–", recommended: `${BP.radio.freq},${BP.radio.bw},${BP.radio.sf},${BP.radio.cr}`, status: "unknown" });
+  } else {
+    const r = state.radio;
+    const crOk = r.cr >= BP.radio.crRange[0] && r.cr <= BP.radio.crRange[1];
+    const ok = close(r.freq, BP.radio.freq) && close(r.bw, BP.radio.bw, 0.01) && r.sf === BP.radio.sf && crOk;
+    const cr = crOk ? r.cr : BP.radio.cr;
+    const rec = `${BP.radio.freq},${BP.radio.bw},${BP.radio.sf},${cr}`;
+    add({
+      id: "radio", label: "Radio (EU/UK Narrow)", current: r.text, recommended: rec,
+      status: ok ? "ok" : "change",
+      commands: ok ? [] : ["set radio " + rec],
+      note: ok ? "" : "Kræver genstart af repeateren."
+    });
+  }
+
+  // --- Duty cycle ------------------------------------------------------------
+  add({
+    id: "dutycycle", label: "Dutycycle", current: state.dutycycle === null ? "–" : state.dutycycle + " %", recommended: BP.dutycycle + " %",
+    status: state.dutycycle === null ? "unknown" : (close(state.dutycycle, BP.dutycycle, 0.05) ? "ok" : "change"),
+    commands: state.dutycycle !== null && !close(state.dutycycle, BP.dutycycle, 0.05) ? ["set dutycycle " + BP.dutycycle] : []
+  });
+
+  // --- path.hash.mode --------------------------------------------------------
+  add({
+    id: "path.hash.mode", label: "path.hash.mode", current: fmt(state.pathHashMode), recommended: "≥ " + BP.pathHashModeMin,
+    status: state.pathHashMode === null ? "unknown" : (state.pathHashMode >= BP.pathHashModeMin ? "ok" : "change"),
+    commands: state.pathHashMode !== null && state.pathHashMode < BP.pathHashModeMin ? ["set path.hash.mode " + BP.pathHashModeMin] : []
+  });
+
+  // --- advert.interval -------------------------------------------------------
+  add({
+    id: "advert.interval", label: "advert.interval (0-hop adverts)", current: fmt(state.advertInterval), recommended: String(BP.advertInterval),
+    status: state.advertInterval === null ? "unknown" : (state.advertInterval === BP.advertInterval ? "ok" : "change"),
+    commands: state.advertInterval !== null && state.advertInterval !== BP.advertInterval ? ["set advert.interval " + BP.advertInterval] : []
+  });
+
+  // --- flood.advert.interval -------------------------------------------------
+  {
+    const [lo, hi] = BP.floodAdvertInterval;
+    const cur = state.floodAdvertInterval;
+    const ok = cur !== null && cur >= lo && cur <= hi;
+    const rec = floodAdvertIntervalFor(state.publicKey);
+    add({
+      id: "flood.advert.interval", label: "flood.advert.interval (timer)", current: fmt(cur), recommended: `${rec} (${lo}–${hi})`,
+      status: cur === null ? "unknown" : (ok ? "ok" : "change"),
+      commands: cur !== null && !ok ? ["set flood.advert.interval " + rec] : []
+    });
+  }
+
+  // --- guest.password --------------------------------------------------------
+  add({
+    id: "guest.password", label: "guest.password", current: fmt(state.guestPassword), recommended: BP.guestPassword,
+    status: state.guestPassword === null ? "unknown" : (state.guestPassword === BP.guestPassword ? "ok" : "change"),
+    commands: state.guestPassword !== null && state.guestPassword !== BP.guestPassword ? ["set guest.password " + BP.guestPassword] : []
+  });
+
+  // --- loop.detect -----------------------------------------------------------
+  add({
+    id: "loop.detect", label: "loop.detect", current: fmt(state.loopDetect), recommended: BP.loopDetect,
+    status: state.loopDetect === null ? "unknown" : (state.loopDetect === BP.loopDetect ? "ok" : "change"),
+    commands: state.loopDetect !== null && state.loopDetect !== BP.loopDetect ? ["set loop.detect " + BP.loopDetect] : []
+  });
+
+  // --- flood.max.unscoped ----------------------------------------------------
+  add({
+    id: "flood.max.unscoped", label: "flood.max.unscoped", current: fmt(state.floodMaxUnscoped), recommended: String(BP.floodMaxUnscoped),
+    status: state.floodMaxUnscoped === null ? "unknown" : (state.floodMaxUnscoped === BP.floodMaxUnscoped ? "ok" : "change"),
+    commands: state.floodMaxUnscoped !== null && state.floodMaxUnscoped !== BP.floodMaxUnscoped ? ["set flood.max.unscoped " + BP.floodMaxUnscoped] : []
+  });
+
+  // --- Location --------------------------------------------------------------
+  if (!location) {
+    add({ id: "location", label: "Position (lat, lon)", current: "ikke sat", recommended: "klik på kortet", status: "input" });
+  } else if (location.source === "device") {
+    add({ id: "location", label: "Position (lat, lon)", current: `${location.lat}, ${location.lon}`, recommended: "sat på enheden", status: "ok" });
+  } else {
+    const lat = location.lat.toFixed(6), lon = location.lon.toFixed(6);
+    add({
+      id: "location", label: "Position (lat, lon)", current: hasDeviceLocation(state) ? `${state.lat}, ${state.lon}` : "ikke sat", recommended: `${lat}, ${lon}`,
+      status: "change", commands: ["set lat " + lat, "set lon " + lon]
+    });
+  }
+
+  // --- gps advert (only firmware built with GPS support knows this) ----------
+  if (state.gpsAdvert !== null) {
+    add({
+      id: "gps.advert", label: "Position i adverts", current: state.gpsAdvert, recommended: "prefs",
+      status: state.gpsAdvert === "prefs" ? "ok" : "change",
+      commands: state.gpsAdvert === "prefs" ? [] : ["gps advert prefs"]
+    });
+  }
+
+  // --- region default --------------------------------------------------------
+  add({
+    id: "region.default", label: "region default", current: fmt(state.regionDefault), recommended: BP.regionDefault,
+    status: state.regionDefault === null ? "unknown" : (state.regionDefault === BP.regionDefault ? "ok" : "change"),
+    commands: state.regionDefault !== null && state.regionDefault !== BP.regionDefault ? ["region default " + BP.regionDefault] : []
+  });
+
+  // --- Region scopes ---------------------------------------------------------
+  if (!scopes || !scopes.scopes.length) {
+    add({ id: "regions", label: "Region scopes", current: state.regionsAllowed ? state.regionsAllowed.join(", ") : "–", recommended: "kræver en position inden for kortets regioner", status: "input" });
+  } else {
+    const expected = [...Object.keys(FIXED_SCOPE_PARENTS), ...scopes.scopes];
+    const have = state.regionsAllowed ? new Set(state.regionsAllowed) : null;
+    const missing = have ? expected.filter(s => !have.has(s)) : expected;
+    const extra = have ? [...have].filter(s => s !== "*" && !expected.includes(s)) : [];
+    let commands = [];
+    let note = "";
+    if (missing.length) {
+      if (versionAtLeast(state.version, 1, 16)) {
+        commands = [...regionDefLines(expected), "region save"];
+      } else if (versionAtLeast(state.version, 1, 12)) {
+        for (const s of expected) commands.push("region put " + s, "region allowf " + s);
+        commands.push("region save");
+      } else {
+        note = "Firmware " + (state.version ? state.version.text : "?") + " understøtter ikke region scopes - opdater til 1.16 eller nyere.";
+      }
+    }
+    if (extra.length) note += (note ? " " : "") + "Enheden har desuden: " + extra.join(", ") + " (fjernes ikke automatisk).";
+    add({
+      id: "regions", label: "Region scopes", current: have ? [...have].join(", ") : "kunne ikke aflæses",
+      recommended: expected.join(", "),
+      status: !missing.length ? "ok" : (commands.length ? "change" : "unsupported"),
+      commands, note
+    });
+  }
+
+  // --- owner.info ------------------------------------------------------------
+  if (state.ownerInfo === null) {
+    add({ id: "owner.info", label: "owner.info", current: "–", recommended: "kontakt, antenne, strøm, montering", status: "unknown" });
+  } else if (state.ownerInfo.trim()) {
+    add({ id: "owner.info", label: "owner.info", current: state.ownerInfo, recommended: "sat", status: "ok" });
+  } else {
+    const text = (input.ownerInfo || "").trim();
+    add({
+      id: "owner.info", label: "owner.info", current: "tom", recommended: text || "fx OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering",
+      status: text ? "change" : "input",
+      commands: text ? ["set owner.info " + text.replace(/\n/g, "|")] : []
+    });
+  }
+
+  return out;
+}
+
+// The commands to send for the selected findings, in a sensible order:
+// position first (so the region default/scopes make sense), the radio last
+// (it asks for a reboot). Deduplicated, order preserved.
+export function planCommands(findings, selectedIds) {
+  const order = ["location", "gps.advert", "region.default", "regions", "owner.info", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "guest.password", "loop.detect", "flood.max.unscoped", "radio"];
+  const byId = new Map(findings.map(f => [f.id, f]));
+  const cmds = [];
+  for (const id of order) {
+    const f = byId.get(id);
+    if (!f || !selectedIds.has(id)) continue;
+    for (const c of f.commands) if (!cmds.includes(c)) cmds.push(c);
+  }
+  return cmds;
+}
+
+export function needsReboot(commands) {
+  return commands.some(c => c.startsWith("set radio "));
+}
