@@ -72,8 +72,8 @@
     <h2>Før du starter</h2>
     <p>Denne side sætter en MeshCore-enhed <em>op</em> - den flasher ikke firmware. Sørg for at følgende er på plads:</p>
     <ul class="am-prereq">
-      <li><strong>Firmware er allerede flashet.</strong> Enheden skal køre MeshCore <em>repeater</em>- eller <em>room server</em>-firmware (companion-firmware genkendes også - dér tjekkes de to indstillinger der betyder noget for det danske mesh). Brug MeshCores egen web-flasher på <a href="https://flasher.meshcore.io/" target="_blank" rel="noopener">flasher.meshcore.io</a> - den kører i browseren via det samme USB-kabel, og du vælger rolle (repeater/room server/companion) og board dér.</li>
-      <li><strong>USB eller Bluetooth.</strong> Repeatere, room servers og USB-companions tilsluttes med et USB-kabel med data (ikke et rent ladekabel). En <em>BLE-companion</em> har ingen USB-kommunikation - den tilsluttes via Bluetooth, ligesom appen gør, og computeren spørger om enhedens PIN (vises på skærmen, hvis enheden har en; ellers 123456 eller den PIN du har sat i appen). Begge dele kræver Chrome eller Edge på en computer - ikke Firefox, Safari eller telefon.</li>
+      <li><strong>Firmware er allerede flashet.</strong> Enheden skal køre MeshCore <em>repeater</em>- eller <em>room server</em>-firmware (companion-firmware genkendes også, men kan kun delvist sættes op). Brug MeshCores egen web-flasher på <a href="https://flasher.meshcore.io/" target="_blank" rel="noopener">flasher.meshcore.io</a> - den kører i browseren via det samme USB-kabel, og du vælger rolle (repeater/room server) og board dér.</li>
+      <li><strong>Et USB-kabel med data</strong> - ikke et rent ladekabel - og en computer med Chrome eller Edge. Web Serial virker ikke i Firefox, Safari eller på telefon.</li>
       <li><strong>Enheden er tændt og ikke i brug af et andet program.</strong> Luk flasheren, den serielle monitor og lignende, før du tilslutter her - kun ét program ad gangen kan holde porten åben.</li>
       <li><strong>Placering.</strong> Hvis enheden ikke allerede har en position gemt, bliver du bedt om at klikke på kortet, hvor den står. Det bestemmer hvilke region scopes den får.</li>
     </ul>
@@ -81,12 +81,11 @@
 
   <section id="connect">
     <h2>1. Forbind enheden</h2>
-    <p>Sæt enheden i computeren med USB-kablet og klik <strong>Tilslut via USB</strong> - browseren spørger hvilken port den skal bruge. En BLE-companion tilsluttes i stedet med <strong>Tilslut via Bluetooth</strong>, hvor du vælger enheden (<code>MeshCore-…</code>) og indtaster dens PIN. Siden læser enhedens indstillinger (CLI over USB, appens protokol for companions) og skriver kun de ændringer du selv vælger til sidst.</p>
+    <p>Sæt enheden i computeren med USB-kablet og klik <strong>Tilslut</strong>. Browseren spørger hvilken port den skal bruge. Siden læser enhedens indstillinger via dens CLI (companion-firmware via appens protokol) og skriver kun de ændringer du selv vælger til sidst.</p>
     <p class="am-error" id="noSerial" hidden>Din browser understøtter ikke Web Serial. Brug Chrome eller Edge på en computer.</p>
     <p class="am-error" id="connectError" hidden></p>
     <div class="editor-toolbar">
       <button type="button" id="btnConnect" class="primary">Tilslut via USB</button>
-      <button type="button" id="btnConnectBle" hidden>Tilslut via Bluetooth</button>
       <button type="button" id="btnDisconnect" hidden>Afbryd</button>
       <button type="button" id="btnReread" hidden>Genlæs enheden</button>
       <span class="am-status" id="status">Ikke forbundet</span>

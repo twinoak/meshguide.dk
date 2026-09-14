@@ -157,79 +157,17 @@ export function parseReply(cmd, lines) {
   return out;
 }
 
-// The companion protocol over any frame transport. A subclass provides
-// sendFrame(payload), beginFrameCapture(), capturedFrames() and
-// endFrameCapture(); this class provides the request/response logic on top.
-export class CompanionLink {
+export class MeshCoreSerial {
   constructor({ onLog } = {}) {
-    this.onLog = onLog || (() => {});
-    this.encoder = new TextEncoder();
-    this.connected = false;
-    this.kind = "link";
-  }
-
-  // Sends one companion frame and returns the payloads of the frames that come
-  // back. With `expect` (a list of response codes) it waits for one of those;
-  // otherwise for any frame. Then a short quiet period so a second frame is
-  // not cut off. Unsolicited push frames (>= 0x80) never count as the answer.
-  async companionCommand(payload, label, { timeoutMs = 1500, quietMs = 150, expect = null } = {}) {
-    if (!this.connected) throw new Error("Ikke forbundet");
-    this.onLog("tx", "<" + label + ">");
-    this.beginFrameCapture();
-    await this.sendFrame(payload);
-    const start = performance.now();
-    let lastCount = 0, lastChange = start;
-    while (true) {
-      await sleep(50);
-      const now = performance.now();
-      const frames = this.capturedFrames();
-      if (frames.length !== lastCount) { lastCount = frames.length; lastChange = now; }
-      const answered = frames.some(f => expect ? expect.includes(f[0]) : f[0] < 0x80);
-      if (answered && now - lastChange >= quietMs) break;
-      if (now - start >= timeoutMs) break;
-    }
-    const frames = this.endFrameCapture();
-    for (const f of frames) this.onLog("info", "frame kode " + f[0] + " (" + f.length + " B)");
-    return frames;
-  }
-
-  // Sends the companion app's two hello frames. Returns { deviceInfo, selfInfo }
-  // (either may be null) or null if nothing frame-shaped answered.
-  async companionQuery() {
-    const a = await this.companionCommand(Uint8Array.from([CMD_DEVICE_QUERY, 1]), "CMD_DEVICE_QUERY", { expect: [RESP_CODE_DEVICE_INFO] });
-    const b = await this.companionCommand(Uint8Array.from([CMD_APP_START, 0, 0, 0, 0, 0, 0, 0, ...this.encoder.encode("meshguide")]), "CMD_APP_START meshguide", { expect: [RESP_CODE_SELF_INFO] });
-    const frames = [...a, ...b];
-    const dev = frames.map(parseDeviceInfo).find(Boolean) || null;
-    const self = frames.map(parseSelfInfo).find(Boolean) || null;
-    return dev || self ? { deviceInfo: dev, selfInfo: self } : null;
-  }
-
-  // { name, key } of the companion's default flood scope; name null when unset;
-  // null when the firmware did not answer (too old for the command).
-  async companionGetDefaultScope() {
-    const frames = await this.companionCommand(Uint8Array.from([CMD_GET_DEFAULT_FLOOD_SCOPE]), "CMD_GET_DEFAULT_FLOOD_SCOPE", { expect: [RESP_CODE_DEFAULT_FLOOD_SCOPE] });
-    return frames.map(parseDefaultScope).find(Boolean) || null;
-  }
-
-  // Sends a companion write command; true on RESP_CODE_OK.
-  async companionSet(payload, label) {
-    const frames = await this.companionCommand(payload, label, { expect: [RESP_CODE_OK, RESP_CODE_ERR] });
-    const err = frames.find(f => f[0] === RESP_CODE_ERR);
-    if (err) this.onLog("error", label + ": fejlkode " + err[1]);
-    return frames.some(f => f[0] === RESP_CODE_OK && f.length === 1);
-  }
-}
-
-export class MeshCoreSerial extends CompanionLink {
-  constructor(opts = {}) {
-    super(opts);
-    this.kind = "usb";
     this.port = null;
     this.reader = null;
     this.writer = null;
     this.buffer = "";
     this.pending = null;
     this.binary = null;   // when set (an array), incoming bytes are captured raw instead of decoded as text
+    this.onLog = onLog || (() => {});
+    this.encoder = new TextEncoder();
+    this.connected = false;
   }
 
   // Opens a port chosen by the user (must be called from a user gesture).
@@ -328,16 +266,55 @@ export class MeshCoreSerial extends CompanionLink {
     return r.value;
   }
 
-  // --- companion frames over the serial port ('>' + len16 + payload) ---
-  async sendFrame(payload) {
+  // Sends one companion frame and returns the payloads of the frames that come
+  // back: waits for at least one complete frame (or the timeout), then a short
+  // quiet period so a second frame is not cut off.
+  async companionCommand(payload, label, { timeoutMs = 1500, quietMs = 150 } = {}) {
+    if (!this.writer) throw new Error("Ikke forbundet");
+    this.onLog("tx", "<" + label + ">");
+    this.binary = [];
     await this.writer.write(companionFrame(payload));
-  }
-  beginFrameCapture() { this.binary = []; }
-  capturedFrames() { return this.binary ? parseCompanionFrames(concat(this.binary)) : []; }
-  endFrameCapture() {
-    const frames = this.capturedFrames();
+    const start = performance.now();
+    let frames = [];
+    let lastLen = 0, lastChange = start;
+    while (true) {
+      await sleep(50);
+      const now = performance.now();
+      const total = this.binary.reduce((n, c) => n + c.length, 0);
+      if (total !== lastLen) { lastLen = total; lastChange = now; }
+      if (total) frames = parseCompanionFrames(concat(this.binary));
+      if (frames.length && now - lastChange >= quietMs) break;
+      if (now - start >= timeoutMs) break;
+    }
     this.binary = null;
+    for (const f of frames) this.onLog("info", "frame kode " + f[0] + " (" + f.length + " B)");
     return frames;
+  }
+
+  // Sends the companion app's two hello frames. Returns { deviceInfo, selfInfo }
+  // (either may be null) or null if nothing frame-shaped answered.
+  async companionQuery() {
+    const a = await this.companionCommand(Uint8Array.from([CMD_DEVICE_QUERY, 1]), "CMD_DEVICE_QUERY");
+    const b = await this.companionCommand(Uint8Array.from([CMD_APP_START, 0, 0, 0, 0, 0, 0, 0, ...this.encoder.encode("meshguide")]), "CMD_APP_START meshguide");
+    const frames = [...a, ...b];
+    const dev = frames.map(parseDeviceInfo).find(Boolean) || null;
+    const self = frames.map(parseSelfInfo).find(Boolean) || null;
+    return dev || self ? { deviceInfo: dev, selfInfo: self } : null;
+  }
+
+  // { name, key } of the companion's default flood scope; name null when unset;
+  // null when the firmware did not answer (too old for the command).
+  async companionGetDefaultScope() {
+    const frames = await this.companionCommand(Uint8Array.from([CMD_GET_DEFAULT_FLOOD_SCOPE]), "CMD_GET_DEFAULT_FLOOD_SCOPE");
+    return frames.map(parseDefaultScope).find(Boolean) || null;
+  }
+
+  // Sends a companion write command; true on RESP_CODE_OK.
+  async companionSet(payload, label) {
+    const frames = await this.companionCommand(payload, label);
+    const err = frames.find(f => f[0] === RESP_CODE_ERR);
+    if (err) this.onLog("error", label + ": fejlkode " + err[1]);
+    return frames.some(f => f[0] === RESP_CODE_OK && f.length === 1);
   }
 
   // Works out what is on the other end:

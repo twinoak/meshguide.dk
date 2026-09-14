@@ -6,14 +6,13 @@
 
 import { buildDataset, scopesForPoint } from "../scopes.js";
 import { MeshCoreSerial, serialSupported } from "./serial.js";
-import { MeshCoreBle, bluetoothSupported } from "./ble.js";
 import { BEST_PRACTICE, READ_COMMANDS, commandText, evaluate, evaluateCompanion, forwards, hasDeviceLocation, isRepeater, needsReboot, parseState, planCommands, roleLabel, scopeKeyFor } from "./checks.js";
 
 const $ = id => document.getElementById(id);
 const HIGHLIGHT_COLOR = "#ffffff";
 
 const ui = {
-  status: $("status"), btnConnect: $("btnConnect"), btnConnectBle: $("btnConnectBle"), btnDisconnect: $("btnDisconnect"), btnReread: $("btnReread"),
+  status: $("status"), btnConnect: $("btnConnect"), btnDisconnect: $("btnDisconnect"), btnReread: $("btnReread"),
   connectError: $("connectError"), device: $("device"), deviceError: $("deviceError"), deviceNote: $("deviceNote"), deviceTable: $("deviceTable"),
   location: $("location"), locationText: $("locationText"), mapHint: $("mapHint"), btnPick: $("btnPick"), btnUseDevice: $("btnUseDevice"), scopesText: $("scopesText"),
   recommend: $("recommend"), findings: $("findings"), plan: $("plan"), btnApply: $("btnApply"), btnReboot: $("btnReboot"), applyStatus: $("applyStatus"), applyLog: $("applyLog"), rebootNote: $("rebootNote"),
@@ -146,31 +145,25 @@ async function setLocation(lat, lon, source) {
 
 // --- Device ----------------------------------------------------------------------
 
-// transport: "usb" (Web Serial: repeater / room server / USB companion) or
-// "ble" (Web Bluetooth: BLE companion, like the app).
-async function connect(transport) {
+async function connect() {
   showError(ui.connectError, "");
   ui.btnConnect.disabled = true;
-  ui.btnConnectBle.disabled = true;
-  setStatus(transport === "ble" ? "Forbinder via Bluetooth … (vælg enheden, og indtast PIN hvis du bliver spurgt)" : "Forbinder …", "busy");
-  const link = transport === "ble" ? new MeshCoreBle({ onLog: log }) : new MeshCoreSerial({ onLog: log });
+  setStatus("Forbinder …", "busy");
+  const serial = new MeshCoreSerial({ onLog: log });
   try {
-    await link.connect();
+    await serial.connect();
   } catch (e) {
     ui.btnConnect.disabled = false;
-    ui.btnConnectBle.disabled = false;
     setStatus("Ikke forbundet", "");
-    if (e && e.name === "NotFoundError") return; // user cancelled the chooser
-    showError(ui.connectError, (transport === "ble" ? "Kunne ikke forbinde via Bluetooth: " : "Kunne ikke åbne porten: ") + (e && e.message ? e.message : e)
-      + (transport === "ble" ? " Er enheden tændt og inden for rækkevidde, og er den ikke allerede forbundet til appen på telefonen?" : ""));
+    if (e && e.name === "NotFoundError") return; // user cancelled the port chooser
+    showError(ui.connectError, "Kunne ikke åbne porten: " + (e && e.message ? e.message : e));
     return;
   }
-  app.serial = link;
+  app.serial = serial;
   ui.btnConnect.hidden = true;
-  ui.btnConnectBle.hidden = true;
   ui.btnDisconnect.hidden = false;
   ui.btnReread.hidden = false;
-  setStatus(transport === "ble" ? "Forbundet via Bluetooth" : "Forbundet", "connected");
+  setStatus("Forbundet", "connected");
   await readDevice();
 }
 
@@ -179,8 +172,6 @@ async function disconnect() {
   app.serial = null;
   ui.btnConnect.hidden = false;
   ui.btnConnect.disabled = false;
-  ui.btnConnectBle.hidden = !bluetoothSupported();
-  ui.btnConnectBle.disabled = false;
   ui.btnDisconnect.hidden = true;
   ui.btnReread.hidden = true;
   setStatus("Ikke forbundet", "");
@@ -223,7 +214,7 @@ async function readDeviceSteps() {
     ui.btnReread.disabled = false;
     renderCompanion(id);
     const s = id.selfInfo;
-    setStatus("Forbundet" + (serial.kind === "ble" ? " via Bluetooth" : "") + ": companion" + (s && s.name ? " · " + s.name : "") + (id.deviceInfo ? " · " + id.deviceInfo.board + " · " + (id.deviceInfo.firmwareVersion || "") : ""), "connected");
+    setStatus("Forbundet: companion" + (s && s.name ? " · " + s.name : "") + (id.deviceInfo ? " · " + id.deviceInfo.board + " · " + (id.deviceInfo.firmwareVersion || "") : ""), "connected");
     showError(ui.deviceNote, "Dette er companion-firmware (den der bruges sammen med appen). Den har ingen CLI, så repeater-opsætningen gælder ikke - men de to indstillinger der betyder noget for det danske mesh, path.hash.mode og standard-scope (#dk), kan tjekkes og rettes herunder.");
     if (!app.expectedScopeKey) app.expectedScopeKey = await scopeKeyFor(BEST_PRACTICE.regionDefault);
     ui.recommend.hidden = false;
@@ -235,9 +226,7 @@ async function readDeviceSteps() {
     ui.btnReread.disabled = false;
     ui.deviceTable.innerHTML = "";
     setStatus("Forbundet, men enheden svarer ikke", "error");
-    showError(ui.deviceError, serial.kind === "ble"
-      ? "Ingen svar over Bluetooth. Blev parringen (PIN) gennemført, og er det en MeshCore-companion? Prøv Genlæs enheden - eller se loggen nederst."
-      : "Enheden svarede hverken som repeater (tekst-CLI) eller companion (binær protokol). Er det den rigtige port, er enheden tændt, og kører den MeshCore-firmware? Bemærk: en companion med BLE- eller WiFi-firmware har ingen USB-kommunikation - tilslut den via Bluetooth i stedet. Prøv Genlæs enheden - eller se den serielle log nederst.");
+    showError(ui.deviceError, "Enheden svarede hverken som repeater (tekst-CLI) eller companion (binær protokol). Er det den rigtige port, er enheden tændt, og kører den MeshCore-firmware? Prøv Genlæs enheden - eller se den serielle log nederst.");
     return;
   }
 
@@ -449,9 +438,7 @@ if (!serialSupported()) {
   $("noSerial").hidden = false;
   ui.btnConnect.disabled = true;
 }
-ui.btnConnectBle.hidden = !bluetoothSupported();
-ui.btnConnect.addEventListener("click", () => connect("usb"));
-ui.btnConnectBle.addEventListener("click", () => connect("ble"));
+ui.btnConnect.addEventListener("click", connect);
 ui.btnDisconnect.addEventListener("click", disconnect);
 ui.btnReread.addEventListener("click", readDevice);
 ui.btnPick.addEventListener("click", () => { app.pickMode = true; ui.mapHint.hidden = false; ui.locationText.textContent = "Klik på kortet hvor enheden står."; });

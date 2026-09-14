@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildDataset, scopesForPoint } from "../scopes.js";
 import { loadData } from "./data.js";
-import { evaluate, floodAdvertIntervalFor, hasDeviceLocation, needsReboot, parseState, parseVersion, planCommands, versionAtLeast } from "../automagical/checks.js";
+import { evaluate, floodAdvertIntervalFor, forwards, hasDeviceLocation, isRepeater, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../automagical/checks.js";
 import { parseReply } from "../automagical/serial.js";
 
 const { regions, postnumreFiles } = loadData();
@@ -31,6 +31,7 @@ const GOOD = {
   loopDetect: "moderate",
   floodMaxUnscoped: "15",
   ownerInfo: "OZ1ABC / 6dBi omni @9m",
+  repeat: "on",
   gpsAdvert: "prefs",
   regionDefault: " default scope is dk",
   regionsAllowed: "*,eu,europe,dk,dk-fyn-odense,dk-fyn,dk5,dk50,dk52,dk53,dk55,dk57,dk58,dk522,dk5220",
@@ -157,9 +158,9 @@ test("regions: missing scopes on old firmware use put/allowf, on very old firmwa
   const ancient = parseState({ ...GOOD, ver: "v1.9.0 (Build: x)", regionsAllowed: null });
   assert.equal(evaluate(ancient, loc, sc).find(x => x.id === "regions").status, "unsupported");
   const extra = parseState({ ...GOOD, regionsAllowed: GOOD.regionsAllowed + ",dk-jylland" });
-  const r3 = evaluate(extra, loc, sc).find(x => x.id === "regions");
-  assert.equal(r3.status, "ok");
-  assert.match(r3.note, /dk-jylland/);
+  const f3 = evaluate(extra, loc, sc);
+  assert.equal(f3.find(x => x.id === "regions").status, "ok");
+  assert.equal(f3.find(x => x.id === "regions.extra").current, "dk-jylland");
   // Unknown current regions -> still offered as a change (region def is idempotent)
   const unk = parseState({ ...GOOD, regionsAllowed: null });
   assert.equal(evaluate(unk, loc, sc).find(x => x.id === "regions").status, "change");
@@ -169,4 +170,170 @@ test("firmware without GPS support hides the advert-position finding", () => {
   const s = parseState({ ...GOOD, gpsAdvert: null });
   const f = evaluate(s, { lat: s.lat, lon: s.lon, source: "device" }, scopesForPoint(ds, s.lat, s.lon));
   assert.ok(!f.some(x => x.id === "gps.advert"));
+});
+
+// --- Companion (binary) protocol -------------------------------------------------
+
+import { companionFrame, parseCompanionFrames, parseDeviceInfo, parseSelfInfo } from "../automagical/serial.js";
+
+function deviceInfoFrame() {
+  const p = new Uint8Array(82);
+  p[0] = 13; p[1] = 8; p[2] = 100; p[3] = 8;
+  new DataView(p.buffer).setUint32(4, 123456, true);
+  new TextEncoder().encodeInto("12 Sep 2026", p.subarray(8, 20));
+  new TextEncoder().encodeInto("Heltec V3", p.subarray(20, 60));
+  new TextEncoder().encodeInto("v1.9.2", p.subarray(60, 80));
+  p[80] = 0; p[81] = 1;
+  return p;
+}
+function selfInfoFrame() {
+  const name = new TextEncoder().encode("Thomas' companion");
+  const p = new Uint8Array(58 + name.length);
+  p[0] = 5; p[1] = 1; p[2] = 22; p[3] = 22;
+  for (let i = 0; i < 32; i++) p[4 + i] = i;
+  const dv = new DataView(p.buffer);
+  dv.setInt32(36, Math.round(56.1629 * 1e6), true); dv.setInt32(40, Math.round(10.2039 * 1e6), true);
+  p[44] = 0; p[45] = 1; p[46] = 0; p[47] = 0;
+  dv.setUint32(48, 869618, true); dv.setUint32(52, 62500, true); p[56] = 8; p[57] = 8;
+  p.set(name, 58);
+  return p;
+}
+
+test("companion frames: framing, device info and self info parse", () => {
+  const f = companionFrame(Uint8Array.from([22, 1]));
+  assert.deepEqual([...f], [0x3C, 2, 0, 22, 1]);
+  // A stream with junk, then two '>' frames back to back, split arbitrarily.
+  const a = deviceInfoFrame(), b = selfInfoFrame();
+  const wire = new Uint8Array([0x00, 0x41, 0x3E, a.length & 0xff, a.length >> 8, ...a, 0x3E, b.length & 0xff, b.length >> 8, ...b, 0x3E]);
+  const frames = parseCompanionFrames(wire);
+  assert.equal(frames.length, 2);
+  const d = parseDeviceInfo(frames[0]);
+  assert.deepEqual(d, { firmwareVerCode: 8, buildDate: "12 Sep 2026", board: "Heltec V3", firmwareVersion: "v1.9.2", repeatEnabled: false, pathHashMode: 1 });
+  const s = parseSelfInfo(frames[1]);
+  assert.equal(s.type, "companion");
+  assert.equal(s.txPower, 22);
+  assert.equal(s.publicKey, "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+  assert.ok(Math.abs(s.lat - 56.1629) < 1e-6 && Math.abs(s.lon - 10.2039) < 1e-6);
+  assert.deepEqual(s.radio, { freq: 869.618, bw: 62.5, sf: 8, cr: 8 });
+  assert.equal(s.name, "Thomas' companion");
+  // The wrong parser rejects the frame
+  assert.equal(parseDeviceInfo(frames[1]), null);
+  assert.equal(parseSelfInfo(frames[0]), null);
+  // A text CLI reply contains '>' too but never forms a plausible frame
+  assert.deepEqual(parseCompanionFrames(new TextEncoder().encode("  -> > 869.618,62.5,8,8\r\n")), []);
+});
+
+// --- Companion rules -------------------------------------------------------------
+
+import { evaluateCompanion, hex, scopeKeyFor, commandText } from "../automagical/checks.js";
+import { parseDefaultScope, setDefaultScopePayload, setPathHashModePayload } from "../automagical/serial.js";
+
+test("companion: scope key derivation and frame payloads", async () => {
+  const key = await scopeKeyFor("dk");
+  assert.equal(hex(key), "4a447e7539b0418bd14cf28aa8241529"); // first 16 bytes of SHA-256("#dk")
+  const p = setDefaultScopePayload("dk", key);
+  assert.equal(p.length, 48);
+  assert.equal(p[0], 63);
+  assert.deepEqual([...p.slice(1, 4)], [0x64, 0x6b, 0x00]); // "dk" + NUL padding
+  assert.equal(hex(p.slice(32)), hex(key));
+  assert.deepEqual([...setPathHashModePayload(1)], [61, 0, 1]);
+  // The GET reply round-trips
+  const reply = new Uint8Array(48); reply[0] = 28; reply.set(p.slice(1), 1);
+  assert.deepEqual(parseDefaultScope(reply), { name: "dk", key: hex(key) });
+  assert.deepEqual(parseDefaultScope(Uint8Array.from([28])), { name: null, key: null });
+  assert.equal(parseDefaultScope(Uint8Array.from([13])), null);
+});
+
+test("companion: path.hash.mode and default scope are checked and fixable", async () => {
+  const key = await scopeKeyFor("dk");
+  const base = { kind: "companion", deviceInfo: { pathHashMode: 1, board: "Heltec V3" }, selfInfo: null };
+  // All good
+  let f = evaluateCompanion({ ...base, defaultScope: { name: "dk", key: hex(key) } }, key);
+  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:ok", "region.default:ok"]);
+  // Fresh companion: mode 0, no scope
+  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: 0 }, defaultScope: { name: null, key: null } }, key);
+  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:change", "region.default:change"]);
+  const plan = planCommands(f, new Set(["path.hash.mode", "region.default"]));
+  assert.deepEqual(plan.map(commandText), ["CMD_SET_DEFAULT_FLOOD_SCOPE dk (" + hex(key) + ")", "CMD_SET_PATH_HASH_MODE 1"]);
+  assert.deepEqual([...plan[1].payload], [61, 0, 1]);
+  assert.equal(plan[0].payload[0], 63);
+  assert.ok(!needsReboot(plan));
+  // Wrong scope name, and right name with a wrong key, both flagged
+  assert.equal(evaluateCompanion({ ...base, defaultScope: { name: "eu", key: hex(key) } }, key).find(x => x.id === "region.default").status, "change");
+  const wrongKey = evaluateCompanion({ ...base, defaultScope: { name: "dk", key: "00".repeat(16) } }, key).find(x => x.id === "region.default");
+  assert.equal(wrongKey.status, "change");
+  assert.match(wrongKey.note, /nøglen/);
+  // Old firmware: unknown, nothing to send
+  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: null }, defaultScope: null }, key);
+  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:unknown", "region.default:unknown"]);
+  assert.deepEqual(planCommands(f, new Set(["path.hash.mode", "region.default"])), []);
+});
+
+
+// --- Room servers ------------------------------------------------------------------
+
+test("room server: room password untouched, forwarding rules only with repeat on", () => {
+  const room = { ...GOOD, role: "room_server", name: "Odense Rum", guestPassword: "hemmelig", repeat: "off", loopDetect: "off", floodMaxUnscoped: "64" };
+  const s = parseState(room);
+  assert.equal(s.role, "room_server");
+  assert.equal(s.repeat, "off");
+  assert.ok(!isRepeater(s));
+  assert.ok(!forwards(s));
+  const loc = { lat: s.lat, lon: s.lon, source: "device" };
+  const f = evaluate(s, loc, scopesForPoint(ds, s.lat, s.lon));
+  const ids = f.map(x => x.id);
+  assert.ok(!ids.includes("guest.password"), "room password is not a finding");
+  assert.ok(!ids.includes("repeat"), "repeat is not recommended on for a room server");
+  assert.ok(!ids.includes("loop.detect") && !ids.includes("flood.max.unscoped"), "forwarding rules skipped when repeat is off");
+  for (const id of ["radio", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "location", "gps.advert", "region.default", "regions", "owner.info"]) assert.ok(ids.includes(id), id);
+  assert.deepEqual(f.filter(x => x.status !== "ok"), [], "a well-configured room server has nothing to change");
+  // Same room server with repeat on: the forwarding rules apply and flag off/64
+  const fwd = evaluate(parseState({ ...room, repeat: "on" }), loc, scopesForPoint(ds, s.lat, s.lon));
+  assert.equal(fwd.find(x => x.id === "loop.detect").status, "change");
+  assert.deepEqual(fwd.find(x => x.id === "flood.max.unscoped").commands, ["set flood.max.unscoped 15"]);
+  assert.ok(!fwd.some(x => x.id === "guest.password"));
+});
+
+test("repeater with repeat off gets 'set repeat on'; firmware without 'get repeat' is treated as forwarding", () => {
+  const f = evaluate(parseState({ ...GOOD, repeat: "off" }), null, null);
+  assert.deepEqual(f.find(x => x.id === "repeat").commands, ["set repeat on"]);
+  assert.ok(f.some(x => x.id === "loop.detect"), "forwarding rules still shown for a repeater");
+  const old = evaluate(parseState({ ...GOOD, repeat: null }), null, null);
+  assert.ok(!old.some(x => x.id === "repeat"));
+  assert.ok(old.some(x => x.id === "loop.detect"));
+  assert.equal(roleLabel("room_server"), "Room server");
+  assert.equal(roleLabel(null), "ukendt");
+});
+
+// --- Extra regions (replace instead of add) ------------------------------------------
+
+test("extra regions: opt-in removal row with def-first, remove, save-last ordering", () => {
+  const loc = { lat: 55.325, lon: 10.49, source: "device" };
+  const sc = scopesForPoint(ds, loc.lat, loc.lon);
+  const s = parseState({ ...GOOD, regionsAllowed: GOOD.regionsAllowed + ",dk-jylland,dk-jylland-x", regionsDenied: "dk-old" });
+  const f = evaluate(s, loc, sc);
+  const regions = f.find(x => x.id === "regions"), extra = f.find(x => x.id === "regions.extra");
+  assert.equal(regions.status, "ok");
+  assert.ok(!/fjernes ikke/.test(regions.note));
+  assert.equal(extra.status, "change");
+  assert.equal(extra.optIn, true, "unticked by default");
+  assert.equal(extra.current, "dk-jylland, dk-jylland-x, dk-old"); // denied extras count too
+  const cmds = extra.commands;
+  assert.ok(cmds[0].startsWith("region def eu|* europe|eu dk "), "region def first (re-parents wanted regions)");
+  const rm = cmds.find(c => typeof c === "object" && c.remove);
+  assert.deepEqual(rm.remove, ["dk-jylland", "dk-jylland-x", "dk-old"]);
+  assert.equal(cmds.at(-1), "region save");
+  // Selected together with other findings, "region save" is deduplicated and moved last
+  const plan = planCommands(f, new Set(["regions", "regions.extra", "dutycycle"]));
+  assert.equal(plan.filter(c => c === "region save").length, 1);
+  assert.equal(plan.at(-1), "region save");
+  assert.ok(plan.findIndex(c => typeof c === "object" && c.remove) > plan.findIndex(c => typeof c === "string" && c.startsWith("region def")));
+  // Not selected: nothing about removal in the plan
+  const plan2 = planCommands(f, new Set(["dutycycle"]));
+  assert.ok(!plan2.some(c => typeof c === "object"));
+  // No extras -> no row
+  assert.ok(!evaluate(parseState(GOOD), loc, sc).some(x => x.id === "regions.extra"));
+  // Ancient firmware: reported but unsupported
+  const old = evaluate(parseState({ ...GOOD, ver: "v1.9.0", regionsAllowed: GOOD.regionsAllowed + ",dk-x" }), loc, sc).find(x => x.id === "regions.extra");
+  assert.equal(old.status, "unsupported");
 });
