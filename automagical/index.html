@@ -55,6 +55,8 @@
   details summary { cursor: pointer; color: var(--muted); }
   .am-prereq { margin: .5rem 0 0; padding-left: 1.2rem; }
   .am-prereq li { margin: .35rem 0; }
+  .am-copy { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .1rem .5rem; margin-left: .35rem; font: inherit; font-size: .8rem; cursor: pointer; vertical-align: baseline; }
+  .am-copy:hover { background: var(--border); }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -73,7 +75,7 @@
     <p>Denne side sætter en MeshCore-enhed <em>op</em> - den flasher ikke firmware. Sørg for at følgende er på plads:</p>
     <ul class="am-prereq">
       <li><strong>Firmware er allerede flashet.</strong> Enheden skal køre MeshCore <em>repeater</em>- eller <em>room server</em>-firmware (companion-firmware genkendes også - dér tjekkes de to indstillinger der betyder noget for det danske mesh). Brug MeshCores egen web-flasher på <a href="https://flasher.meshcore.io/" target="_blank" rel="noopener">flasher.meshcore.io</a> - den kører i browseren via det samme USB-kabel, og du vælger rolle (repeater/room server/companion) og board dér.</li>
-      <li><strong>USB eller Bluetooth.</strong> Repeatere, room servers og USB-companions tilsluttes med et USB-kabel med data (ikke et rent ladekabel). En <em>BLE-companion</em> har ingen USB-kommunikation - den tilsluttes via Bluetooth, ligesom appen gør, og computeren spørger om enhedens PIN (vises på skærmen, hvis enheden har en; ellers 123456 eller den PIN du har sat i appen). Begge dele kræver Chrome eller Edge på en computer - ikke Firefox, Safari eller telefon.</li>
+      <li><strong>USB eller Bluetooth.</strong> Repeatere, room servers og USB-companions tilsluttes med et USB-kabel med data (ikke et rent ladekabel). En <em>BLE-companion</em> har ingen USB-kommunikation - den tilsluttes via Bluetooth, ligesom appen gør, og computeren spørger om enhedens PIN (vises på skærmen, hvis enheden har en; ellers 123456 eller den PIN du har sat i appen). Begge dele kræver Chrome eller Edge på en computer - ikke Firefox, Safari eller telefon. Brave virker også, men har Web Bluetooth slået fra fra fabrikken: indsæt <code>brave://flags/#brave-web-bluetooth-api</code><button type="button" class="am-copy" data-copy="brave://flags/#brave-web-bluetooth-api">Kopiér</button> i adresselinjen (browsere lader ikke en side linke til sine egne indstillinger), vælg <em>Enabled</em> og genstart browseren. USB virker uden ændringer.</li>
       <li><strong>Enheden er tændt og ikke i brug af et andet program.</strong> Luk flasheren, den serielle monitor og lignende, før du tilslutter her - kun ét program ad gangen kan holde porten åben.</li>
       <li><strong>Placering.</strong> Hvis enheden ikke allerede har en position gemt, bliver du bedt om at klikke på kortet, hvor den står. Det bestemmer hvilke region scopes den får.</li>
     </ul>

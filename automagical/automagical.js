@@ -146,6 +146,48 @@ async function setLocation(lat, lon, source) {
 
 // --- Device ----------------------------------------------------------------------
 
+// Chromium's exact messages when the user closes the device picker without choosing
+// anything. Only these are silent. They are NotFoundErrors, but so is
+// "Web Bluetooth API globally disabled." (Brave's default, or a Chrome policy), so
+// the error name alone cannot tell a cancel from a blocked API.
+const CANCEL_MESSAGES = ["User cancelled the requestDevice() chooser.", "No port selected by the user."];
+const BLE_DISABLED_MESSAGE = "Web Bluetooth API globally disabled.";
+// Pages are not allowed to link to browser-internal URLs (chrome://, brave://, edge://) -
+// the navigation is blocked - so the address is shown with a copy button instead.
+const BRAVE_BLE_FLAG = "brave://flags/#brave-web-bluetooth-api";
+
+// Fills `el` with the connect error. Text only, except the Brave case, which gets the
+// flag address as <code> plus a copy button.
+function showConnectError(el, transport, e) {
+  const msg = e && e.message ? e.message : String(e);
+  el.replaceChildren();
+  el.append((transport === "ble" ? "Kunne ikke forbinde via Bluetooth: " : "Kunne ikke åbne porten: ") + msg);
+  if (transport === "ble" && msg === BLE_DISABLED_MESSAGE) {
+    const code = document.createElement("code");
+    code.textContent = BRAVE_BLE_FLAG;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "am-copy";
+    btn.dataset.copy = BRAVE_BLE_FLAG;
+    btn.textContent = "Kopiér";
+    el.append(" Browseren har slået Web Bluetooth fra. I Brave: indsæt ", code, btn, " i adresselinjen, vælg Enabled og genstart browseren. I Chrome/Edge på en arbejdscomputer er det typisk en politik sat af en administrator.");
+  } else if (transport === "ble") {
+    el.append(" Er enheden tændt og inden for rækkevidde, og er den ikke allerede forbundet til appen på telefonen?");
+  }
+  el.hidden = false;
+}
+
+async function copyToClipboard(btn) {
+  const label = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(btn.dataset.copy);
+    btn.textContent = "Kopieret";
+  } catch (e) {
+    btn.textContent = "Kunne ikke kopiere - markér teksten og kopiér selv";
+  }
+  setTimeout(() => { btn.textContent = label; }, 2500);
+}
+
 // transport: "usb" (Web Serial: repeater / room server / USB companion) or
 // "ble" (Web Bluetooth: BLE companion, like the app).
 async function connect(transport) {
@@ -160,9 +202,9 @@ async function connect(transport) {
     ui.btnConnect.disabled = false;
     ui.btnConnectBle.disabled = false;
     setStatus("Ikke forbundet", "");
-    if (e && e.name === "NotFoundError") return; // user cancelled the chooser
-    showError(ui.connectError, (transport === "ble" ? "Kunne ikke forbinde via Bluetooth: " : "Kunne ikke åbne porten: ") + (e && e.message ? e.message : e)
-      + (transport === "ble" ? " Er enheden tændt og inden for rækkevidde, og er den ikke allerede forbundet til appen på telefonen?" : ""));
+    if (e && CANCEL_MESSAGES.includes(e.message)) return; // user closed the picker
+    log("error", (transport === "ble" ? "Bluetooth: " : "Seriel: ") + (e && e.name ? e.name + ": " : "") + (e && e.message ? e.message : e));
+    showConnectError(ui.connectError, transport, e);
     return;
   }
   app.serial = link;
@@ -454,6 +496,7 @@ ui.btnConnect.addEventListener("click", () => connect("usb"));
 ui.btnConnectBle.addEventListener("click", () => connect("ble"));
 ui.btnDisconnect.addEventListener("click", disconnect);
 ui.btnReread.addEventListener("click", readDevice);
+document.addEventListener("click", (ev) => { const btn = ev.target.closest("button[data-copy]"); if (btn) copyToClipboard(btn); });
 ui.btnPick.addEventListener("click", () => { app.pickMode = true; ui.mapHint.hidden = false; ui.locationText.textContent = "Klik på kortet hvor enheden står."; });
 ui.btnUseDevice.addEventListener("click", () => { if (app.state && hasDeviceLocation(app.state)) setLocation(app.state.lat, app.state.lon, "device"); });
 ui.btnApply.addEventListener("click", apply);
