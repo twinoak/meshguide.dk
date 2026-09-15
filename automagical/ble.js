@@ -36,8 +36,6 @@ export class MeshCoreBle extends CompanionLink {
     this.device = null;
     this.rx = null;
     this.tx = null;
-    this.queue = [];
-    this.capturing = false;
   }
 
   // Opens the browser's device picker (must be called from a user gesture),
@@ -59,9 +57,7 @@ export class MeshCoreBle extends CompanionLink {
     this.tx = await service.getCharacteristic(NUS_TX);
     this.tx.addEventListener("characteristicvaluechanged", e => {
       const v = e.target.value;
-      const frame = new Uint8Array(v.buffer, v.byteOffset, v.byteLength).slice();
-      this.onLog("rx", "[frame " + frame[0] + ", " + frame.length + " B] " + [...frame.slice(0, 16)].map(b => b.toString(16).padStart(2, "0")).join(" ") + (frame.length > 16 ? " …" : ""));
-      if (this.capturing) this.queue.push(frame);
+      this.receiveFrame(new Uint8Array(v.buffer, v.byteOffset, v.byteLength).slice());
     });
     await this.tx.startNotifications(); // first encrypted access -> pairing / PIN dialog
     this.connected = true;
@@ -82,14 +78,6 @@ export class MeshCoreBle extends CompanionLink {
     if (this.rx.properties.write && this.rx.writeValueWithResponse) return this.rx.writeValueWithResponse(payload);
     if (this.rx.writeValueWithoutResponse) return this.rx.writeValueWithoutResponse(payload);
     return this.rx.writeValue(payload);
-  }
-  beginFrameCapture() { this.queue = []; this.capturing = true; }
-  capturedFrames() { return this.queue.slice(); }
-  endFrameCapture() {
-    this.capturing = false;
-    const q = this.queue;
-    this.queue = [];
-    return q;
   }
 
   // Over Bluetooth there is only the companion protocol.

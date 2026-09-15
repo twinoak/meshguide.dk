@@ -1,0 +1,49 @@
+/* v2.css - the guided version, on top of ../style.css and ../automagical/automagical.css */
+
+.site-header h1 a { color: inherit; text-decoration: none; }
+
+/* Where am I */
+.v2-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 1.25rem; font-size: .9rem; color: var(--muted); min-height: 1.4rem; }
+.v2-crumbs a { color: var(--accent); text-decoration: none; }
+.v2-crumbs a:hover { text-decoration: underline; }
+.v2-crumbs .sep { color: var(--border); }
+.v2-crumbs .current { color: var(--text); font-weight: 600; }
+.v2-crumbs[hidden] { display: none; }
+
+/* Choice cards */
+.v2-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.v2-choice { display: block; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 1.1rem 1.2rem 1rem; color: var(--text); text-decoration: none; transition: border-color .15s ease, transform .15s ease, background .15s ease; }
+.v2-choice:hover, .v2-choice:focus-visible { border-color: var(--accent); background: #3f3f3f; transform: translateY(-2px); outline: none; }
+.v2-choice .icon { width: 36px; height: 36px; color: var(--accent); margin-bottom: .55rem; display: block; }
+.v2-choice h3 { margin: 0 0 .35rem; font-size: 1.1rem; color: #fff; }
+.v2-choice p { margin: 0; color: var(--muted); font-size: .92rem; }
+.v2-choice code { background: var(--bg); font-size: .9em; }
+.v2-choice .req { margin-top: .75rem; font-size: .8rem; color: var(--accent-2); }
+.v2-back { margin: 1.25rem 0 0; font-size: .9rem; }
+.v2-back a { text-decoration: none; }
+
+/* Checklists before connecting */
+.v2-check { margin: .75rem 0 0; padding: 0; list-style: none; }
+.v2-check li { position: relative; padding: .3rem 0 .3rem 1.6rem; }
+.v2-check li::before { content: ""; position: absolute; left: .2rem; top: .75rem; width: .55rem; height: .55rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, .18); }
+.v2-check li strong { color: #fff; }
+
+/* Once connected, the introduction and checklist fold away */
+section.connected #directIntro, section.connected #directCheck, section.connected #remoteIntro, section.connected #remoteCheck, section.connected .v2-back { display: none; }
+section.connected h2 { margin-bottom: .75rem; }
+
+/* Status bar while a device is connected */
+.v2-runbar { margin-top: 0; }
+#runbar { padding-top: 1rem; padding-bottom: 1rem; }
+
+/* Defaults view */
+#defaultsMap { position: relative; width: auto; height: 560px; margin: 0 -1.5rem; background: #111; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; }
+#defaultsMap .leaflet-container { background: #111; }
+#defaultsCliTitle { margin: 0; color: #fff; font-size: 1rem; }
+#defaultsCli { margin: 0; display: flex; flex-direction: column; gap: .8rem; }
+#defaultsCli pre { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
+#defaultsCli code { background: transparent; padding: 0; }
+
+@media (max-width: 900px) {
+  #defaultsMap { margin: 0 -.85rem; }
+}

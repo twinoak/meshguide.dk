@@ -337,3 +337,126 @@ test("extra regions: opt-in removal row with def-first, remove, save-last orderi
   const old = evaluate(parseState({ ...GOOD, ver: "v1.9.0", regionsAllowed: GOOD.regionsAllowed + ",dk-x" }), loc, sc).find(x => x.id === "regions.extra");
   assert.equal(old.status, "unsupported");
 });
+
+// --- Remote configuration through a companion (automagical/remote-cli.js + serial.js) ---
+import { formatRadio, lockFindings, REMOTE_LOCKED } from "../automagical/checks.js";
+import { addContactPayload, decodePathLen, extractFrames, loginPayload, nodeDiscoverPayload, parseAck, parseContact, parseContactMessage, parseCurrTime, parseDiscoverResponse, parseSent, setDeviceTimePayload, textMessagePayload } from "../automagical/serial.js";
+
+test("radio settings are shown human-readably, commands stay in CLI form", () => {
+  assert.equal(formatRadio("869.618,62.5,8,8"), "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/8");
+  assert.equal(formatRadio({ freq: 869.525, bw: 250, sf: 11, cr: 5 }), "869.525 MHz · BW 250 kHz · SF 11 · CR 4/5");
+  assert.equal(formatRadio("garbage"), "garbage");
+  assert.equal(formatRadio(null), "–");
+  const f = evaluate(parseState({ ...GOOD, radio: "868.0,125,7,5" }), null, null).find(x => x.id === "radio");
+  assert.equal(f.current, "868 MHz · BW 125 kHz · SF 7 · CR 4/5");
+  assert.equal(f.recommended, "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/5");
+  assert.deepEqual(f.commands, ["set radio 869.618,62.5,8,5"]);
+});
+
+test("remote mode locks the radio: shown as a difference, never planned", () => {
+  const s = parseState({ ...GOOD, radio: "868.0,125,7,5", dutycycle: "50.0%" });
+  const f = lockFindings(evaluate(s, null, null));
+  const radio = f.find(x => x.id === "radio");
+  assert.equal(radio.status, "locked");
+  assert.deepEqual(radio.commands, []);
+  assert.match(radio.note, /Ændres ikke via mesh/);
+  assert.equal(f.find(x => x.id === "dutycycle").status, "change");             // others untouched
+  const cmds = planCommands(f, new Set(["radio", "dutycycle"]));
+  assert.deepEqual(cmds, ["set dutycycle 10"]);
+  assert.ok(!needsReboot(cmds));
+  assert.deepEqual([...REMOTE_LOCKED], ["radio"]);
+  // an OK radio stays OK
+  assert.equal(lockFindings(evaluate(parseState(GOOD), null, null)).find(x => x.id === "radio").status, "ok");
+});
+
+test("companion frames: contact list, sent, message and login payloads follow MyMesh.cpp", () => {
+  // RESP_CODE_CONTACT as writeContactRespFrame() lays it out
+  const c = new Uint8Array(148); const dv = new DataView(c.buffer);
+  c[0] = 3; for (let i = 0; i < 32; i++) c[1 + i] = 0xa0 + (i % 16); c[33] = 2; c[34] = 0; c[35] = 0xFF;
+  new TextEncoder().encodeInto("Bakketoppen", c.subarray(100, 132));
+  dv.setUint32(132, 1789380000, true); dv.setInt32(136, 56162900, true); dv.setInt32(140, 10203900, true); dv.setUint32(144, 1789380001, true);
+  const contact = parseContact(c);
+  assert.equal(contact.name, "Bakketoppen");
+  assert.equal(contact.type, "repeater");
+  assert.equal(contact.outPathLen, -1);
+  assert.equal(contact.outPathHashSize, null);
+  assert.equal(contact.publicKey.slice(0, 4), "a0a1");
+  // the path length byte packs the hash size: 0x4A is 10 hops of 2-byte hashes (what the app shows), not 74
+  c[35] = 0x4A;
+  assert.deepEqual([parseContact(c).outPathLen, parseContact(c).outPathHashSize], [10, 2]);
+  assert.deepEqual(decodePathLen(0x00), { hops: 0, hashSize: 1 });
+  assert.deepEqual(decodePathLen(0x83), { hops: 3, hashSize: 3 });
+  assert.deepEqual(decodePathLen(0xFF), { hops: -1, hashSize: null });
+  assert.equal(contact.lat, 56.1629);
+  assert.equal(contact.lon, 10.2039);
+  assert.equal(contact.lastAdvert, 1789380000);
+  assert.equal(parseContact(new Uint8Array(100)), null);
+  // RESP_CODE_SENT
+  const s = new Uint8Array(10); s[0] = 6; s[1] = 1; new DataView(s.buffer).setUint32(2, 77, true); new DataView(s.buffer).setUint32(6, 4200, true);
+  assert.deepEqual(parseSent(s), { flood: true, ack: 77, estTimeoutMs: 4200 });
+  const a = new Uint8Array(9); a[0] = 0x82; new DataView(a.buffer).setUint32(1, 77, true); new DataView(a.buffer).setUint32(5, 1234, true);
+  assert.deepEqual(parseAck(a), { ack: 77, tripMs: 1234 });
+  assert.equal(parseAck(Uint8Array.from([0x83])), null);
+  const ct = new Uint8Array(5); ct[0] = 9; new DataView(ct.buffer).setUint32(1, 1789380000, true);
+  assert.equal(parseCurrTime(ct), 1789380000);
+  // CLI reply as a legacy (7) and a v3 (16) message frame
+  const text = new TextEncoder().encode("> 869.618,62.5,8,8");
+  const m7 = new Uint8Array(13 + text.length); m7[0] = 7; m7.set([1, 2, 3, 4, 5, 6], 1); m7[7] = 0xFF; m7[8] = 1; new DataView(m7.buffer).setUint32(9, 1789380002, true); m7.set(text, 13);
+  const p7 = parseContactMessage(m7);
+  assert.deepEqual([p7.prefix, p7.pathLen, p7.txtType, p7.senderTimestamp, p7.text], ["010203040506", -1, 1, 1789380002, "> 869.618,62.5,8,8"]);
+  const m16 = new Uint8Array(16 + text.length); m16[0] = 16; m16[1] = 40; m16.set([1, 2, 3, 4, 5, 6], 4); m16[10] = 0x42; m16[11] = 1; new DataView(m16.buffer).setUint32(12, 1789380003, true); m16.set(text, 16);
+  const p16 = parseContactMessage(m16);
+  assert.deepEqual([p16.prefix, p16.pathLen, p16.txtType, p16.text], ["010203040506", 2, 1, "> 869.618,62.5,8,8"]);
+  assert.equal(parseContactMessage(Uint8Array.from([10])), null);
+  // CMD_SEND_LOGIN and CMD_SEND_TXT_MSG payloads
+  const key = "ab".repeat(32);
+  const login = loginPayload(key, "hemmelig");
+  assert.equal(login[0], 26);
+  assert.equal(login.length, 33 + 8);
+  assert.deepEqual([...login.slice(1, 33)], Array(32).fill(0xab));
+  assert.equal(new TextDecoder().decode(login.slice(33)), "hemmelig");
+  const msg = textMessagePayload(key, "get radio", { attempt: 2, timestamp: 0x01020304 });
+  assert.deepEqual([...msg.slice(0, 13)], [2, 0, 2, 4, 3, 2, 1, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab]); // PLAIN by default, little-endian timestamp
+  assert.equal(new TextDecoder().decode(msg.slice(13)), "get radio");
+  assert.equal(textMessagePayload(key, "x", { txtType: 1 })[1], 1);
+  assert.throws(() => textMessagePayload(key, "x".repeat(161)), /for lang/);
+  assert.equal(textMessagePayload(key, "x".repeat(160)).length, 173); // MAX_TEXT_LEN fits in a frame
+  assert.ok(textMessagePayload(key, "region def " + "dk5230 ".repeat(21).trim()).length <= 176); // a full region def line fits
+  const t = setDeviceTimePayload(1789380000);
+  assert.deepEqual([t[0], new DataView(t.buffer).getUint32(1, true)], [6, 1789380000]);
+});
+
+test("frame stream: partial frames are kept for the next chunk, garbage is skipped", () => {
+  const a = Uint8Array.from([0x3E, 3, 0, 1, 2, 3, 0x3E, 4, 0, 9, 9]);      // one full frame, one half frame
+  const r1 = extractFrames(a);
+  assert.deepEqual(r1.frames.map(f => [...f]), [[1, 2, 3]]);
+  assert.deepEqual([...r1.rest], [0x3E, 4, 0, 9, 9]);
+  const r2 = extractFrames(Uint8Array.from([...r1.rest, 9, 9, 0x3E, 1, 0, 0x83])); // rest completed, then a push frame
+  assert.deepEqual(r2.frames.map(f => [...f]), [[9, 9, 9, 9], [0x83]]);
+  assert.equal(r2.rest.length, 0);
+  const r3 = extractFrames(Uint8Array.from([0x52, 0x65, 0x3E, 0x20, 0x41, 0x3E, 1, 0, 5])); // "Re> A" text noise, then a frame
+  assert.deepEqual(r3.frames.map(f => [...f]), [[5]]);
+});
+
+test("repeaters nearby: NODE_DISCOVER_REQ payload, response push, and adding the found key as a contact", () => {
+  const req = nodeDiscoverPayload(0x11223344);
+  assert.deepEqual([...req], [55, 0x80, 0x04, 0x44, 0x33, 0x22, 0x11, 0, 0, 0, 0]); // repeaters only (1 << ADV_TYPE_REPEATER), since 0
+  // PUSH_CODE_CONTROL_DATA carrying a NODE_DISCOVER_RESP from a repeater
+  const key = "ab".repeat(32);
+  const push = new Uint8Array(4 + 6 + 32);
+  push[0] = 0x8E; push[1] = 30; push[2] = (-95 & 0xff); push[3] = 0;          // companion heard it at SNR 7.5, RSSI -95
+  push[4] = 0x92; push[5] = (-13 & 0xff);                                    // repeater, heard the request at SNR -3.25
+  new DataView(push.buffer).setUint32(6, 0x11223344, true);
+  for (let i = 0; i < 32; i++) push[10 + i] = 0xab;
+  const r = parseDiscoverResponse(push);
+  assert.deepEqual([r.type, r.tag, r.snr, r.rssi, r.reqSnr, r.publicKey], ["repeater", 0x11223344, 7.5, -95, -3.25, key]);
+  assert.equal(parseDiscoverResponse(Uint8Array.from([0x8E, 0, 0, 0, 0x80, 4, 1, 2, 3, 4])), null); // a request, not a response
+  assert.equal(parseDiscoverResponse(Uint8Array.from([0x83])), null);
+  // CMD_ADD_UPDATE_CONTACT: full key, repeater, no path (0xFF), empty name
+  const add = addContactPayload(key);
+  assert.equal(add.length, 144);
+  assert.equal(add[0], 9);
+  assert.deepEqual([...add.slice(1, 33)], Array(32).fill(0xab));
+  assert.deepEqual([add[33], add[34], add[35]], [2, 0, 0xFF]);
+  assert.ok(add.slice(36, 100).every(b => b === 0) && add.slice(100, 132).every(b => b === 0));
+});

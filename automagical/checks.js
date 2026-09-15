@@ -151,6 +151,30 @@ function fmt(v) {
   return v === null || v === undefined || v === "" ? "–" : String(v);
 }
 
+// Human-readable radio settings: "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/8".
+// Accepts the CLI string "freq,bw,sf,cr" or a { freq, bw, sf, cr } object;
+// anything that is not four numbers is returned unchanged.
+export function formatRadio(r) {
+  if (r === null || r === undefined || r === "") return "–";
+  const parts = typeof r === "string" ? r.split(",").map(num) : [r.freq, r.bw, r.sf, r.cr].map(v => (typeof v === "number" ? v : num(v)));
+  if (parts.length !== 4 || parts.some(v => v === null || v === undefined || Number.isNaN(v))) return String(r);
+  const [freq, bw, sf, cr] = parts;
+  return `${freq} MHz · BW ${bw} kHz · SF ${sf} · CR 4/${cr}`;
+}
+
+// Settings that are never changed over the mesh: a wrong radio setting cuts the
+// link to the repeater, so remote mode only shows the difference.
+export const REMOTE_LOCKED = Object.freeze(["radio"]);
+
+// Turns "change" findings for the given ids into "locked" ones: the difference
+// is still shown, but nothing is sent. Other findings pass through untouched.
+export function lockFindings(findings, lockedIds = REMOTE_LOCKED) {
+  const locked = new Set(lockedIds);
+  return findings.map(f => locked.has(f.id) && f.status === "change"
+    ? { ...f, status: "locked", commands: [], note: "Ændres ikke via mesh - en forkert radioindstilling afbryder forbindelsen. Ret den lokalt via USB." }
+    : f);
+}
+
 // state: from parseState(). location: { lat, lon, source: "device" | "map" } or
 // null. scopes: the result of scopesForPoint() for that location, or null.
 // input: { ownerInfo } - free-text values the user typed for "input" findings.
@@ -164,7 +188,7 @@ export function evaluate(state, location, scopes, input = {}) {
 
   // --- Radio -----------------------------------------------------------------
   if (!state.radio) {
-    add({ id: "radio", label: "Radio (freq, bw, sf, cr)", current: "–", recommended: `${BP.radio.freq},${BP.radio.bw},${BP.radio.sf},${BP.radio.cr}`, status: "unknown" });
+    add({ id: "radio", label: "Radio (EU/UK Narrow)", current: "–", recommended: formatRadio(BP.radio), status: "unknown" });
   } else {
     const r = state.radio;
     const crOk = r.cr >= BP.radio.crRange[0] && r.cr <= BP.radio.crRange[1];
@@ -172,7 +196,7 @@ export function evaluate(state, location, scopes, input = {}) {
     const cr = crOk ? r.cr : BP.radio.cr;
     const rec = `${BP.radio.freq},${BP.radio.bw},${BP.radio.sf},${cr}`;
     add({
-      id: "radio", label: "Radio (EU/UK Narrow)", current: r.text, recommended: rec,
+      id: "radio", label: "Radio (EU/UK Narrow)", current: formatRadio(r), recommended: formatRadio(rec),
       status: ok ? "ok" : "change",
       commands: ok ? [] : ["set radio " + rec],
       note: ok ? "" : "Kræver genstart af enheden."
