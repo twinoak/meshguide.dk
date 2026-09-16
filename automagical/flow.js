@@ -158,7 +158,7 @@ export function createFlow({ ui, log, setStatus, mode = "direct", onReboot = asy
   function initMap() {
     if (app.map) { app.map.invalidateSize(); return; } // the container may have been hidden meanwhile
     if (typeof L === "undefined") return;
-    const map = L.map(ui.map, { center: [56.0, 11.0], zoom: 7, minZoom: 6, maxZoom: 14, worldCopyJump: false });
+    const map = L.map(ui.map, { center: [56.0, 11.0], zoom: 7, minZoom: 6, maxZoom: 19, worldCopyJump: false }); // maxZoom: see script.js
     L.maplibreGL({
       style: "https://tiles.openfreemap.org/styles/dark",
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere &copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'

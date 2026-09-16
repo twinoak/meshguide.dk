@@ -187,7 +187,7 @@ const DIRECT_TEXT = {
   },
   "companion/ble": {
     title: "Forbind companionen via Bluetooth",
-    intro: "Klik Tilslut og vælg companionen (MeshCore-…) i browserens liste. Computeren spørger måske om enhedens PIN - den vises på skærmen hvis enheden har en, ellers 123456 eller den PIN du har sat i appen.",
+    intro: "Klik Tilslut og vælg companionen (MeshCore-…) i browserens liste. Computeren spørger om enhedens PIN - den vises på skærmen hvis enheden har en, ellers 123456 eller den PIN du har sat i appen.",
     check: [
       "<strong>Firmware er flashet</strong> - <code>companion_radio_ble</code> fra <a href=\"https://flasher.meshcore.io/\" target=\"_blank\" rel=\"noopener\">flasher.meshcore.io</a>, og enheden er tændt.",
       "<strong>Luk appen på telefonen</strong> - en companion har kun én Bluetooth-forbindelse ad gangen.",
@@ -196,9 +196,9 @@ const DIRECT_TEXT = {
   },
   "repeater/usb": {
     title: "Forbind repeateren via USB",
-    intro: "Sæt repeateren i computeren med et USB-kabel og klik Tilslut. Siden læser dens indstillinger, finder dens placering og viser hvad der bør ændres - intet skrives før du klikker Anvend.",
+    intro: "Sæt repeateren (eller room serveren) i computeren med et USB-kabel med data, og klik Tilslut. Siden læser dens indstillinger, finder dens placering og viser hvad der bør ændres - intet skrives før du klikker Anvend.",
     check: [
-      "<strong>Firmware er flashet</strong> - repeaterfirmware fra <a href=\"https://flasher.meshcore.io/\" target=\"_blank\" rel=\"noopener\">flasher.meshcore.io</a>.",
+      "<strong>Firmware er flashet</strong> - repeater- eller room server-firmware fra <a href=\"https://flasher.meshcore.io/\" target=\"_blank\" rel=\"noopener\">flasher.meshcore.io</a>.",
       "<strong>Kun ét program ad gangen</strong> kan holde porten: luk flasheren, den serielle monitor og lignende først.",
       "<strong>Placering</strong>: har repeateren ingen position gemt, bliver du bedt om at klikke på kortet hvor den står - det bestemmer dens region scopes.",
       "<strong>Chrome, Edge eller Brave</strong> på en computer - ikke Firefox, Safari eller telefon."
@@ -352,8 +352,10 @@ async function reread() {
 // --- Remote: a companion's radio reaches the repeater -------------------------------
 
 const REMOTE_CHECK = [
+  "<strong>Companionen skal have hørt repeateren</strong> - den skal stå i companionens kontaktliste (dens advert er modtaget). Ellers: vent på næste advert, eller tryk på repeaterens knap hvis du er i nærheden, og hent listen igen.",
   "<strong>Repeaterens admin-adgangskode.</strong> Gæste-adgangskoden giver ingen adgang til kommandoer. Adgangskoden sendes krypteret over radioen og gemmes ikke.",
   "<strong>Det tager tid</strong> - hver indstilling er en tur frem og tilbage over LoRa. Tabte pakker prøves 3 gange og springes så over; du kan altid genlæse.",
+  "<strong>Radioindstillinger vises kun</strong> - en forkert frekvens, båndbredde eller SF ville afbryde forbindelsen til repeateren. Beskeder i companionens kø hentes undervejs og vises i loggen."
 ];
 
 function renderRemote(route) {
@@ -551,7 +553,7 @@ async function renderDefaults() {
   for (const el of document.querySelectorAll(".floodAdvertInterval")) el.textContent = floodInterval;
   if (typeof L === "undefined") return;
   const datasetPromise = loadDataset();
-  const map = L.map(ui.defaultsMap, { center: [56.0, 11.0], zoom: 7, minZoom: 6, maxZoom: 14, worldCopyJump: false });
+  const map = L.map(ui.defaultsMap, { center: [56.0, 11.0], zoom: 7, minZoom: 6, maxZoom: 19, worldCopyJump: false }); // maxZoom: see script.js
   defaultsMapObj = map;
   L.maplibreGL({
     style: "https://tiles.openfreemap.org/styles/dark",

@@ -76,14 +76,20 @@ function init(cities) {
   // attempt for the next click.
   let datasetPromise = loadDataset();
 
+  // maxZoom: maplibre-gl-leaflet renders MapLibre one zoom level below Leaflet
+  // (512 px vs 256 px tiles), and the OpenFreeMap tiles carry names for minor
+  // streets from MapLibre zoom 14 - so Leaflet has to be allowed to at least
+  // 15 before street names show up. The tiles stop at 14 but the style
+  // overzooms them fine, so 19 is only a "how close" limit, not a tile limit.
   const map = L.map(mapEl, {
     center: [56.0, 11.0],
     zoom: 7,
     minZoom: 6,
-    maxZoom: 14,
+    maxZoom: 19,
     worldCopyJump: false
   });
 
+  // OpenFreeMap dark - free vector tiles, no API key.
   L.maplibreGL({
     style: "https://tiles.openfreemap.org/styles/dark",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere &copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'

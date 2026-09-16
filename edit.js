@@ -95,7 +95,7 @@
     center: [56.0, 11.0],
     zoom: 7,
     minZoom: 6,
-    maxZoom: 14
+    maxZoom: 19 // see the zoom comment in script.js
   });
 
   // OpenFreeMap dark - see the matching comment in script.js.
