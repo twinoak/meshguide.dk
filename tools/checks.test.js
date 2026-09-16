@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildDataset, scopesForPoint } from "../lib/scopes.js";
 import { loadData } from "./data.js";
-import { NAME_MAX_BYTES, evaluate, floodAdvertIntervalFor, formatLatLon, forwards, hasDeviceLocation, isRepeater, nameProblem, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
+import { DEFAULTS_ANCHOR, NAME_MAX_BYTES, PASSWORD_MAX_BYTES, READ_COMMANDS, UNSUPPORTED, delaysFor, parseNeighbours, passwordProblem, clockDriftText, evaluate, floodAdvertIntervalFor, formatDanishTime, formatLatLon, forwards, hasDeviceLocation, isRepeater, nameProblem, needsReboot, parseClock, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
 import { parseReply, setAdvertNamePayload } from "../lib/serial.js";
 
 const { regions, postnumreFiles } = loadData();
@@ -20,7 +20,6 @@ const GOOD = {
   name: "OZ1ABC-Rpt",
   publicKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   radio: "869.618,62.5,8,8",
-  tx: "22",
   lat: "55.3250007",
   lon: "10.4899998",
   dutycycle: "10.0%",
@@ -32,7 +31,14 @@ const GOOD = {
   floodMaxUnscoped: "15",
   ownerInfo: "OZ1ABC / 6dBi omni @9m",
   repeat: "on",
-  gpsAdvert: "prefs",
+  cad: "off",
+  rxGain: "on",
+  femRxGain: "off",
+  agcResetInterval: "4",
+  rxdelay: "3",
+  txdelay: "1.2",
+  directTxdelay: "0.6",
+  neighbours: "a1b2c3d4:120:14\nb2c3d4e5:3600:2\nc3d4e5f6:86400:-8",   // two with SNR > 0, one negative
   regionDefault: " default scope is dk",
   regionsAllowed: "*,eu,europe,dk,dk-fyn-odense,dk-fyn,dk5,dk50,dk52,dk53,dk55,dk57,dk58,dk522,dk5220",
   regionTree: "* F\n eu F\n  dk F\n   dk-fyn-odense F"
@@ -68,7 +74,6 @@ test("parseState reads the firmware's reply formats", () => {
   assert.equal(s.board, "Heltec V3");
   assert.equal(s.version.text, "v1.17.1");
   assert.deepEqual(s.radio, { freq: 869.618, bw: 62.5, sf: 8, cr: 8, text: "869.618,62.5,8,8" });
-  assert.equal(s.txPower, 22);
   assert.equal(s.dutycycle, 10);
   assert.equal(s.regionDefault, "dk");
   assert.equal(s.regionsAllowed.length, 15);
@@ -78,7 +83,6 @@ test("parseState reads the firmware's reply formats", () => {
   assert.equal(parseState({ ...GOOD, regionsAllowed: "-none-" }).regionsAllowed.length, 0);
   assert.equal(parseState({ ...GOOD, regionsAllowed: null }).regionsAllowed, null);
   assert.equal(parseState({ ...GOOD, regionDefault: " default scope is <null>" }).regionDefault, "<null>");
-  assert.equal(parseState({ ...GOOD, gpsAdvert: null }).gpsAdvert, null);
 });
 
 test("a well-configured repeater gets no recommendations", () => {
@@ -94,7 +98,7 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   const fresh = {
     ...GOOD, name: "", lat: "0.0", lon: "0.0", dutycycle: "50.0%", advertInterval: "120", floodAdvertInterval: "0",
     guestPassword: "", pathHashMode: "0", loopDetect: "off", floodMaxUnscoped: "0", ownerInfo: "",
-    gpsAdvert: "none", regionDefault: " default scope is <null>", regionsAllowed: "-none-", regionTree: "* F"
+    cad: "on", rxGain: "off", femRxGain: "on", agcResetInterval: "0", rxdelay: "0", txdelay: "0.5", directTxdelay: "0.1999999", neighbours: "-none-", regionDefault: " default scope is <null>", regionsAllowed: "-none-", regionTree: "* F"
   };
   const s = parseState(fresh);
   // No position yet: location and regions need input, nothing to send for them.
@@ -108,7 +112,18 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   const byId = Object.fromEntries(f.map(x => [x.id, x]));
   assert.equal(byId.location.status, "change");
   assert.deepEqual(byId.location.commands, ["set lat 55.325000", "set lon 10.490000"]);
-  assert.deepEqual(byId["gps.advert"].commands, ["gps advert prefs"]);
+  assert.ok(!byId["gps.advert"] && !byId.repeat, "no advert-position or repeat rows");
+  assert.deepEqual(byId.cad.commands, ["set cad off"]);
+  assert.deepEqual(byId["radio.rxgain"].commands, ["set radio.rxgain on"]);
+  assert.deepEqual(byId["radio.fem.rxgain"].commands, ["set radio.fem.rxgain off"]);
+  assert.deepEqual(byId["agc.reset.interval"].commands, ["set agc.reset.interval 4"]);
+  assert.deepEqual(byId.rxdelay.commands, ["set rxdelay 2"]);
+  assert.deepEqual(byId.txdelay.commands, ["set txdelay 1"]);
+  assert.deepEqual(byId["direct.txdelay"].commands, ["set direct.txdelay 0.4"]);
+  assert.equal(byId["direct.txdelay"].current, "0.2", "the firmware's 0.1999999 is shown as 0.2");
+  for (const id of ["rxdelay", "txdelay", "direct.txdelay"]) assert.equal(byId[id].note, "Relevante naboer: 0", id);
+  assert.equal(byId["advert.interval"].label, "advert.interval");
+  assert.equal(byId["flood.advert.interval"].label, "flood.advert.interval");
   assert.deepEqual(byId["region.default"].commands, ["region default dk"]);
   assert.deepEqual(byId.regions.commands, [
     "region def eu|* europe|eu dk dk-fyn-odense|dk dk-fyn|dk dk5|dk dk50|dk dk52|dk dk53|dk dk55|dk dk57|dk dk58|dk dk522|dk dk5220",
@@ -129,6 +144,7 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   const plan = planCommands(f, new Set(f.map(x => x.id)));
   assert.equal(plan[0], "set lat 55.325000");
   assert.ok(plan.indexOf("region default dk") < plan.indexOf("region save"));
+  assert.ok(plan.indexOf("set flood.max.unscoped 15") < plan.indexOf("set cad off") && plan.indexOf("set cad off") < plan.indexOf("set agc.reset.interval 4"), "the receiver settings come after the forwarding rules");
   assert.ok(!needsReboot(plan));
   // Deselecting a finding drops its commands.
   const partial = planCommands(f, new Set(["location", "regions"]));
@@ -148,6 +164,43 @@ test("wrong radio preset -> set radio with the default CR 8, needs reboot; a rig
   assert.equal(cr6.recommended, "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/6");
   // CR outside 5-8 is not a valid LoRa setting: back to 8.
   assert.deepEqual(evaluate(parseState({ ...GOOD, radio: "869.618,62.5,8,4" }), null, null).find(x => x.id === "radio").commands, ["set radio 869.618,62.5,8,8"]);
+});
+
+test("the device clock: CLI reply parsed, shown as Danish time incl. summer/winter time, drift in words", () => {
+  assert.equal(parseClock("18:07 - 16/9/2026 UTC"), Date.UTC(2026, 8, 16, 18, 7) / 1000);
+  assert.equal(parseClock("08:05 - 1/1/2027 UTC"), Date.UTC(2027, 0, 1, 8, 5) / 1000);
+  assert.equal(parseClock("> 22"), null);
+  assert.equal(parseClock(null), null);
+  assert.equal(formatDanishTime(Date.UTC(2026, 6, 1, 12, 0) / 1000), "01.07.2026 14:00");  // CEST
+  assert.equal(formatDanishTime(Date.UTC(2026, 0, 15, 12, 0) / 1000), "15.01.2026 13:00"); // CET
+  assert.equal(formatDanishTime(Date.UTC(2026, 9, 25, 0, 59) / 1000), "25.10.2026 02:59"); // last minute of summer time
+  assert.equal(formatDanishTime(Date.UTC(2026, 9, 25, 1, 0) / 1000), "25.10.2026 02:00");  // first minute of winter time
+  const now = 1789580000;
+  const min = Math.floor(now / 60) * 60;                             // the CLI reply is cut to the minute; so is our side
+  assert.equal(clockDriftText(min, now, "minute"), "passer");
+  assert.equal(clockDriftText(min - 60, now, "minute"), "passer");     // the minute ticked over between the device and us
+  assert.equal(clockDriftText(min - 120, now, "minute"), "2 min bagud");
+  assert.equal(clockDriftText(min + 60, now, "minute"), "1 min foran");
+  assert.equal(clockDriftText(min - 3600, now, "minute"), "1 t 0 min bagud");
+  assert.equal(clockDriftText(now + 4, now, "second"), "passer");
+  assert.equal(clockDriftText(now - 6, now, "second"), "6 s bagud");
+  assert.equal(clockDriftText(now + 4500, now, "second"), "1 t 15 min foran");
+  assert.equal(clockDriftText(now - 86400 * 845, now, "second"), "845 d bagud");
+  assert.equal(READ_COMMANDS.clock, "clock");
+  assert.equal(READ_COMMANDS.tx, undefined);
+  assert.equal(parseState({ ...GOOD, clock: "18:07 - 16/9/2026 UTC" }).clock, Date.UTC(2026, 8, 16, 18, 7) / 1000);
+  assert.equal(parseState(GOOD).txPower, undefined);
+});
+
+test("the admin password follows the firmware's size: 15 bytes; no blank or padded passwords", () => {
+  assert.equal(passwordProblem("hemmelig1"), null);
+  assert.equal(passwordProblem("a".repeat(PASSWORD_MAX_BYTES)), null);
+  assert.match(passwordProblem(""), /tom/);
+  assert.match(passwordProblem(" x"), /mellemrum/);
+  assert.match(passwordProblem("x "), /mellemrum/);
+  assert.equal(passwordProblem("min kode"), null);
+  assert.match(passwordProblem("a".repeat(16)), /15 tegn/);
+  assert.match(passwordProblem("æøåæøåæøå"), /15 tegn/); // 9 characters, 18 bytes
 });
 
 test("positions are shown with Danish compass letters, commands stay lat/lon", () => {
@@ -198,10 +251,67 @@ test("regions: missing scopes on old firmware use put/allowf, on very old firmwa
   assert.equal(evaluate(unk, loc, sc).find(x => x.id === "regions").status, "change");
 });
 
-test("firmware without GPS support hides the advert-position finding", () => {
-  const s = parseState({ ...GOOD, gpsAdvert: null });
-  const f = evaluate(s, { lat: s.lat, lon: s.lon, source: "device" }, scopesForPoint(ds, s.lat, s.lon));
-  assert.ok(!f.some(x => x.id === "gps.advert"));
+test("cad, rxgain, fem rxgain and agc.reset.interval: an unsupported setting is left out, not shown", () => {
+  const loc = { lat: 55.325, lon: 10.49, source: "device" };
+  // A board without a front-end module answers "Error: unsupported": no row at all.
+  const noFem = evaluate(parseState({ ...GOOD, femRxGain: UNSUPPORTED }), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  assert.ok(!noFem.some(x => x.id === "radio.fem.rxgain"));
+  assert.ok(noFem.some(x => x.id === "radio.rxgain"), "the others stay");
+  // Older firmware: "unknown config" for all four (and the delays) -> none of them shown, nothing planned.
+  const old = evaluate(parseState({ ...GOOD, cad: UNSUPPORTED, rxGain: UNSUPPORTED, femRxGain: UNSUPPORTED, agcResetInterval: UNSUPPORTED, rxdelay: UNSUPPORTED, txdelay: UNSUPPORTED, directTxdelay: UNSUPPORTED }), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  for (const id of ["cad", "radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(!old.some(x => x.id === id), id);
+  assert.ok(!planCommands(old, new Set(old.map(x => x.id))).some(c => /cad|rxgain|agc|delay/.test(commandText(c))));
+  // No reply at all -> "Kunne ikke aflæses".
+  assert.equal(evaluate(parseState({ ...GOOD, cad: null }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "cad").status, "unknown");
+  // agc.reset.interval 8 is not 4.
+  assert.deepEqual(evaluate(parseState({ ...GOOD, agcResetInterval: "8" }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "agc.reset.interval").commands, ["set agc.reset.interval 4"]);
+  // Every finding that has a page section links to it.
+  const ids = evaluate(parseState(GOOD), loc, scopesForPoint(ds, loc.lat, loc.lon)).map(x => x.id);
+  for (const id of ids) assert.ok(DEFAULTS_ANCHOR[id], "anchor for " + id);
+});
+
+test("rxdelay / txdelay / direct.txdelay follow the white paper's table on the neighbours heard with SNR > 0 within 7 days", () => {
+  // The neighbours reply: id:seconds:snr×4 per line, "-none-" when empty.
+  assert.deepEqual(parseNeighbours("-none-"), { count: 0, total: 0, truncated: false });
+  assert.deepEqual(parseNeighbours("a1b2c3d4:120:14\nb2c3d4e5:3600:2\nc3d4e5f6:86400:-8"), { count: 2, total: 3, truncated: false });
+  assert.deepEqual(parseNeighbours("a1b2c3d4:120:14\nb2c3d4e5:" + (8 * 86400) + ":20"), { count: 1, total: 2, truncated: false }, "heard 8 days ago does not count");
+  assert.deepEqual(parseNeighbours("a1b2c3d4:120:0"), { count: 0, total: 1, truncated: false }, "SNR 0 is not > 0");
+  assert.equal(parseNeighbours(null), null);
+  // The firmware stops adding lines at 134 characters: such a reply is a lower bound.
+  const long = Array.from({ length: 8 }, (_, i) => "0000000" + i + ":100000:12").join("\n"); // 8 x 18 chars + 7 newlines = 151
+  assert.ok(long.length >= 134);
+  assert.deepEqual(parseNeighbours(long), { count: 8, total: 8, truncated: true });
+  // The table.
+  assert.deepEqual(delaysFor(0), { txdelay: 1.0, directTxdelay: 0.4, rxdelay: 2 });
+  assert.deepEqual(delaysFor(3), { txdelay: 1.2, directTxdelay: 0.6, rxdelay: 3 });
+  assert.deepEqual(delaysFor(8), { txdelay: 1.7, directTxdelay: 0.8, rxdelay: 4 });
+  assert.deepEqual(delaysFor(10), { txdelay: 1.9, directTxdelay: 0.9, rxdelay: 6 });
+  assert.deepEqual(delaysFor(11), { txdelay: 2.0, directTxdelay: 0.9, rxdelay: 7 });
+  assert.deepEqual(delaysFor(12), { txdelay: 2.0, directTxdelay: 0.9, rxdelay: 8 });
+  assert.deepEqual(delaysFor(40), delaysFor(12), "12+ is the top tier");
+  // GOOD has 2 neighbours with SNR > 0 -> 1.2 / 0.6 / 3, which it already has.
+  const loc = { lat: 55.325, lon: 10.49, source: "device" };
+  const f = evaluate(parseState(GOOD), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  for (const id of ["rxdelay", "txdelay", "direct.txdelay"]) assert.equal(f.find(x => x.id === id).status, "ok", id);
+  assert.equal(f.find(x => x.id === "rxdelay").note, "Relevante naboer: 2");
+  // Float noise from the firmware's ftoa is not a difference.
+  assert.equal(evaluate(parseState({ ...GOOD, txdelay: "1.199999" }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "txdelay").status, "ok");
+  // A truncated list: the count is a minimum, and the note says so.
+  const tf = evaluate(parseState({ ...GOOD, neighbours: long }), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  assert.equal(tf.find(x => x.id === "txdelay").recommended, "1.7");
+  for (const id of ["rxdelay", "txdelay", "direct.txdelay"]) assert.equal(tf.find(x => x.id === id).note, "Relevante naboer: ≥ 8", id);
+  // No neighbour list (old firmware or no reply): the rows are there but without a recommendation.
+  for (const nb of [UNSUPPORTED, null]) {
+    const u = evaluate(parseState({ ...GOOD, neighbours: nb }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "rxdelay");
+    assert.equal(u.status, "unknown");
+    assert.equal(u.recommended, "–");
+    assert.deepEqual(u.commands, []);
+    assert.match(u.note, /Nabolisten kunne ikke hentes/);
+  }
+  // Plan order: the delays come after the receiver settings, before the radio.
+  const fresh = evaluate(parseState({ ...GOOD, rxdelay: "0", txdelay: "0.5", directTxdelay: "0.2", agcResetInterval: "0", radio: "868.0,125,7,5" }), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  const plan = planCommands(fresh, new Set(fresh.map(x => x.id))).map(commandText);
+  assert.ok(plan.indexOf("set agc.reset.interval 4") < plan.indexOf("set rxdelay 3") && plan.indexOf("set rxdelay 3") < plan.indexOf("set txdelay 1.2") && plan.indexOf("set direct.txdelay 0.6") < plan.indexOf("set radio 869.618,62.5,8,8"), plan.join(" | "));
 });
 
 // --- Companion (binary) protocol -------------------------------------------------
@@ -317,7 +427,7 @@ test("room server: room password untouched, forwarding rules only with repeat on
   assert.ok(!ids.includes("guest.password"), "room password is not a finding");
   assert.ok(!ids.includes("repeat"), "repeat is not recommended on for a room server");
   assert.ok(!ids.includes("loop.detect") && !ids.includes("flood.max.unscoped"), "forwarding rules skipped when repeat is off");
-  for (const id of ["radio", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "location", "gps.advert", "region.default", "regions", "owner.info"]) assert.ok(ids.includes(id), id);
+  for (const id of ["radio", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "location", "region.default", "regions", "owner.info", "cad", "radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(ids.includes(id), id);
   assert.deepEqual(f.filter(x => x.status !== "ok"), [], "a well-configured room server has nothing to change");
   // Same room server with repeat on: the forwarding rules apply and flag off/64
   const fwd = evaluate(parseState({ ...room, repeat: "on" }), loc, scopesForPoint(ds, s.lat, s.lon));
@@ -326,9 +436,9 @@ test("room server: room password untouched, forwarding rules only with repeat on
   assert.ok(!fwd.some(x => x.id === "guest.password"));
 });
 
-test("repeater with repeat off gets 'set repeat on'; firmware without 'get repeat' is treated as forwarding", () => {
+test("repeat is read but not a finding; a repeater keeps the forwarding rules whatever repeat says", () => {
   const f = evaluate(parseState({ ...GOOD, repeat: "off" }), null, null);
-  assert.deepEqual(f.find(x => x.id === "repeat").commands, ["set repeat on"]);
+  assert.ok(!f.some(x => x.id === "repeat"));
   assert.ok(f.some(x => x.id === "loop.detect"), "forwarding rules still shown for a repeater");
   const old = evaluate(parseState({ ...GOOD, repeat: null }), null, null);
   assert.ok(!old.some(x => x.id === "repeat"));

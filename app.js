@@ -10,6 +10,7 @@
 //   #/repeater/remote       companion: USB or Bluetooth?
 //   #/repeater/remote/usb|ble -> remote flow (contacts, login, then the same flow)
 //   #/defaults              the map + the recommended settings
+//   #/defaults/<id>         the same, scrolled to the element <id> (the findings' labels link here)
 //   #radio-indstillinger    (and the other old front-page anchors) -> #/defaults, scrolled there
 //
 // Nothing about talking to devices lives here: lib/serial.js / ble.js / remote-cli.js
@@ -105,7 +106,7 @@ function parseRoute() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   const [a, b, c] = parts;
   if (!a) return { view: "start", parts };
-  if (a === "defaults") return { view: "defaults", parts };
+  if (a === "defaults") return { view: "defaults", parts: ["defaults"], anchor: b || null };
   if (LEGACY_ANCHORS.has(a) && parts.length === 1) return { view: "defaults", parts: ["defaults"], anchor: a };
   if (a === "companion") {
     if (!b) return { view: "companion", parts };
@@ -152,7 +153,7 @@ async function render() {
   const route = parseRoute();
   state.route = route;
   renderCrumbs(route);
-  for (const el of document.querySelectorAll("section[data-view]")) el.hidden = el.dataset.view !== route.view;
+  for (const el of document.querySelectorAll("section[data-view]")) el.hidden = !el.dataset.view.split(" ").includes(route.view); // a section may belong to several views
   ui.contacts.hidden = true;
   ui.login.hidden = true;
   ui.kindNotice.hidden = true;
@@ -168,7 +169,8 @@ async function render() {
   if (route.view === "direct") renderDirect(route);
   else if (route.view === "remote") renderRemote(route);
   else if (route.view === "defaults") renderDefaults();
-  if (route.anchor) $(route.anchor).scrollIntoView();
+  const target = route.anchor ? $(route.anchor) : null;
+  if (target) target.scrollIntoView();
   else window.scrollTo({ top: 0 });
 }
 

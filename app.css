@@ -29,6 +29,8 @@
 .am-findings .status.input { color: var(--accent); }
 .am-findings .status.unknown, .am-findings .status.unsupported { color: var(--muted); }
 .am-findings .note { color: var(--muted); font-size: .85rem; }
+.am-findings a.am-def { color: var(--muted); text-decoration: none; margin-left: .15rem; vertical-align: -1px; }
+.am-findings a.am-def:hover { color: var(--accent); }
 .am-findings input[type=text] { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .3rem .5rem; font: inherit; }
 .am-findings tr.ok td { color: var(--muted); }
 .am-findings tr.ok td code { color: var(--muted); }

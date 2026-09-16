@@ -329,13 +329,13 @@
 
     <h2 id="radio-indstillinger"><span>Radioindstillinger</span><a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Radioindstillinger" target="_blank">Wiki</a></h2>
 
-    <article class="setting">
+    <article class="setting" id="def-radio">
       <h3>EU/UK Narrow preset</h3>
       <p>I Danmark bruger vi det preset der hedder EU/UK Narrow, som du kan vælge fra appen eller bruge CLI.</p>
       <pre><code>set radio 869.618,62.5,8,8</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-dutycycle">
       <h3>Dutycycle (den lovlige grænse i EU)</h3>
         <p>Du skal sætte <code>dutycycle</code> til <code>10</code> (10%) da det er det lovlige maximum inden for EU, men EU/UK Narrow bruger 50 som default.</p>
       <pre><code>set dutycycle 10</code></pre>
@@ -344,7 +344,7 @@
       <p>Coding Rate er unik i MeshCore fordi den, som den eneste radioparameter, kan være forskellig mellem noder og stadig fungere. Modtageren kan afkode pakker uanset hvilken CR afsenderen brugte, så du skal sætte den efter dine lokale forhold. Højere CR = bedre chance for at pakken overlever støj og interferens, men langsommere og mere kanalbelastning.</p>
       <p>Hvis du har en meget belastet repeater- eller companion-node, kan de være en god ide at sætte CR rate til lavere en 8, som er default, hvis du er godt forbundet med dit lokale mesh. Det kan også være en god idé at sætte den helt ned til 5 på en velforbundet repeater, da det ofte er unødvendigt at bruge airtime på at sende alle de ekstra redundante bits.</p>
 
-    <article class="setting">
+    <article class="setting" id="def-cr">
       <h3>Coding Rate (CR)</h3>
       <table>
         <thead>
@@ -363,7 +363,7 @@
   <section data-view="defaults" id="indstillinger">
     <h2 id="diverse-indstillinger"><span>Diverse indstillinger</span></h2>
 
-    <article class="setting">
+    <article class="setting" id="def-path.hash.mode">
       <h3>path.hash.mode<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Path.hash.mode" target="_blank">Wiki</a></h3>
       <ul>
         <p>Styrer hvor mange bytes der bruges til at identificere noder og paths i mesh'et:</p>
@@ -385,7 +385,7 @@
       <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-advert">
       <h3>advert.interval / flood.advert.interval<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Advert" target="_blank">Wiki</a></h3>
       <table>
         <thead>
@@ -400,7 +400,7 @@
 set flood.advert.interval <span class="floodAdvertInterval">48</span></code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-password">
       <h3>password / guest.password</h3>
       <ul>
         <li><strong>password</strong> - admin-adgangskoden: den der giver lov til at ændre indstillinger, både over USB og over mesh'et (appens "remote management" og denne guide). Fabriksindstillingen er <code>password</code> - skift den. Højst 15 tegn; bemærk at kommandoen er <code>password</code>, ikke <code>set password</code>, og at repeateren svarer <code>password now: …</code>.</li>
@@ -410,7 +410,7 @@ set flood.advert.interval <span class="floodAdvertInterval">48</span></code></pr
 set guest.password hello</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-region.default">
       <h3>region default<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Regioner" target="_blank">Wiki</a></h3>
       <p>Det er muligt at sætte et scope der ikke er <code>*</code> som default, hvilket gør at alle datapakker, der ikke bliver overskrevet et andet sted, bruger det scope. Det kan være en god idé at sætte dette til <code>dk</code>.</p>
       <p>Dette betyder i praksis at datapakker der ikke normalt vil have et scope, som adverts, vil bære et scope i stedet for at være unscoped, og kan derfor, i en situation hvor mange Repeatere bruger <code>flood.max.unscoped</code>, komme længere rundt i netværket. </p>
@@ -418,7 +418,7 @@ set guest.password hello</code></pre>
       <pre><code>region default dk</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-owner.info">
       <h3>owner.info<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Owner.info" target="_blank">Wiki</a></h3>
       <ul>
         <li>Sæt en kort streng med kontaktoplysninger så andre kan nå dig hvis din repeater opfører sig forkert eller skal flyttes.</li>
@@ -433,7 +433,7 @@ set guest.password hello</code></pre>
       </ul>
       <pre><code>set owner.info min@email.dk / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
-    <article class="setting">
+    <article class="setting" id="def-loop.detect">
       <h3>loop.detect<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Loop.detect" target="_blank">Wiki</a></h3>
       <p><code>loop.detect</code> handler om, hvor følsom en repeater skal være over for pakker, der ligner de kører i ring.</p>
       <p>Hvornår en pakke bliver smidt ud kommer an på om der er tale om en 1, 2 eller 3-byte path-hash.</p>
@@ -470,19 +470,19 @@ set guest.password hello</code></pre>
       <pre><code>set loop.detect moderate</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-flood.max.unscoped">
       <h3>flood.max.unscoped<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Flood.max.unscoped" target="_blank">Wiki</a></h3>
       <p>Det er muligt at særbehandle datapakker uden et scope, hvis din Repeater bliver overbelastet af langvejstrafik. Hvis en flood datapakke uden scope ankommer til en Repeater der har sat flood.max.unscoped til 15, og pakken allerede har hoppet mere end 15 gange, vil Repeateren droppe datapakken. </p>
       <pre><code>set flood.max.unscoped 15</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-cad">
       <h3>cad<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/CAD" target="_blank">Wiki</a></h3>
       <p>CAD (Channel Activity Detection) får radioen til at lytte efter en anden LoRa-sending lige før den selv sender, og vente hvis kanalen er optaget. Det lyder fornuftigt, men i det danske mesh anbefaler vi at slå det fra - se wikien for hvorfor.</p>
       <pre><code>set cad off</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-rxgain">
       <h3>rxgain</h3>
       <ul>
         <li><strong>radio.rxgain</strong> - radiochippens egen "boosted" modtagerforstærkning: lidt bedre følsomhed for lidt mere strøm. Slå den til.</li>
@@ -492,10 +492,44 @@ set guest.password hello</code></pre>
 set radio.fem.rxgain off</code></pre>
     </article>
 
-    <article class="setting">
+    <article class="setting" id="def-agc.reset.interval">
       <h3>agc.reset.interval</h3>
-      <p>Nulstiller radioens automatiske forstærkningsregulering (AGC) med faste mellemrum, så den ikke bliver hængende "døv" efter et kraftigt signal. Angives i sekunder og rundes til et multiplum af 4; 0 slår det fra.</p>
+      <p>Nulstiller radioens automatiske forstærkningsregulering (AGC) med faste mellemrum, så den ikke bliver hængende "døv" efter et kraftigt signal. Angives i sekunder og rundes til et multiplum af 4; 0 slår det fra. Minimum er 4 sekunder og det anbefales at sætte dette.</p>
       <pre><code>set agc.reset.interval 4</code></pre>
+    </article>
+
+    <article class="setting" id="def-delays">
+      <h3>rxdelay / txdelay / direct.txdelay<a class="social-btn wiki" href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">White paper</a></h3>
+      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik og dermed kollidere. MeshCore undgår det ved at holde en tilfældig pause før hver sending: <code>txdelay</code> for flood-trafik, <code>direct.txdelay</code> for direkte beskeder, og <code>rxdelay</code> for hvor længe behandling af nyankomne pakker udskydes, dette afhænger også af den indkomne pakkes signalstyrke. Kombination af disse 3 værdier er med til at minimere sandsynlighed for pakke kollisioner.</p>
+
+      <p>Der har været forsket i hvordan disse værdier bør sættes(se evt. <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>) og det viser sig at antallet af umiddelbare naboer bør styre disse tre tal.</p>
+
+      <p>Følgende tabel viser anbefalede værdier for forskellige netværkstæthed og antal naboer:</p>
+      <table>
+        <thead>
+          <tr><th>Tæthed</th><th>Naboer (SNR &gt; 0)</th><th>txdelay</th><th>direct.txdelay</th><th>rxdelay</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="4">Lav</td><td>0</td><td>1.0</td><td>0.4</td><td>2</td></tr>
+          <tr><td>1</td><td>1.1</td><td>0.5</td><td>2</td></tr>
+          <tr><td>2</td><td>1.2</td><td>0.6</td><td>3</td></tr>
+          <tr><td>3</td><td>1.2</td><td>0.6</td><td>3</td></tr>
+          <tr><td rowspan="5">Mellem</td><td>4</td><td>1.3</td><td>0.7</td><td>3</td></tr>
+          <tr><td>5</td><td>1.4</td><td>0.7</td><td>3</td></tr>
+          <tr><td>6</td><td>1.5</td><td>0.7</td><td>4</td></tr>
+          <tr><td>7</td><td>1.6</td><td>0.8</td><td>4</td></tr>
+          <tr><td>8</td><td>1.7</td><td>0.8</td><td>4</td></tr>
+          <tr><td rowspan="2">Høj</td><td>9</td><td>1.8</td><td>0.8</td><td>5</td></tr>
+          <tr><td>10</td><td>1.9</td><td>0.9</td><td>6</td></tr>
+          <tr><td rowspan="2">Meget høj</td><td>11</td><td>2.0</td><td>0.9</td><td>7</td></tr>
+          <tr><td>12+</td><td>2.0</td><td>0.9</td><td>8</td></tr>
+        </tbody>
+      </table>
+      <p>Dette forudsætter selvfølgelig at man enten på forhånd kender antal repeatere eller at man lader repeateren køre i et stykke tid og så tæller antallet af hørbare naboer. Efter man har fundet antallet af naboer, kan man slå det op i tabellen og sætte de anbefalede værdier.</p>
+      <p>Eksempel for en repeater med 3 hørbare naboer:</p>
+      <pre><code>set rxdelay 3
+set txdelay 1.2
+set direct.txdelay 0.6</code></pre>
     </article>
 
     <article class="setting" id="defaultsGps" hidden>
@@ -515,7 +549,7 @@ set lon (klik på kortet)</code></pre>
     <p class="v2-back"><a href="#/">‹ Tilbage</a></p>
   </section>
 
-  <section data-view="defaults" id="social">
+  <section data-view="start defaults" id="social">
     <h2 id="bidrag"><span>Snak med os, og bidrag til siden!</span></h2>
     <div class="social-links">
       <a href="edit.html" class="social-btn editor">
