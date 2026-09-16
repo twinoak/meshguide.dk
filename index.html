@@ -394,11 +394,19 @@
         <tbody>
           <tr><td>advert.interval</td><td>0</td><td>0-hop adverts burde slås helt fra</td></tr>
           <tr><td>flood.advert.interval</td><td><span class="floodAdvertInterval">48</span></td><td>Netværksdækkende (flood) advert hver <span class="floodAdvertInterval">24</span>. time</td></tr>
-          <tr><td>guest.password</td><td>hello</td><td>Lader medlemmer forespørge repeaterens status</td></tr>
         </tbody>
       </table>
       <pre><code>set advert.interval 0
-set flood.advert.interval <span class="floodAdvertInterval">48</span>
+set flood.advert.interval <span class="floodAdvertInterval">48</span></code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>password / guest.password</h3>
+      <ul>
+        <li><strong>password</strong> - admin-adgangskoden: den der giver lov til at ændre indstillinger, både over USB og over mesh'et (appens "remote management" og denne guide). Fabriksindstillingen er <code>password</code> - skift den. Højst 15 tegn; bemærk at kommandoen er <code>password</code>, ikke <code>set password</code>, og at repeateren svarer <code>password now: …</code>.</li>
+        <li><strong>guest.password</strong> - gæste-adgangskoden: lader andre i mesh'et logge ind som gæst og se repeaterens status, men ikke ændre noget. I det danske mesh bruger vi <code>hello</code>, så alle kan forespørge alle repeatere.</li>
+      </ul>
+      <pre><code>password DinNyeAdgangskode
 set guest.password hello</code></pre>
     </article>
 
@@ -418,12 +426,12 @@ set guest.password hello</code></pre>
       </ul>
       <p>Overvej at inkludere følgende i din <code>owner.info</code>:</p>
       <ul>
-        <li><strong>Kontaktnavn</strong> - dit ham-kaldesignal, Discord-brugernavn, etc</li>
+        <li><strong>Kontakt</strong> - din e-mail, dit Discord-brugernavn, dit kaldesignal, etc</li>
         <li><strong>Antennespecifikationer</strong> - type, gain, højde over jord</li>
         <li><strong>Strømkilde</strong> - net, solceller, batteribackup</li>
         <li><strong>Installationstype</strong> - tag, mast, indendørs, portabel</li>
       </ul>
-      <pre><code>set owner.info OZ1ABC / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
+      <pre><code>set owner.info min@email.dk / 6dBi omni @9m / Solar+Batt / Tagmontering</code></pre>
     </article>
     <article class="setting">
       <h3>loop.detect<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Loop.detect" target="_blank">Wiki</a></h3>
@@ -466,6 +474,28 @@ set guest.password hello</code></pre>
       <h3>flood.max.unscoped<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Flood.max.unscoped" target="_blank">Wiki</a></h3>
       <p>Det er muligt at særbehandle datapakker uden et scope, hvis din Repeater bliver overbelastet af langvejstrafik. Hvis en flood datapakke uden scope ankommer til en Repeater der har sat flood.max.unscoped til 15, og pakken allerede har hoppet mere end 15 gange, vil Repeateren droppe datapakken. </p>
       <pre><code>set flood.max.unscoped 15</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>cad<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/CAD" target="_blank">Wiki</a></h3>
+      <p>CAD (Channel Activity Detection) får radioen til at lytte efter en anden LoRa-sending lige før den selv sender, og vente hvis kanalen er optaget. Det lyder fornuftigt, men i det danske mesh anbefaler vi at slå det fra - se wikien for hvorfor.</p>
+      <pre><code>set cad off</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>rxgain</h3>
+      <ul>
+        <li><strong>radio.rxgain</strong> - radiochippens egen "boosted" modtagerforstærkning: lidt bedre følsomhed for lidt mere strøm. Slå den til.</li>
+        <li><strong>radio.fem.rxgain</strong> - den eksterne forstærker (LNA) på boards med et front-end-modul. Slå den fra. Boards uden svarer <code>Error: unsupported</code>, og det er fint.</li>
+      </ul>
+      <pre><code>set radio.rxgain on
+set radio.fem.rxgain off</code></pre>
+    </article>
+
+    <article class="setting">
+      <h3>agc.reset.interval</h3>
+      <p>Nulstiller radioens automatiske forstærkningsregulering (AGC) med faste mellemrum, så den ikke bliver hængende "døv" efter et kraftigt signal. Angives i sekunder og rundes til et multiplum af 4; 0 slår det fra.</p>
+      <pre><code>set agc.reset.interval 4</code></pre>
     </article>
 
     <article class="setting" id="defaultsGps" hidden>

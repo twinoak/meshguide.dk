@@ -20,6 +20,8 @@
 .am-error { border: 1px solid rgba(248, 81, 73, .5); background: rgba(248, 81, 73, .08); border-radius: 4px; padding: .6rem .9rem; margin: 0 0 1rem; }
 .am-device th { width: 11rem; white-space: nowrap; }
 .am-device td code { word-break: break-all; }
+.am-rename input[type=text] { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .2rem .5rem; font: inherit; font-size: .9rem; width: 14rem; max-width: 100%; }
+#renameNote:not(:empty) { display: inline-block; margin-top: .25rem; font-size: .85rem; }
 .am-findings td:first-child { width: 2rem; }
 .am-findings .status { white-space: nowrap; font-size: .85rem; }
 .am-findings .status.ok { color: var(--hl); }

@@ -6,8 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildDataset, scopesForPoint } from "../lib/scopes.js";
 import { loadData } from "./data.js";
-import { evaluate, floodAdvertIntervalFor, forwards, hasDeviceLocation, isRepeater, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
-import { parseReply } from "../lib/serial.js";
+import { NAME_MAX_BYTES, evaluate, floodAdvertIntervalFor, formatLatLon, forwards, hasDeviceLocation, isRepeater, nameProblem, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
+import { parseReply, setAdvertNamePayload } from "../lib/serial.js";
 
 const { regions, postnumreFiles } = loadData();
 const ds = buildDataset(regions, postnumreFiles);
@@ -135,15 +135,47 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   assert.deepEqual(partial, ["set lat 55.325000", "set lon 10.490000", ...byId.regions.commands]);
 });
 
-test("wrong radio preset -> set radio, keeps a valid CR, needs reboot", () => {
+test("wrong radio preset -> set radio with the default CR 8, needs reboot; a right preset keeps its CR", () => {
   const s = parseState({ ...GOOD, radio: "868.0,125,7,5" });
   const f = evaluate(s, { lat: s.lat, lon: s.lon, source: "device" }, scopesForPoint(ds, s.lat, s.lon));
   const radio = f.find(x => x.id === "radio");
   assert.equal(radio.status, "change");
-  assert.deepEqual(radio.commands, ["set radio 869.618,62.5,8,5"]);
+  assert.deepEqual(radio.commands, ["set radio 869.618,62.5,8,8"]);
   assert.ok(needsReboot(planCommands(f, new Set(["radio"]))));
-  // CR 8 is also fine as-is
-  assert.equal(evaluate(parseState({ ...GOOD, radio: "869.618,62.5,8,6" }), null, null).find(x => x.id === "radio").status, "ok");
+  // The preset is right and CR is a per-node choice within 5-8: fine as-is, shown as-is.
+  const cr6 = evaluate(parseState({ ...GOOD, radio: "869.618,62.5,8,6" }), null, null).find(x => x.id === "radio");
+  assert.equal(cr6.status, "ok");
+  assert.equal(cr6.recommended, "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/6");
+  // CR outside 5-8 is not a valid LoRa setting: back to 8.
+  assert.deepEqual(evaluate(parseState({ ...GOOD, radio: "869.618,62.5,8,4" }), null, null).find(x => x.id === "radio").commands, ["set radio 869.618,62.5,8,8"]);
+});
+
+test("positions are shown with Danish compass letters, commands stay lat/lon", () => {
+  assert.equal(formatLatLon(55.325, 10.49), "55.325° N, 10.49° Ø");
+  assert.equal(formatLatLon("56.1963043", "10.2408895"), "56.1963043° N, 10.2408895° Ø");
+  assert.equal(formatLatLon(-33.9, -70.6), "33.9° S, 70.6° V");
+  const f = evaluate(parseState(GOOD), { lat: 55.325, lon: 10.49, source: "map" }, scopesForPoint(ds, 55.325, 10.49)).find(x => x.id === "location");
+  assert.equal(f.label, "Position");
+  assert.equal(f.recommended, "55.325000° N, 10.490000° Ø");
+  assert.deepEqual(f.commands, ["set lat 55.325000", "set lon 10.490000"]);
+});
+
+test("device names follow the firmware's rule: 31 bytes, no [ ] \\ : , ? *", () => {
+  assert.equal(nameProblem("Bakketoppen"), null);
+  assert.equal(nameProblem("OZ1ABC Rpt #2"), null);
+  assert.match(nameProblem(""), /tomt/);
+  assert.match(nameProblem("   "), /tomt/);
+  assert.match(nameProblem("a,b"), /ikke indeholde/);
+  assert.match(nameProblem("a:b"), /ikke indeholde/);
+  assert.match(nameProblem("[x]"), /ikke indeholde/);
+  assert.equal(nameProblem("a".repeat(31)), null);
+  assert.match(nameProblem("a".repeat(32)), /31 tegn/);
+  assert.equal(nameProblem("Bakketoppen på Djursland ÆØ"), null);    // 27 characters, 30 bytes
+  assert.match(nameProblem("Bakketoppen på Djursland ÆØÅ"), /31 tegn/); // 28 characters, 32 bytes
+  assert.equal(nameProblem("x".repeat(NAME_MAX_BYTES)), null);
+  const p = setAdvertNamePayload("Min companion");
+  assert.equal(p[0], 8);
+  assert.equal(new TextDecoder().decode(p.slice(1)), "Min companion");
 });
 
 test("regions: missing scopes on old firmware use put/allowf, on very old firmware are unsupported; extras are reported", () => {
@@ -349,8 +381,8 @@ test("radio settings are shown human-readably, commands stay in CLI form", () =>
   assert.equal(formatRadio(null), "–");
   const f = evaluate(parseState({ ...GOOD, radio: "868.0,125,7,5" }), null, null).find(x => x.id === "radio");
   assert.equal(f.current, "868 MHz · BW 125 kHz · SF 7 · CR 4/5");
-  assert.equal(f.recommended, "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/5");
-  assert.deepEqual(f.commands, ["set radio 869.618,62.5,8,5"]);
+  assert.equal(f.recommended, "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/8");
+  assert.deepEqual(f.commands, ["set radio 869.618,62.5,8,8"]);
 });
 
 test("remote mode locks the radio: shown as a difference, never planned", () => {
