@@ -8,7 +8,7 @@
 // Directories serve their index.html, every file is sent with Cache-Control:
 // no-cache so a browser reload always shows your latest edit, and .js/.mjs
 // get a JavaScript MIME type so ES modules load. localhost counts as a secure
-// context, so Web Serial (automagical/) works here too.
+// context, so Web Serial and Web Bluetooth work here too.
 
 import { createServer } from "node:http";
 import { createReadStream, statSync } from "node:fs";
@@ -80,6 +80,5 @@ server.listen(port, () => {
   console.log(`Serving ${root}`);
   console.log(`  http://localhost:${port}/`);
   console.log(`  http://localhost:${port}/edit.html`);
-  console.log(`  http://localhost:${port}/automagical/`);
   console.log("Ctrl+C to stop.");
 });

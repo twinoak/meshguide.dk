@@ -4,7 +4,7 @@
 //   node tools/build-api.js _site
 //
 // Copies the static site files and generates the static API from the same
-// JSON data and the same scopes.js the browser uses:
+// JSON data and the same lib/scopes.js the browser uses:
 //
 //   api/scopes.json          { "scopes": [...], "count": N }   (was /api/scopes?all)
 //   api/chats.json           { "chats": [...] }                (was /api/chats?all)
@@ -15,7 +15,7 @@
 
 import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { allScopes, buildDataset } from "../scopes.js";
+import { allScopes, buildDataset } from "../lib/scopes.js";
 import { allChats, chatAliases } from "./chats.js";
 import { ROOT, loadData } from "./data.js";
 

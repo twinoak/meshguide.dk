@@ -95,10 +95,10 @@
     center: [56.0, 11.0],
     zoom: 7,
     minZoom: 6,
-    maxZoom: 19 // see the zoom comment in script.js
+    maxZoom: 19 // see the zoom comment in lib/flow.js initMap
   });
 
-  // OpenFreeMap dark - see the matching comment in script.js.
+  // OpenFreeMap dark - free vector tiles, no API key.
   L.maplibreGL({
     style: "https://tiles.openfreemap.org/styles/dark",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere &copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'

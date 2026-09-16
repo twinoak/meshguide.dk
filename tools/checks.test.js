@@ -1,13 +1,13 @@
-// Tests for the automagical rules (automagical/checks.js) and the CLI reply
-// parser (automagical/serial.js). Reply strings are in the exact formats the
+// Tests for the configurator's rules (lib/checks.js) and the CLI reply
+// parser (lib/serial.js). Reply strings are in the exact formats the
 // MeshCore repeater firmware produces (src/helpers/CommonCLI.cpp).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDataset, scopesForPoint } from "../scopes.js";
+import { buildDataset, scopesForPoint } from "../lib/scopes.js";
 import { loadData } from "./data.js";
-import { evaluate, floodAdvertIntervalFor, forwards, hasDeviceLocation, isRepeater, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../automagical/checks.js";
-import { parseReply } from "../automagical/serial.js";
+import { evaluate, floodAdvertIntervalFor, forwards, hasDeviceLocation, isRepeater, needsReboot, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
+import { parseReply } from "../lib/serial.js";
 
 const { regions, postnumreFiles } = loadData();
 const ds = buildDataset(regions, postnumreFiles);
@@ -174,7 +174,7 @@ test("firmware without GPS support hides the advert-position finding", () => {
 
 // --- Companion (binary) protocol -------------------------------------------------
 
-import { companionFrame, parseCompanionFrames, parseDeviceInfo, parseSelfInfo } from "../automagical/serial.js";
+import { companionFrame, parseCompanionFrames, parseDeviceInfo, parseSelfInfo } from "../lib/serial.js";
 
 function deviceInfoFrame() {
   const p = new Uint8Array(82);
@@ -225,8 +225,8 @@ test("companion frames: framing, device info and self info parse", () => {
 
 // --- Companion rules -------------------------------------------------------------
 
-import { evaluateCompanion, hex, scopeKeyFor, commandText } from "../automagical/checks.js";
-import { parseDefaultScope, setDefaultScopePayload, setPathHashModePayload } from "../automagical/serial.js";
+import { evaluateCompanion, hex, scopeKeyFor, commandText } from "../lib/checks.js";
+import { parseDefaultScope, setDefaultScopePayload, setPathHashModePayload } from "../lib/serial.js";
 
 test("companion: scope key derivation and frame payloads", async () => {
   const key = await scopeKeyFor("dk");
@@ -338,9 +338,9 @@ test("extra regions: opt-in removal row with def-first, remove, save-last orderi
   assert.equal(old.status, "unsupported");
 });
 
-// --- Remote configuration through a companion (automagical/remote-cli.js + serial.js) ---
-import { formatRadio, lockFindings, REMOTE_LOCKED } from "../automagical/checks.js";
-import { addContactPayload, decodePathLen, extractFrames, loginPayload, nodeDiscoverPayload, parseAck, parseContact, parseContactMessage, parseCurrTime, parseDiscoverResponse, parseSent, setDeviceTimePayload, textMessagePayload } from "../automagical/serial.js";
+// --- Remote configuration through a companion (lib/remote-cli.js + serial.js) ---
+import { formatRadio, lockFindings, REMOTE_LOCKED } from "../lib/checks.js";
+import { addContactPayload, decodePathLen, extractFrames, loginPayload, nodeDiscoverPayload, parseAck, parseContact, parseContactMessage, parseCurrTime, parseDiscoverResponse, parseSent, setDeviceTimePayload, textMessagePayload } from "../lib/serial.js";
 
 test("radio settings are shown human-readably, commands stay in CLI form", () => {
   assert.equal(formatRadio("869.618,62.5,8,8"), "869.618 MHz · BW 62.5 kHz · SF 8 · CR 4/8");

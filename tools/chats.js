@@ -12,7 +12,7 @@
 //   aggregate layer the center of ALL its postal codes). On a key collision
 //   with a curated city chat, the city chat wins.
 
-import { geomBBox, postalLayers } from "../scopes.js";
+import { geomBBox, postalLayers } from "../lib/scopes.js";
 
 const POSTAL_KEY = /^dk(\d{4})$/;
 

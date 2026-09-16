@@ -1,0 +1,110 @@
+/* app.css - the guide's own styles, on top of style.css (the site's design).
+   First the configurator (am-*: device table, findings, progress bars, contacts),
+   then the guide around it (v2-*: crumbs, choice cards, checklists). */
+.am-status { display: inline-flex; align-items: center; gap: .5rem; font-size: .9rem; color: var(--muted); }
+.am-status::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.am-status.connected { color: var(--hl); }
+.am-status.connected::before { background: var(--hl); }
+.am-status.busy::before { background: var(--accent-2); }
+.am-status.error { color: #f85149; }
+.am-status.error::before { background: #f85149; }
+.am-status.busy::before { animation: am-pulse 1s ease-in-out infinite; }
+@keyframes am-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.am-progress { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; font-size: .85rem; color: var(--muted); }
+.am-progress .text { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.am-bar { flex: 1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; position: relative; }
+.am-bar-fill { height: 100%; width: 0; background: var(--accent-2); border-radius: 3px; transition: width .15s linear; }
+.am-bar.indeterminate .am-bar-fill { position: absolute; width: 30%; animation: am-slide 1.2s ease-in-out infinite; transition: none; }
+@keyframes am-slide { from { left: -30%; } to { left: 100%; } }
+.am-warn { border: 1px solid rgba(240, 136, 62, .5); background: rgba(240, 136, 62, .08); border-radius: 4px; padding: .6rem .9rem; margin: 0 0 1rem; }
+.am-error { border: 1px solid rgba(248, 81, 73, .5); background: rgba(248, 81, 73, .08); border-radius: 4px; padding: .6rem .9rem; margin: 0 0 1rem; }
+.am-device th { width: 11rem; white-space: nowrap; }
+.am-device td code { word-break: break-all; }
+.am-findings td:first-child { width: 2rem; }
+.am-findings .status { white-space: nowrap; font-size: .85rem; }
+.am-findings .status.ok { color: var(--hl); }
+.am-findings .status.change { color: var(--accent-2); }
+.am-findings .status.input { color: var(--accent); }
+.am-findings .status.unknown, .am-findings .status.unsupported { color: var(--muted); }
+.am-findings .note { color: var(--muted); font-size: .85rem; }
+.am-findings input[type=text] { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .3rem .5rem; font: inherit; }
+.am-findings tr.ok td { color: var(--muted); }
+.am-findings tr.ok td code { color: var(--muted); }
+.am-cmds { margin: 1rem 0 0; }
+.am-cmds pre { margin: .3rem 0 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
+.am-log { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow: auto; max-height: 20rem; font-size: .8rem; line-height: 1.35; }
+.am-log .tx { color: var(--accent); }
+.am-log .rx { color: var(--text); }
+.am-log .info { color: var(--muted); }
+.am-log .error { color: #f85149; }
+.am-apply-log li { margin: .2rem 0; }
+.am-apply-log li.err { color: #f85149; }
+.am-apply-log li.ok { color: var(--hl); }
+details summary { cursor: pointer; color: var(--muted); }
+.am-prereq { margin: .5rem 0 0; padding-left: 1.2rem; }
+.am-prereq li { margin: .35rem 0; }
+.am-copy { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .1rem .5rem; margin-left: .35rem; font: inherit; font-size: .8rem; cursor: pointer; vertical-align: baseline; }
+.am-copy:hover { background: var(--border); }
+[hidden] { display: none !important; }
+
+/* Remote page: contact list and login */
+.am-contacts td, .am-contacts th { white-space: nowrap; }
+.am-contacts td.name { white-space: normal; }
+.am-contacts td code { font-size: .8rem; }
+.am-contacts tr.selected td { background: rgba(255, 255, 255, .06); }
+.am-contacts tr.nearby td.nearby { color: var(--hl); white-space: nowrap; }
+.am-contacts tr.nearby td.name::before { content: "●"; color: var(--hl); margin-right: .4rem; font-size: .7rem; vertical-align: middle; }
+.am-contacts td:first-child { width: 2rem; }
+.am-findings .status.locked { color: var(--accent); }
+.am-findings tr.locked td { color: var(--muted); }
+.editor-toolbar input[type=password] { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: .45rem .6rem; font: inherit; min-width: 16rem; }
+
+/* --- The guide: crumbs, choices, checklists --- */
+
+.site-header h1 a { color: inherit; text-decoration: none; }
+
+/* Where am I */
+.v2-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 0 0 1.25rem; font-size: .9rem; color: var(--muted); min-height: 1.4rem; }
+.v2-crumbs a { color: var(--accent); text-decoration: none; }
+.v2-crumbs a:hover { text-decoration: underline; }
+.v2-crumbs .sep { color: var(--border); }
+.v2-crumbs .current { color: var(--text); font-weight: 600; }
+.v2-crumbs[hidden] { display: none; }
+
+/* Choice cards */
+.v2-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.v2-choice { display: block; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 1.1rem 1.2rem 1rem; color: var(--text); text-decoration: none; transition: border-color .15s ease, transform .15s ease, background .15s ease; }
+.v2-choice:hover, .v2-choice:focus-visible { border-color: var(--accent); background: #3f3f3f; transform: translateY(-2px); outline: none; }
+.v2-choice .icon { width: 36px; height: 36px; color: var(--accent); margin-bottom: .55rem; display: block; }
+.v2-choice h3 { margin: 0 0 .35rem; font-size: 1.1rem; color: #fff; }
+.v2-choice p { margin: 0; color: var(--muted); font-size: .92rem; }
+.v2-choice code { background: var(--bg); font-size: .9em; }
+.v2-choice .req { margin-top: .75rem; font-size: .8rem; color: var(--accent-2); }
+.v2-back { margin: 1.25rem 0 0; font-size: .9rem; }
+.v2-back a { text-decoration: none; }
+
+/* Checklists before connecting */
+.v2-check { margin: .75rem 0 0; padding: 0; list-style: none; }
+.v2-check li { position: relative; padding: .3rem 0 .3rem 1.6rem; }
+.v2-check li::before { content: ""; position: absolute; left: .2rem; top: .75rem; width: .55rem; height: .55rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, .18); }
+.v2-check li strong { color: #fff; }
+
+/* Once connected, the introduction and checklist fold away */
+section.connected #directIntro, section.connected #directCheck, section.connected #remoteIntro, section.connected #remoteCheck, section.connected .v2-back { display: none; }
+section.connected h2 { margin-bottom: .75rem; }
+
+/* Status bar while a device is connected */
+.v2-runbar { margin-top: 0; }
+#runbar { padding-top: 1rem; padding-bottom: 1rem; }
+
+/* Defaults view */
+#defaultsMap { position: relative; width: auto; height: 560px; margin: 0 -1.5rem; background: #111; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; }
+#defaultsMap .leaflet-container { background: #111; }
+#defaultsCliTitle { margin: 0; color: #fff; font-size: 1rem; }
+#defaultsCli { margin: 0; display: flex; flex-direction: column; gap: .8rem; }
+#defaultsCli pre { margin: 0; background: var(--bg); padding: .6rem .8rem; border-radius: 4px; overflow-x: auto; font-size: .85rem; }
+#defaultsCli code { background: transparent; padding: 0; }
+
+@media (max-width: 900px) {
+  #defaultsMap { margin: 0 -.85rem; }
+}

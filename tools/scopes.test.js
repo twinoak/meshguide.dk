@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { allScopes, buildDataset, regionDefLines, scopesForPoint } from "../scopes.js";
+import { allScopes, buildDataset, regionDefLines, scopesForPoint } from "../lib/scopes.js";
 import { allChats, chatAliases } from "./chats.js";
 import { loadData } from "./data.js";
 

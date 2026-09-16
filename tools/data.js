@@ -1,6 +1,6 @@
 // data.js - loads the site's JSON data from disk (Node only).
 //
-// The browser does the equivalent with fetch() in script.js; the build step and
+// The browser does the equivalent with fetch() in lib/flow.js; the build step and
 // the tests use this.
 
 import { readFileSync } from "node:fs";
