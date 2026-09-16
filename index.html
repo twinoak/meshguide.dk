@@ -96,7 +96,7 @@
       <a class="v2-choice" href="#/companion" data-choice="companion">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><line x1="10" y1="18.5" x2="14" y2="18.5"/><path d="M9 8.5a4 4 0 0 1 6 0"/><path d="M10.5 10.5a2 2 0 0 1 3 0"/><circle cx="12" cy="12.6" r=".6" fill="currentColor"/></svg>
         <h3>Sæt en companion op</h3>
-        <p>Enheden du har med i lommen og bruger sammen med appen. Vi tjekker de to indstillinger der betyder noget for det danske mesh, og retter dem.</p>
+        <p>Enheden du har med i lommen og bruger sammen med appen. Vi tjekker de få indstillinger der betyder noget for det danske mesh, og retter dem.</p>
         <div class="req">USB eller Bluetooth · Chrome, Edge eller Brave · 1 minut</div>
       </a>
       <a class="v2-choice" href="#/repeater" data-choice="repeater">
@@ -385,6 +385,11 @@
       <pre><code>set path.hash.mode 1</code></pre>
     </article>
 
+    <article class="setting" id="def-autoadd">
+      <h3>Overskriv ældste kontakt (companion)</h3>
+      <p>En companions kontaktliste har et fast antal pladser. Er listen fuld og "overskriv ældste" slået fra, smider companionen nye kontakter væk uden at sige noget - også repeatere du gerne vil kunne nå. Slået til erstatter den i stedet den ældste kontakt, der ikke er markeret som favorit. Indstillingen ligger i appens indstillinger for kontakter; guiden slår den til når den sætter en companion op.</p>
+    </article>
+
     <article class="setting" id="def-advert">
       <h3>advert.interval / flood.advert.interval<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/Advert" target="_blank">Wiki</a></h3>
       <table>
@@ -494,23 +499,25 @@ set radio.fem.rxgain off</code></pre>
 
     <article class="setting" id="def-agc.reset.interval">
       <h3>agc.reset.interval</h3>
-      <p>Nulstiller radioens automatiske forstærkningsregulering (AGC) med faste mellemrum, så den ikke bliver hængende "døv" efter et kraftigt signal. Angives i sekunder og rundes til et multiplum af 4; 0 slår det fra. Minimum er 4 sekunder og det anbefales at sætte dette.</p>
+      <p>Nulstiller radioens automatiske forstærkningsregulering (AGC) med faste mellemrum, så den ikke bliver hængende "døv" efter et kraftigt signal. Angives i sekunder og rundes til et multiplum af 4; 0 slår det fra.</p>
       <pre><code>set agc.reset.interval 4</code></pre>
     </article>
 
     <article class="setting" id="def-delays">
       <h3>rxdelay / txdelay / direct.txdelay<a class="social-btn wiki" href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">White paper</a></h3>
-      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik og dermed kollidere. MeshCore undgår det ved at holde en tilfældig pause før hver sending: <code>txdelay</code> for flood-trafik, <code>direct.txdelay</code> for direkte beskeder, og <code>rxdelay</code> for hvor længe behandling af nyankomne pakker udskydes, dette afhænger også af den indkomne pakkes signalstyrke. Kombination af disse 3 værdier er med til at minimere sandsynlighed for pakke kollisioner.</p>
-
-      <p>Der har været forsket i hvordan disse værdier bør sættes(se evt. <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>) og det viser sig at antallet af umiddelbare naboer bør styre disse tre tal.</p>
-
-      <p>Følgende tabel viser anbefalede værdier for forskellige netværkstæthed og antal naboer:</p>
+      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik - og kollidere. MeshCore undgår det ved at trække en tilfældig ventetid før hver sending: <code>txdelay</code> for flood-trafik (antal "slots" = 5 × pakkens airtime × txdelay), <code>direct.txdelay</code> for direkte beskeder (samme formel, mindre vindue så svar ikke bliver træge), og <code>rxdelay</code> for hvornår radioen åbner for modtagelse igen, så naboer ikke låser sig fast i samme takt. Fabriksindstillingerne (txdelay 0.5, direct.txdelay 0.2, rxdelay 0) giver en høj kollisionssandsynlighed - direkte beskeder sendes uden ventetid overhovedet.</p>
+      <p>Værdierne afhænger af hvor mange naboer repeateren reelt kan høre. Sådan sættes de, efter <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>, afsnit 8:</p>
+      <ol>
+        <li>Ryd gamle naboer ud af repeaterens naboliste: <code>neighbors</code> viser dem, og en repeater der ikke er hørt i mere end 7 dage fjernes med <code>neighbor.remove &lt;id&gt;</code>. Ellers tæller flyttede og døde repeatere med.</li>
+        <li>Tæl naboerne med SNR over 0. Naboer med negativ SNR afkodes sjældent og bidrager ikke til trængslen - de tæller ikke med.</li>
+        <li>Slå tallet op i tabellen og sæt de tre værdier.</li>
+      </ol>
       <table>
         <thead>
           <tr><th>Tæthed</th><th>Naboer (SNR &gt; 0)</th><th>txdelay</th><th>direct.txdelay</th><th>rxdelay</th></tr>
         </thead>
         <tbody>
-          <tr><td rowspan="4">Lav</td><td>0</td><td>1.0</td><td>0.4</td><td>2</td></tr>
+          <tr><td rowspan="4">Tynd</td><td>0</td><td>1.0</td><td>0.4</td><td>2</td></tr>
           <tr><td>1</td><td>1.1</td><td>0.5</td><td>2</td></tr>
           <tr><td>2</td><td>1.2</td><td>0.6</td><td>3</td></tr>
           <tr><td>3</td><td>1.2</td><td>0.6</td><td>3</td></tr>
@@ -519,14 +526,13 @@ set radio.fem.rxgain off</code></pre>
           <tr><td>6</td><td>1.5</td><td>0.7</td><td>4</td></tr>
           <tr><td>7</td><td>1.6</td><td>0.8</td><td>4</td></tr>
           <tr><td>8</td><td>1.7</td><td>0.8</td><td>4</td></tr>
-          <tr><td rowspan="2">Høj</td><td>9</td><td>1.8</td><td>0.8</td><td>5</td></tr>
+          <tr><td rowspan="2">Tæt</td><td>9</td><td>1.8</td><td>0.8</td><td>5</td></tr>
           <tr><td>10</td><td>1.9</td><td>0.9</td><td>6</td></tr>
-          <tr><td rowspan="2">Meget høj</td><td>11</td><td>2.0</td><td>0.9</td><td>7</td></tr>
+          <tr><td rowspan="2">Regional / bakketop</td><td>11</td><td>2.0</td><td>0.9</td><td>7</td></tr>
           <tr><td>12+</td><td>2.0</td><td>0.9</td><td>8</td></tr>
         </tbody>
       </table>
-      <p>Dette forudsætter selvfølgelig at man enten på forhånd kender antal repeatere eller at man lader repeateren køre i et stykke tid og så tæller antallet af hørbare naboer. Efter man har fundet antallet af naboer, kan man slå det op i tabellen og sætte de anbefalede værdier.</p>
-      <p>Eksempel for en repeater med 3 hørbare naboer:</p>
+      <p>Højere txdelay giver flere slots og færre kollisioner, men også længere leveringstid - over 2.0 (som firmwaren heller ikke tillader) er der ikke mere at hente. Papirets forslag for 12+ naboer er 2.1-2.5, men CLI'en afviser alt over 2 (<code>Error, must be 0-2</code>), så 2.0 er det højeste. Eksempel for en repeater med 3 hørbare naboer:</p>
       <pre><code>set rxdelay 3
 set txdelay 1.2
 set direct.txdelay 0.6</code></pre>

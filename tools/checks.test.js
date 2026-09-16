@@ -368,7 +368,7 @@ test("companion frames: framing, device info and self info parse", () => {
 // --- Companion rules -------------------------------------------------------------
 
 import { evaluateCompanion, hex, scopeKeyFor, commandText } from "../lib/checks.js";
-import { parseDefaultScope, setDefaultScopePayload, setPathHashModePayload } from "../lib/serial.js";
+import { parseAutoAddConfig, parseDefaultScope, setAutoAddConfigPayload, setDefaultScopePayload, setPathHashModePayload } from "../lib/serial.js";
 
 test("companion: scope key derivation and frame payloads", async () => {
   const key = await scopeKeyFor("dk");
@@ -379,6 +379,9 @@ test("companion: scope key derivation and frame payloads", async () => {
   assert.deepEqual([...p.slice(1, 4)], [0x64, 0x6b, 0x00]); // "dk" + NUL padding
   assert.equal(hex(p.slice(32)), hex(key));
   assert.deepEqual([...setPathHashModePayload(1)], [61, 0, 1]);
+  assert.deepEqual([...setAutoAddConfigPayload(0x1f, 3)], [58, 0x1f, 3]);
+  assert.deepEqual(parseAutoAddConfig(Uint8Array.from([25, 0x1e, 0])), { config: 0x1e, maxHops: 0 });
+  assert.equal(parseAutoAddConfig(Uint8Array.from([1, 3])), null);
   // The GET reply round-trips
   const reply = new Uint8Array(48); reply[0] = 28; reply.set(p.slice(1), 1);
   assert.deepEqual(parseDefaultScope(reply), { name: "dk", key: hex(key) });
@@ -388,25 +391,29 @@ test("companion: scope key derivation and frame payloads", async () => {
 
 test("companion: path.hash.mode and default scope are checked and fixable", async () => {
   const key = await scopeKeyFor("dk");
-  const base = { kind: "companion", deviceInfo: { pathHashMode: 1, board: "Heltec V3" }, selfInfo: null };
+  const base = { kind: "companion", deviceInfo: { pathHashMode: 1, board: "Heltec V3" }, selfInfo: null, autoAdd: { config: 0x1f, maxHops: 0 } };
   // All good
   let f = evaluateCompanion({ ...base, defaultScope: { name: "dk", key: hex(key) } }, key);
-  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:ok", "region.default:ok"]);
-  // Fresh companion: mode 0, no scope
-  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: 0 }, defaultScope: { name: null, key: null } }, key);
-  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:change", "region.default:change"]);
-  const plan = planCommands(f, new Set(["path.hash.mode", "region.default"]));
-  assert.deepEqual(plan.map(commandText), ["CMD_SET_DEFAULT_FLOOD_SCOPE dk (" + hex(key) + ")", "CMD_SET_PATH_HASH_MODE 1"]);
+  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:ok", "region.default:ok", "contacts.overwrite:ok"]);
+  // Fresh companion: mode 0, no scope, overwrite-oldest off (types 0x1e auto-added, 2 hops)
+  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: 0 }, defaultScope: { name: null, key: null }, autoAdd: { config: 0x1e, maxHops: 2 } }, key);
+  assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:change", "region.default:change", "contacts.overwrite:change"]);
+  const plan = planCommands(f, new Set(["path.hash.mode", "region.default", "contacts.overwrite"]));
+  assert.deepEqual(plan.map(commandText), ["CMD_SET_DEFAULT_FLOOD_SCOPE dk (" + hex(key) + ")", "CMD_SET_PATH_HASH_MODE 1", "CMD_SET_AUTOADD_CONFIG 0x1f (overskriv ældste)"]);
   assert.deepEqual([...plan[1].payload], [61, 0, 1]);
+  assert.deepEqual([...plan[2].payload], [58, 0x1f, 2], "only bit 0 added; the type bits and the hop limit go back unchanged");
   assert.equal(plan[0].payload[0], 63);
   assert.ok(!needsReboot(plan));
+  // Firmware without CMD_GET_AUTOADD_CONFIG: no overwrite row at all.
+  assert.ok(!evaluateCompanion({ ...base, defaultScope: { name: "dk", key: hex(key) }, autoAdd: null }, key).some(x => x.id === "contacts.overwrite"));
+  assert.equal(DEFAULTS_ANCHOR["contacts.overwrite"], "def-autoadd");
   // Wrong scope name, and right name with a wrong key, both flagged
   assert.equal(evaluateCompanion({ ...base, defaultScope: { name: "eu", key: hex(key) } }, key).find(x => x.id === "region.default").status, "change");
   const wrongKey = evaluateCompanion({ ...base, defaultScope: { name: "dk", key: "00".repeat(16) } }, key).find(x => x.id === "region.default");
   assert.equal(wrongKey.status, "change");
   assert.match(wrongKey.note, /nøglen/);
   // Old firmware: unknown, nothing to send
-  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: null }, defaultScope: null }, key);
+  f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: null }, defaultScope: null, autoAdd: null }, key);
   assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:unknown", "region.default:unknown"]);
   assert.deepEqual(planCommands(f, new Set(["path.hash.mode", "region.default"])), []);
 });
