@@ -481,12 +481,6 @@ set guest.password hello</code></pre>
       <pre><code>set flood.max.unscoped 15</code></pre>
     </article>
 
-    <article class="setting" id="def-cad">
-      <h3>cad<a class="social-btn wiki" href="https://wiki.meshnet.dk/wiki/CAD" target="_blank">Wiki</a></h3>
-      <p>CAD (Channel Activity Detection) får radioen til at lytte efter en anden LoRa-sending lige før den selv sender, og vente hvis kanalen er optaget. Det lyder fornuftigt, men i det danske mesh anbefaler vi at slå det fra - se wikien for hvorfor.</p>
-      <pre><code>set cad off</code></pre>
-    </article>
-
     <article class="setting" id="def-rxgain">
       <h3>rxgain</h3>
       <ul>
@@ -505,19 +499,14 @@ set radio.fem.rxgain off</code></pre>
 
     <article class="setting" id="def-delays">
       <h3>rxdelay / txdelay / direct.txdelay<a class="social-btn wiki" href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">White paper</a></h3>
-      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik - og kollidere. MeshCore undgår det ved at trække en tilfældig ventetid før hver sending: <code>txdelay</code> for flood-trafik (antal "slots" = 5 × pakkens airtime × txdelay), <code>direct.txdelay</code> for direkte beskeder (samme formel, mindre vindue så svar ikke bliver træge), og <code>rxdelay</code> for hvornår radioen åbner for modtagelse igen, så naboer ikke låser sig fast i samme takt. Fabriksindstillingerne (txdelay 0.5, direct.txdelay 0.2, rxdelay 0) giver en høj kollisionssandsynlighed - direkte beskeder sendes uden ventetid overhovedet.</p>
-      <p>Værdierne afhænger af hvor mange naboer repeateren reelt kan høre. Sådan sættes de, efter <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>, afsnit 8:</p>
-      <ol>
-        <li>Ryd gamle naboer ud af repeaterens naboliste: <code>neighbors</code> viser dem, og en repeater der ikke er hørt i mere end 7 dage fjernes med <code>neighbor.remove &lt;id&gt;</code>. Ellers tæller flyttede og døde repeatere med.</li>
-        <li>Tæl naboerne med SNR over 0. Naboer med negativ SNR afkodes sjældent og bidrager ikke til trængslen - de tæller ikke med.</li>
-        <li>Slå tallet op i tabellen og sæt de tre værdier.</li>
-      </ol>
+      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik og kollidere med hinanden. MeshCore undgår det ved at holde en pause før en pakke videresendes. Længden af pausen udregnes med nogle formler som grundlæggende baserer sig på 3 parametre: <code>txdelay</code> for flood-trafik, <code>direct.txdelay</code> for direkte beskeder, og <code>rxdelay</code> kombineret med pakkens signalstyrke bestemmer hvor længe en pakke venter før den videresendes.</p>
+      <p>Der har været forsket i optimering af disse parametre(se <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>) og konklusionen er at standardparametrene er uheldige og bør ændres. Dette gøres ud fra nedenstående tabel med udgangspunkt i hvor mange "aktive" naboer en given repeater har.</p>
       <table>
         <thead>
           <tr><th>Tæthed</th><th>Naboer (SNR &gt; 0)</th><th>txdelay</th><th>direct.txdelay</th><th>rxdelay</th></tr>
         </thead>
         <tbody>
-          <tr><td rowspan="4">Tynd</td><td>0</td><td>1.0</td><td>0.4</td><td>2</td></tr>
+          <tr><td rowspan="4">Lav</td><td>0</td><td>1.0</td><td>0.4</td><td>2</td></tr>
           <tr><td>1</td><td>1.1</td><td>0.5</td><td>2</td></tr>
           <tr><td>2</td><td>1.2</td><td>0.6</td><td>3</td></tr>
           <tr><td>3</td><td>1.2</td><td>0.6</td><td>3</td></tr>
@@ -526,13 +515,13 @@ set radio.fem.rxgain off</code></pre>
           <tr><td>6</td><td>1.5</td><td>0.7</td><td>4</td></tr>
           <tr><td>7</td><td>1.6</td><td>0.8</td><td>4</td></tr>
           <tr><td>8</td><td>1.7</td><td>0.8</td><td>4</td></tr>
-          <tr><td rowspan="2">Tæt</td><td>9</td><td>1.8</td><td>0.8</td><td>5</td></tr>
+          <tr><td rowspan="2">Høj</td><td>9</td><td>1.8</td><td>0.8</td><td>5</td></tr>
           <tr><td>10</td><td>1.9</td><td>0.9</td><td>6</td></tr>
-          <tr><td rowspan="2">Regional / bakketop</td><td>11</td><td>2.0</td><td>0.9</td><td>7</td></tr>
+          <tr><td rowspan="2">Meget høj</td><td>11</td><td>2.0</td><td>0.9</td><td>7</td></tr>
           <tr><td>12+</td><td>2.0</td><td>0.9</td><td>8</td></tr>
         </tbody>
       </table>
-      <p>Højere txdelay giver flere slots og færre kollisioner, men også længere leveringstid - over 2.0 (som firmwaren heller ikke tillader) er der ikke mere at hente. Papirets forslag for 12+ naboer er 2.1-2.5, men CLI'en afviser alt over 2 (<code>Error, must be 0-2</code>), så 2.0 er det højeste. Eksempel for en repeater med 3 hørbare naboer:</p>
+      <p>Eksempel for en repeater med 3 hørbare naboer:</p>
       <pre><code>set rxdelay 3
 set txdelay 1.2
 set direct.txdelay 0.6</code></pre>

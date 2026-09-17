@@ -31,7 +31,6 @@ const GOOD = {
   floodMaxUnscoped: "15",
   ownerInfo: "OZ1ABC / 6dBi omni @9m",
   repeat: "on",
-  cad: "off",
   rxGain: "on",
   femRxGain: "off",
   agcResetInterval: "4",
@@ -98,7 +97,7 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   const fresh = {
     ...GOOD, name: "", lat: "0.0", lon: "0.0", dutycycle: "50.0%", advertInterval: "120", floodAdvertInterval: "0",
     guestPassword: "", pathHashMode: "0", loopDetect: "off", floodMaxUnscoped: "0", ownerInfo: "",
-    cad: "on", rxGain: "off", femRxGain: "on", agcResetInterval: "0", rxdelay: "0", txdelay: "0.5", directTxdelay: "0.1999999", neighbours: "-none-", regionDefault: " default scope is <null>", regionsAllowed: "-none-", regionTree: "* F"
+    rxGain: "off", femRxGain: "on", agcResetInterval: "0", rxdelay: "0", txdelay: "0.5", directTxdelay: "0.1999999", neighbours: "-none-", regionDefault: " default scope is <null>", regionsAllowed: "-none-", regionTree: "* F"
   };
   const s = parseState(fresh);
   // No position yet: location and regions need input, nothing to send for them.
@@ -113,7 +112,6 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   assert.equal(byId.location.status, "change");
   assert.deepEqual(byId.location.commands, ["set lat 55.325000", "set lon 10.490000"]);
   assert.ok(!byId["gps.advert"] && !byId.repeat, "no advert-position or repeat rows");
-  assert.deepEqual(byId.cad.commands, ["set cad off"]);
   assert.deepEqual(byId["radio.rxgain"].commands, ["set radio.rxgain on"]);
   assert.deepEqual(byId["radio.fem.rxgain"].commands, ["set radio.fem.rxgain off"]);
   assert.deepEqual(byId["agc.reset.interval"].commands, ["set agc.reset.interval 4"]);
@@ -144,7 +142,7 @@ test("a factory-fresh repeater without a position asks for the map, then gets th
   const plan = planCommands(f, new Set(f.map(x => x.id)));
   assert.equal(plan[0], "set lat 55.325000");
   assert.ok(plan.indexOf("region default dk") < plan.indexOf("region save"));
-  assert.ok(plan.indexOf("set flood.max.unscoped 15") < plan.indexOf("set cad off") && plan.indexOf("set cad off") < plan.indexOf("set agc.reset.interval 4"), "the receiver settings come after the forwarding rules");
+  assert.ok(plan.indexOf("set flood.max.unscoped 15") < plan.indexOf("set radio.rxgain on") && plan.indexOf("set radio.rxgain on") < plan.indexOf("set agc.reset.interval 4"), "the receiver settings come after the forwarding rules");
   assert.ok(!needsReboot(plan));
   // Deselecting a finding drops its commands.
   const partial = planCommands(f, new Set(["location", "regions"]));
@@ -251,18 +249,18 @@ test("regions: missing scopes on old firmware use put/allowf, on very old firmwa
   assert.equal(evaluate(unk, loc, sc).find(x => x.id === "regions").status, "change");
 });
 
-test("cad, rxgain, fem rxgain and agc.reset.interval: an unsupported setting is left out, not shown", () => {
+test("rxgain, fem rxgain and agc.reset.interval: an unsupported setting is left out, not shown", () => {
   const loc = { lat: 55.325, lon: 10.49, source: "device" };
   // A board without a front-end module answers "Error: unsupported": no row at all.
   const noFem = evaluate(parseState({ ...GOOD, femRxGain: UNSUPPORTED }), loc, scopesForPoint(ds, loc.lat, loc.lon));
   assert.ok(!noFem.some(x => x.id === "radio.fem.rxgain"));
   assert.ok(noFem.some(x => x.id === "radio.rxgain"), "the others stay");
   // Older firmware: "unknown config" for all four (and the delays) -> none of them shown, nothing planned.
-  const old = evaluate(parseState({ ...GOOD, cad: UNSUPPORTED, rxGain: UNSUPPORTED, femRxGain: UNSUPPORTED, agcResetInterval: UNSUPPORTED, rxdelay: UNSUPPORTED, txdelay: UNSUPPORTED, directTxdelay: UNSUPPORTED }), loc, scopesForPoint(ds, loc.lat, loc.lon));
-  for (const id of ["cad", "radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(!old.some(x => x.id === id), id);
-  assert.ok(!planCommands(old, new Set(old.map(x => x.id))).some(c => /cad|rxgain|agc|delay/.test(commandText(c))));
+  const old = evaluate(parseState({ ...GOOD, rxGain: UNSUPPORTED, femRxGain: UNSUPPORTED, agcResetInterval: UNSUPPORTED, rxdelay: UNSUPPORTED, txdelay: UNSUPPORTED, directTxdelay: UNSUPPORTED }), loc, scopesForPoint(ds, loc.lat, loc.lon));
+  for (const id of ["radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(!old.some(x => x.id === id), id);
+  assert.ok(!planCommands(old, new Set(old.map(x => x.id))).some(c => /rxgain|agc|delay/.test(commandText(c))));
   // No reply at all -> "Kunne ikke aflæses".
-  assert.equal(evaluate(parseState({ ...GOOD, cad: null }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "cad").status, "unknown");
+  assert.equal(evaluate(parseState({ ...GOOD, rxGain: null }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "radio.rxgain").status, "unknown");
   // agc.reset.interval 8 is not 4.
   assert.deepEqual(evaluate(parseState({ ...GOOD, agcResetInterval: "8" }), loc, scopesForPoint(ds, loc.lat, loc.lon)).find(x => x.id === "agc.reset.interval").commands, ["set agc.reset.interval 4"]);
   // Every finding that has a page section links to it.
@@ -434,7 +432,7 @@ test("room server: room password untouched, forwarding rules only with repeat on
   assert.ok(!ids.includes("guest.password"), "room password is not a finding");
   assert.ok(!ids.includes("repeat"), "repeat is not recommended on for a room server");
   assert.ok(!ids.includes("loop.detect") && !ids.includes("flood.max.unscoped"), "forwarding rules skipped when repeat is off");
-  for (const id of ["radio", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "location", "region.default", "regions", "owner.info", "cad", "radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(ids.includes(id), id);
+  for (const id of ["radio", "dutycycle", "path.hash.mode", "advert.interval", "flood.advert.interval", "location", "region.default", "regions", "owner.info", "radio.rxgain", "radio.fem.rxgain", "agc.reset.interval", "rxdelay", "txdelay", "direct.txdelay"]) assert.ok(ids.includes(id), id);
   assert.deepEqual(f.filter(x => x.status !== "ok"), [], "a well-configured room server has nothing to change");
   // Same room server with repeat on: the forwarding rules apply and flag off/64
   const fwd = evaluate(parseState({ ...room, repeat: "on" }), loc, scopesForPoint(ds, s.lat, s.lon));
