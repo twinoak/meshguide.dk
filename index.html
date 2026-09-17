@@ -499,8 +499,11 @@ set radio.fem.rxgain off</code></pre>
 
     <article class="setting" id="def-delays">
       <h3>rxdelay / txdelay / direct.txdelay<a class="social-btn wiki" href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">White paper</a></h3>
-      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik og kollidere med hinanden. MeshCore undgår det ved at holde en pause før en pakke videresendes. Længden af pausen udregnes med nogle formler som grundlæggende baserer sig på 3 parametre: <code>txdelay</code> for flood-trafik, <code>direct.txdelay</code> for direkte beskeder, og <code>rxdelay</code> kombineret med pakkens signalstyrke bestemmer hvor længe en pakke venter før den videresendes.</p>
-      <p>Der har været forsket i optimering af disse parametre(se <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>) og konklusionen er at standardparametrene er uheldige og bør ændres. Dette gøres ud fra nedenstående tabel med udgangspunkt i hvor mange "aktive" naboer en given repeater har.</p>
+      <p>Når flere repeatere hører den samme pakke, vil de sende den videre i samme øjeblik og dermed kollidere. MeshCore undgår det ved at holde en tilfældig pause før hver sending: <code>txdelay</code> for flood-trafik, <code>direct.txdelay</code> for direkte beskeder, og <code>rxdelay</code> for hvor længe behandling af nyankomne pakker udskydes, dette afhænger også af den indkomne pakkes signalstyrke. Kombination af disse 3 værdier er med til at minimere sandsynlighed for pakke kollisioner.</p>
+
+      <p>Der har været forsket i hvordan disse værdier bør sættes(se evt. <a href="https://wiki.wcmesh.com/assets/files/White%20Paper%201%20-%20Using%20%20rxdelay,%20txdelay%20and%20direct.txdelay%20to%20Minimize%20Collisions%20in%20a%20MeshCore%20Routing-ca0773282b6b84320c49c3d40b1aa8e8.pdf" target="_blank" rel="noopener">white paper 1 fra WC Mesh</a>) og det viser sig at antallet af umiddelbare naboer bør styre disse tre tal.</p>
+
+      <p>Følgende tabel viser anbefalede værdier for forskellige netværkstæthed og antal naboer:</p>
       <table>
         <thead>
           <tr><th>Tæthed</th><th>Naboer (SNR &gt; 0)</th><th>txdelay</th><th>direct.txdelay</th><th>rxdelay</th></tr>
@@ -521,6 +524,7 @@ set radio.fem.rxgain off</code></pre>
           <tr><td>12+</td><td>2.0</td><td>0.9</td><td>8</td></tr>
         </tbody>
       </table>
+      <p>Dette forudsætter selvfølgelig at man enten på forhånd kender antal repeatere eller at man lader repeateren køre i et stykke tid og så tæller antallet af hørbare naboer. Efter man har fundet antallet af naboer, kan man slå det op i tabellen og sætte de anbefalede værdier.</p>
       <p>Eksempel for en repeater med 3 hørbare naboer:</p>
       <pre><code>set rxdelay 3
 set txdelay 1.2
