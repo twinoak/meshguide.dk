@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildDataset, scopesForPoint } from "../lib/scopes.js";
 import { loadData } from "./data.js";
-import { DEFAULTS_ANCHOR, NAME_MAX_BYTES, PASSWORD_MAX_BYTES, READ_COMMANDS, UNSUPPORTED, delaysFor, parseNeighbours, passwordProblem, clockDriftText, evaluate, floodAdvertIntervalFor, formatDanishTime, formatLatLon, forwards, hasDeviceLocation, isRepeater, nameProblem, needsReboot, parseClock, parseState, parseVersion, planCommands, roleLabel, versionAtLeast } from "../lib/checks.js";
+import { DEFAULTS_ANCHOR, NAME_MAX_BYTES, PASSWORD_MAX_BYTES, READ_COMMANDS, UNSUPPORTED, delaysFor, parseNeighbours, passwordProblem, clockDriftText, evaluate, floodAdvertIntervalFor, formatDanishTime, formatLatLon, forwards, hasDeviceLocation, isRepeater, nameProblem, needsReboot, parseClock, parseState, parseVersion, planCommands, roleLabel, stripHash, versionAtLeast } from "../lib/checks.js";
 import { parseReply, setAdvertNamePayload } from "../lib/serial.js";
 
 const { regions, postnumreFiles } = loadData();
@@ -82,6 +82,28 @@ test("parseState reads the firmware's reply formats", () => {
   assert.equal(parseState({ ...GOOD, regionsAllowed: "-none-" }).regionsAllowed.length, 0);
   assert.equal(parseState({ ...GOOD, regionsAllowed: null }).regionsAllowed, null);
   assert.equal(parseState({ ...GOOD, regionDefault: " default scope is <null>" }).regionDefault, "<null>");
+});
+
+test("a region stored as '#dk' is the same region as 'dk'", () => {
+  // Seen in the field: "region default" answered "default scope is #dk" and the
+  // guide wanted to change "#dk" to "dk". The firmware ignores a leading "#" in
+  // region names, so the name is normalised before comparison.
+  assert.equal(stripHash("#dk"), "dk");
+  assert.equal(stripHash("dk"), "dk");
+  assert.equal(stripHash("<null>"), "<null>");
+  assert.equal(stripHash(null), null);
+  const s = parseState({ ...GOOD, regionDefault: " default scope is #dk", regionsAllowed: "*,#eu,#europe,#dk,dk-fyn-odense,dk-fyn,dk5,dk50,dk52,dk53,dk55,dk57,dk58,dk522,dk5220", regionsDenied: "#dk-old" });
+  assert.equal(s.regionDefault, "dk");
+  assert.deepEqual(s.regionsAllowed.slice(0, 4), ["*", "eu", "europe", "dk"]);
+  assert.deepEqual(s.regionsDenied, ["dk-old"]);
+  const loc = { lat: s.lat, lon: s.lon, source: "device" };
+  const f = evaluate(s, loc, scopesForPoint(ds, s.lat, s.lon));
+  const byId = Object.fromEntries(f.map(x => [x.id, x]));
+  assert.equal(byId["region.default"].status, "ok");
+  assert.equal(byId["region.default"].current, "dk");
+  assert.deepEqual(byId["region.default"].commands, []);
+  assert.equal(byId.regions.status, "ok", "no region is reported missing because of the '#'");
+  assert.deepEqual(byId["regions.extra"].current, "dk-old", "the extra is listed without its '#'");
 });
 
 test("a well-configured repeater gets no recommendations", () => {
@@ -410,6 +432,11 @@ test("companion: path.hash.mode and default scope are checked and fixable", asyn
   const wrongKey = evaluateCompanion({ ...base, defaultScope: { name: "dk", key: "00".repeat(16) } }, key).find(x => x.id === "region.default");
   assert.equal(wrongKey.status, "change");
   assert.match(wrongKey.note, /nøglen/);
+  // A companion whose app stored the scope name as "#dk" with the right key is fine.
+  const hashed = evaluateCompanion({ ...base, defaultScope: { name: "#dk", key: hex(key) } }, key).find(x => x.id === "region.default");
+  assert.equal(hashed.status, "ok");
+  assert.equal(hashed.current, "#dk", "shown with a single '#'");
+  assert.equal(evaluateCompanion({ ...base, defaultScope: { name: "#eu", key: hex(key) } }, key).find(x => x.id === "region.default").status, "change");
   // Old firmware: unknown, nothing to send
   f = evaluateCompanion({ ...base, deviceInfo: { pathHashMode: null }, defaultScope: null, autoAdd: null }, key);
   assert.deepEqual(f.map(x => x.id + ":" + x.status), ["path.hash.mode:unknown", "region.default:unknown"]);
