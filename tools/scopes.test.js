@@ -75,7 +75,7 @@ test("the scope universe is sorted, unique and contains the fixed scopes and eve
   const all = allScopes(ds);
   assert.deepEqual(all, [...new Set(all)].sort());
   for (const s of ["eu", "europe", "dk", "dk5", "dk50", "dk500", "dk5000", "dk-fyn", "dk-kbh"]) assert.ok(all.includes(s), s);
-  assert.equal(all.length, 427);
+  assert.equal(all.length, 428);
 });
 
 test("region def lines are split at the 160-byte limit exactly like the PHP engine did", () => {
